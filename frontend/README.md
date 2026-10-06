@@ -1,6 +1,6 @@
 # Suraksha Frontend Starter
 
-A mock-driven React + TypeScript + Leaflet implementation based on the supplied Figma screenshots.
+A mock frontend written in React + Typescript + Leaflet!!
 
 ## Run
 
