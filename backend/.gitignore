@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+sos.db
+.env
+
+.venv/
+.pytest_cache/
+uploads/
+*.bak
+
+.env.*
+!.env.example
+
+dev-tokens.json
