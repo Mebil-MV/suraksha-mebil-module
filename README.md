@@ -12,10 +12,16 @@ Suraksha is a comprehensive full-stack platform designed to enhance community re
 
 ### 2. Gamified Preparedness & Awareness
 * **Safety Tips & Micro-Challenges:** Users earn points and badges by completing bite-sized disaster readiness tasks.
-* **Interactive Awareness Animations:** Immersive HTML5 Canvas simulations (e.g., flood scenarios) to visually communicate disaster risks.
-* **Audio Accessibility:** Integrated Text-to-Speech (TTS) allowing users to listen to safety guidelines and quiz questions.
+* **Interactive Awareness Animations:** Immersive HTML5 Canvas simulations to visually communicate disaster risks. 
+  * Integrates continuous looping animations for *Clogged Drain Flooding*, *Lake Overflow Flooding*, and *Deforestation Landslides*.
+* **Audio Accessibility:** Integrated Text-to-Speech (TTS) using native, natural-sounding browser voices to read safety guidelines and quiz questions.
 
-### 3. Localization
+### 3. Modern UI & Mobile Support (PWA)
+* **Progressive Web App (PWA):** Fully installable on Android and iOS devices, capable of running securely over local networks or HTTPS.
+* **Monochrome Aesthetic:** A highly-contrasted, sleek black-and-white global styling for UI elements, preserving color only for focal interactive elements (like custom cursor water drops and disaster animations).
+* **Automated Session Management:** Graceful token expiry handling with auto-redirects upon 401 Unauthorized errors.
+
+### 4. Localization
 * **Bilingual Support:** Full English (EN) and Hindi (HI) interface toggling.
 
 ---
