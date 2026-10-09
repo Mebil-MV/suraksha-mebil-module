@@ -1,0 +1,8 @@
+.git
+.venv
+.env
+__pycache__
+uploads
+.pytest_cache
+dev-tokens.json
+.env.*
