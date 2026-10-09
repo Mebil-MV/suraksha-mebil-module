@@ -30,12 +30,25 @@ export default function SpeechButton({ text, lang = 'en-US' }: SpeechButtonProps
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
     
-    // Optional: Try to find a high quality local voice for the language
+    // Try to find a high-quality 'realistic' voice (Google or Microsoft Natural)
     const voices = window.speechSynthesis.getVoices();
-    const targetVoice = voices.find(v => v.lang.startsWith(lang.substring(0, 2)));
+    
+    let targetVoice = voices.find(v => 
+      v.lang.startsWith(lang.substring(0, 2)) && 
+      (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google'))
+    );
+
+    // Fallback to any matching language voice if natural one isn't found
+    if (!targetVoice) {
+      targetVoice = voices.find(v => v.lang.startsWith(lang.substring(0, 2)));
+    }
+
     if (targetVoice) {
       utterance.voice = targetVoice;
     }
+    
+    // Slightly adjust rate for better clarity
+    utterance.rate = 0.95;
 
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);

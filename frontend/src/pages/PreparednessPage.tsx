@@ -85,11 +85,28 @@ export default function PreparednessPage() {
       {activeTab === 'awareness' && (
         <div className="tab-content awareness-content">
           <div className="card text-center mb-4" style={{ padding: '0' }}>
-            <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'बाढ़ जागरूकता परिदृश्य' : 'Flood Awareness Scenario'}</h2>
+            <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'बंद नाले से बाढ़ जागरूकता' : 'Clogged Drain Flood Awareness'}</h2>
             <iframe 
-              src="/flood-animation.html" 
+              src="/drain-flood.html" 
               style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '0 0 10px 10px', backgroundColor: '#0f1a2e' }}
-              title="Flood Animation"
+              title="Clogged Drain Flood Animation"
+            />
+          </div>
+          
+          <div className="card text-center mb-4" style={{ padding: '0' }}>
+            <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'झील के ओवरफ्लो से बाढ़ जागरूकता' : 'Lake Overflow Flood Awareness'}</h2>
+            <iframe 
+              src="/lake-flood.html" 
+              style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '0 0 10px 10px', backgroundColor: '#0f1a2e' }}
+              title="Lake Overflow Flood Animation"
+            />
+          </div>
+          <div className="card text-center mb-4" style={{ padding: '0' }}>
+            <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'वनों की कटाई से भूस्खलन जागरूकता' : 'Deforestation Landslide Awareness'}</h2>
+            <iframe 
+              src="/landslide.html" 
+              style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '0 0 10px 10px', backgroundColor: '#1a1f18' }}
+              title="Deforestation Landslide Animation"
             />
           </div>
         </div>

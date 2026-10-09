@@ -7,10 +7,21 @@ function getAuthHeaders(): Record<string, string> {
     : { "Content-Type": "application/json" };
 }
 
+async function handleResponse(res: Response) {
+  if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      window.location.href = "/login";
+    }
+    throw new Error(await res.text());
+  }
+  return res.json();
+}
+
 export async function apiGet(path: string) {
   const res = await fetch(`${API_BASE}${path}`, { headers: getAuthHeaders() });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return handleResponse(res);
 }
 
 export async function apiPost(path: string, body?: unknown) {
@@ -19,8 +30,7 @@ export async function apiPost(path: string, body?: unknown) {
     headers: getAuthHeaders(),
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return handleResponse(res);
 }
 
 export async function apiPostForm(path: string, formData: URLSearchParams) {
@@ -29,8 +39,7 @@ export async function apiPostForm(path: string, formData: URLSearchParams) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: formData,
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return handleResponse(res);
 }
 
 export async function apiDelete(path: string) {
@@ -38,8 +47,7 @@ export async function apiDelete(path: string) {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return handleResponse(res);
 }
 
 export async function apiPatch(path: string, body?: unknown) {
@@ -48,6 +56,5 @@ export async function apiPatch(path: string, body?: unknown) {
     headers: getAuthHeaders(),
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return handleResponse(res);
 }

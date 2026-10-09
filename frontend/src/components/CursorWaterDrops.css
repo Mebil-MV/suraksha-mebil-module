@@ -1,0 +1,24 @@
+.water-drop {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(64, 169, 255, 0.5);
+  border: 1px solid rgba(135, 206, 235, 0.8);
+  pointer-events: none; /* Crucial so it doesn't block clicks */
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%) scale(1);
+  animation: drop-fade 0.6s ease-out forwards;
+  z-index: 9999;
+  box-shadow: 0 0 10px rgba(64, 169, 255, 0.4);
+}
+
+@keyframes drop-fade {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}

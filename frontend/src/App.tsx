@@ -13,6 +13,7 @@ import FloodGame from './pages/FloodGame';
 import { I18nProvider } from './i18n';
 import Layout from './components/Layout';
 import './App.css';
+import CursorWaterDrops from './components/CursorWaterDrops';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -22,6 +23,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <I18nProvider>
+      <CursorWaterDrops />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<PrivateRoute><Layout><HomePage /></Layout></PrivateRoute>} />
