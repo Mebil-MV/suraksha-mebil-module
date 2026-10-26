@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Suraksha - Master Animation Showcase & Code Repository</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070c14;
+      --card-bg: #101a2b;
+      --border: #1d304a;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --badge-bg: #18263a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      padding: 30px 20px 80px;
+      line-height: 1.5;
+    }
+    header {
+      max-width: 1240px;
+      margin: 0 auto 40px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 720px;
+      margin: 0 auto 20px;
+    }
+    .stats-bar {
+      display: inline-flex;
+      gap: 20px;
+      background: #0f172a;
+      padding: 8px 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 28px;
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.45);
+      border-color: var(--accent);
+    }
+    .card.featured {
+      grid-column: 1 / -1;
+    }
+    .card-preview {
+      background: #040810;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card.featured .card-preview {
+      min-height: 520px;
+    }
+    .card-preview iframe {
+      width: 100%;
+      height: 100%;
+      min-height: 260px;
+      border: none;
+    }
+    .card.featured .card-preview iframe {
+      min-height: 520px;
+    }
+    .card-body {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-meta {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--badge-bg);
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .badge.canvas { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }
+    .badge.audio { color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
+    .badge.svg { color: #a78bfa; border-color: rgba(167, 139, 250, 0.3); }
+    .badge.css { color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #08202b;
+    }
+    .btn-primary:hover {
+      background: #7dd3fc;
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover {
+      background: var(--border);
+      color: #fff;
+    }
+    .svg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      width: 100%;
+      padding: 16px;
+    }
+    .svg-item {
+      background: #09111c;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: 0.2s;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .svg-item:hover {
+      border-color: var(--accent);
+      transform: scale(1.03);
+    }
+    .svg-item img {
+      width: 100%;
+      height: 75px;
+      object-fit: contain;
+    }
+    .svg-item span {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎬 Suraksha Animation Library</h1>
+    <p>Complete categorized catalog of all simulation, vector, and sprite animation source codes for disaster awareness.</p>
+    <div class="stats-bar">
+      <span>✨ 4 Interactive Canvas Simulations</span>
+      <span>•</span>
+      <span>🎨 5 Vector Animated SVGs</span>
+      <span>•</span>
+      <span>🎮 1 CSS Keyframe Sprite Suite</span>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <!-- 01: City Flood Canvas -->
+    <article class="card featured">
+      <div class="card-preview">
+        <iframe src="01-city-flood-canvas/index.html" loading="lazy"></iframe>
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="badge canvas">HTML5 Canvas 2D</span>
+          <span class="badge">Procedural Parallax</span>
+          <span class="badge">Interactive Timeline</span>
+        </div>
+        <h2 class="card-title">01. Rising Floodwater & City Pan Simulation</h2>
+        <p class="card-desc">
+          Procedural multi-layer 2D canvas simulation demonstrating urban flash flooding. Features 3 parallax depth layers, stochastic rain streaks, lightning dynamics, wave height deformation, water window reflections, and smooth camera panning / zoom-in on an inhabited house.
+        </p>
+        <div class="card-actions">
+          <a href="01-city-flood-canvas/index.html" target="_blank" class="btn btn-primary">Open Fullscreen</a>
+          <a href="01-city-flood-canvas/animation.js" target="_blank" class="btn btn-outline">animation.js</a>
+          <a href="01-city-flood-canvas/styles.css" target="_blank" class="btn btn-outline">styles.css</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- 02: Landslide Simulation with Narrator -->
+    <article class="card">
+      <div class="card-preview">
+        <iframe src="02-landslide-narrator/index.html" loading="lazy"></iframe>
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="badge canvas">Canvas 2D</span>
+          <span class="badge audio">Speech Synthesis</span>
+          <span class="badge">Terrain Physics</span>
+        </div>
+        <h2 class="card-title">02. Landslide & Mountain Soil Liquefaction</h2>
+        <p class="card-desc">
+          Interactive simulation showing how hillside deforestation leaves soil vulnerable to heavy torrential rains, triggering a massive mudslide that engulfs a valley village. Includes voice narrator synthesis.
+        </p>
+        <div class="card-actions">
+          <a href="02-landslide-narrator/index.html" target="_blank" class="btn btn-primary">Open Fullscreen</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- 03: Family Flood Rescue Simulation -->
+    <article class="card">
+      <div class="card-preview">
+        <iframe src="03-family-flood-rescue/index.html" loading="lazy"></iframe>
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="badge canvas">Canvas 2D</span>
+          <span class="badge">Procedural Characters</span>
+          <span class="badge">Emergency Checklist</span>
+        </div>
+        <h2 class="card-title">03. Flood Night: Family Rescue & Evacuation</h2>
+        <p class="card-desc">
+          Multi-character narrative animation following a sleeping family during nighttime flooding. Parents awaken children, guide them up the stairs to safety, and collect essential survival supplies (canned food, drinking water, phones, power bank, torch, whistle).
+        </p>
+        <div class="card-actions">
+          <a href="03-family-flood-rescue/index.html" target="_blank" class="btn btn-primary">Open Fullscreen</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- 04: Tree in a Storm Simulation -->
+    <article class="card">
+      <div class="card-preview">
+        <iframe src="04-tree-storm-hazard-simulation/index.html" loading="lazy"></iframe>
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="badge canvas">Canvas 2D</span>
+          <span class="badge">Wind Aerodynamics</span>
+          <span class="badge">Hazard Awareness</span>
+        </div>
+        <h2 class="card-title">04. Severe Tree Storm & Wind Hazard</h2>
+        <p class="card-desc">
+          Physics-based simulation demonstrating wind force hazards during gale storms, branch breakage, flying debris, and warning alerts explaining why staying under tall trees during storms is hazardous.
+        </p>
+        <div class="card-actions">
+          <a href="04-tree-storm-hazard/index.html" target="_blank" class="btn btn-primary">Open Fullscreen</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- 05: Vector Disaster SVGs -->
+    <article class="card">
+      <div class="card-preview">
+        <div class="svg-grid">
+          <a href="05-disaster-vector-svgs/01-earthquake-shaking.svg" target="_blank" class="svg-item">
+            <img src="05-disaster-vector-svgs/01-earthquake-shaking.svg" alt="Earthquake">
+            <span>Earthquake</span>
+          </a>
+          <a href="05-disaster-vector-svgs/02-rising-flood-waters.svg" target="_blank" class="svg-item">
+            <img src="05-disaster-vector-svgs/02-rising-flood-waters.svg" alt="Flood">
+            <span>Flood Waters</span>
+          </a>
+          <a href="05-disaster-vector-svgs/03-fire-smoke-corridor.svg" target="_blank" class="svg-item">
+            <img src="05-disaster-vector-svgs/03-fire-smoke-corridor.svg" alt="Fire Smoke">
+            <span>Fire Smoke</span>
+          </a>
+          <a href="05-disaster-vector-svgs/04-tornado-cyclone.svg" target="_blank" class="svg-item">
+            <img src="05-disaster-vector-svgs/04-tornado-cyclone.svg" alt="Cyclone">
+            <span>Cyclone</span>
+          </a>
+          <a href="05-disaster-vector-svgs/05-tsunami-ocean-wave.svg" target="_blank" class="svg-item">
+            <img src="05-disaster-vector-svgs/05-tsunami-ocean-wave.svg" alt="Tsunami">
+            <span>Tsunami</span>
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="badge svg">Animated SVG</span>
+          <span class="badge">SMIL Morphing</span>
+          <span class="badge">Zero Dependencies</span>
+        </div>
+        <h2 class="card-title">05. Standalone Vector Disaster SVGs</h2>
+        <p class="card-desc">
+          Five pure SVG vector animations using SMIL keyframes (`<animate>`, `<animateTransform>`). Includes earthquake seismic shockwaves, torrential flood downpour, burning corridor smoke, cyclone debris rotation, and tsunami ocean recession.
+        </p>
+        <div class="card-actions">
+          <a href="05-disaster-vector-svgs/01-earthquake-shaking.svg" target="_blank" class="btn btn-outline">01. Earthquake</a>
+          <a href="05-disaster-vector-svgs/02-rising-flood-waters.svg" target="_blank" class="btn btn-outline">02. Flood</a>
+          <a href="05-disaster-vector-svgs/03-fire-smoke-corridor.svg" target="_blank" class="btn btn-outline">03. Smoke</a>
+          <a href="05-disaster-vector-svgs/04-tornado-cyclone.svg" target="_blank" class="btn btn-outline">04. Cyclone</a>
+          <a href="05-disaster-vector-svgs/05-tsunami-ocean-wave.svg" target="_blank" class="btn btn-outline">05. Tsunami</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- 06: Flood Survival Game CSS Sprites -->
+    <article class="card">
+      <div class="card-preview">
+        <iframe src="06-flood-game-css-sprites/index.html" style="width:100%;height:260px;border:none;"></iframe>
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="badge css">CSS Keyframe Sprites</span>
+          <span class="badge">Interactive State</span>
+        </div>
+        <h2 class="card-title">06. Flood Survival Game UI Sprites</h2>
+        <p class="card-desc">
+          Pure CSS sprite animations developed for the micro-game engine: helicopter hover vibration, distressed waving kid, bed toss, and dynamic smooth water level climbing.
+        </p>
+        <div class="card-actions">
+          <a href="06-flood-game-css-sprites/index.html" target="_blank" class="btn btn-primary">Open Interactive Demo</a>
+          <a href="06-flood-game-css-sprites/game-animations.css" target="_blank" class="btn btn-outline">game-animations.css</a>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+</body>
+</html>

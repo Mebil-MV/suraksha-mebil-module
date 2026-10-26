@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03 - Flood Survival Game CSS Sprites Preview</title>
+  <link rel="stylesheet" href="game-animations.css">
+  <style>
+    body {
+      background: #090e17;
+      color: #f1f5f9;
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .wrapper {
+      width: 100%;
+      max-width: 600px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 15px;
+    }
+    button {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #38bdf8;
+      color: #08202b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <div class="flood-animation-container">
+      <div id="sky" class="flood-sky night"></div>
+
+      <div class="flood-house">
+        <div class="roof-area">
+          <div id="kidRoof" class="kid-sprite waving" style="display:none;">👦<span class="cloth">🟥</span></div>
+          <div id="rescueHeli" class="rescue-sprite" style="display:none;">🚁</div>
+        </div>
+        <div class="room-area">
+          <div class="window">🪟</div>
+          <div id="kidBed" class="kid-sprite in-bed">🛏️👦</div>
+          <div id="kidSunk" class="kid-sprite sunk" style="display:none;">💧👦💧</div>
+        </div>
+      </div>
+
+      <div id="water" class="flood-water" style="height: 10%;"></div>
+    </div>
+
+    <div class="controls">
+      <button onclick="setState('intro')">1. Night / Bed</button>
+      <button onclick="setState('rising')">2. Water Rising (45%)</button>
+      <button onclick="setState('roof')">3. Evacuate to Roof (75%)</button>
+      <button onclick="setState('rescued')">4. Helicopter Rescue (Day)</button>
+      <button onclick="setState('submerged')">5. Submerged (100%)</button>
+    </div>
+  </div>
+
+  <script>
+    function setState(state) {
+      const sky = document.getElementById('sky');
+      const water = document.getElementById('water');
+      const kidBed = document.getElementById('kidBed');
+      const kidRoof = document.getElementById('kidRoof');
+      const rescueHeli = document.getElementById('rescueHeli');
+      const kidSunk = document.getElementById('kidSunk');
+
+      kidBed.style.display = 'none';
+      kidRoof.style.display = 'none';
+      rescueHeli.style.display = 'none';
+      kidSunk.style.display = 'none';
+      sky.className = 'flood-sky night';
+
+      if (state === 'intro') {
+        water.style.height = '10%';
+        kidBed.style.display = 'block';
+      } else if (state === 'rising') {
+        water.style.height = '45%';
+        kidBed.style.display = 'block';
+      } else if (state === 'roof') {
+        water.style.height = '75%';
+        kidRoof.style.display = 'block';
+      } else if (state === 'rescued') {
+        sky.className = 'flood-sky day';
+        water.style.height = '60%';
+        kidRoof.style.display = 'block';
+        rescueHeli.style.display = 'block';
+      } else if (state === 'submerged') {
+        water.style.height = '100%';
+        kidSunk.style.display = 'block';
+      }
+    }
+  </script>
+
+</body>
+</html>

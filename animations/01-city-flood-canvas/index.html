@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>01 - Rising Floodwater City Simulation (HTML5 Canvas)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="player">
+    <div class="stage">
+      <canvas id="c" role="img" aria-label="Animation: rain falls and floodwater rises through a city skyline at dusk, then the camera pans and pushes in on a single lit house as the water laps at its door."></canvas>
+    </div>
+    <div class="bar">
+      <button id="play" class="play" type="button"></button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline scrubber">
+      <span id="time" class="time">0:00 / 0:20</span>
+    </div>
+    <div class="chapters" role="group" aria-label="Jump to a shot">
+      <button type="button" data-t="0">1. Wide City Shot</button>
+      <button type="button" data-t="6">2. Pan Across District</button>
+      <button type="button" data-t="14.5">3. House Close-Up</button>
+    </div>
+  </main>
+
+  <script src="animation.js"></script>
+</body>
+</html>

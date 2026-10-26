@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" width="100%" height="100%">
+  <!-- Dark sky gradient -->
+  <defs>
+    <linearGradient id="tornadoSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="60%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#374151" />
+    </linearGradient>
+    <radialGradient id="funnelGrad" cx="50%" cy="20%" r="50%">
+      <stop offset="0%" stop-color="#6b7280" />
+      <stop offset="100%" stop-color="#374151" />
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="300" height="200" fill="url(#tornadoSky)" />
+  <!-- Ground -->
+  <rect x="0" y="155" width="300" height="45" fill="#365314" />
+
+  <!-- Storm cloud ceiling -->
+  <ellipse cx="150" cy="25" rx="120" ry="25" fill="#374151" />
+  <ellipse cx="100" cy="20" rx="60" ry="20" fill="#4b5563" />
+  <ellipse cx="200" cy="22" rx="70" ry="18" fill="#4b5563" />
+  <ellipse cx="60" cy="30" rx="40" ry="15" fill="#374151" />
+  <ellipse cx="240" cy="28" rx="45" ry="15" fill="#374151" />
+
+  <!-- Dynamic vortex polygon funnel -->
+  <polygon points="120,30 180,30 165,155 135,155" fill="url(#funnelGrad)" opacity="0.8">
+    <animate attributeName="points" values="120,30 180,30 165,155 135,155;118,30 182,30 162,155 138,155;120,30 180,30 165,155 135,155" dur="1s" repeatCount="indefinite" />
+  </polygon>
+  <polygon points="128,35 172,35 160,148 140,148" fill="#6b7280" opacity="0.5">
+    <animate attributeName="points" values="128,35 172,35 160,148 140,148;130,35 170,35 158,148 142,148;128,35 172,35 160,148 140,148" dur="0.8s" repeatCount="indefinite" />
+  </polygon>
+
+  <!-- Flying rotational debris particles -->
+  <rect x="145" y="130" width="8" height="4" fill="#78350f" transform="rotate(30,149,132)">
+    <animate attributeName="transform" values="rotate(30,149,132);rotate(390,149,132)" dur="2s" repeatCount="indefinite" />
+  </rect>
+  <rect x="155" y="100" width="5" height="3" fill="#78350f">
+    <animate attributeName="transform" values="rotate(0,157,101);rotate(360,157,101)" dur="1.5s" repeatCount="indefinite" />
+  </rect>
+  <circle cx="140" cy="120" r="3" fill="#92400e">
+    <animate attributeName="cx" values="140;160;140" dur="1s" repeatCount="indefinite" />
+  </circle>
+
+  <!-- Distant vulnerable house -->
+  <rect x="30" y="140" width="25" height="18" fill="#d4a574" />
+  <polygon points="27,141 42,128 57,141" fill="#b91c1c" />
+
+  <!-- Animated Lightning strike -->
+  <path d="M80 15 L85 40 L78 42 L88 65" stroke="#fbbf24" stroke-width="2" fill="none" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;0;0;0.8;0;0.8" dur="3s" repeatCount="indefinite" />
+  </path>
+  
+  <text x="150" y="193" text-anchor="middle" font-size="11" fill="#9ca3af" font-weight="bold" font-family="sans-serif">🌪️ TORNADO APPROACHING 🌪️</text>
+</svg>

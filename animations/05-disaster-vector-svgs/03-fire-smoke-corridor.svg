@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" width="100%" height="100%">
+  <!-- Corridor walls -->
+  <rect x="0" y="0" width="300" height="200" fill="#1c1917" />
+  <!-- Floor -->
+  <polygon points="0,200 300,200 250,130 50,130" fill="#44403c" />
+  <!-- Left wall -->
+  <polygon points="0,0 50,40 50,130 0,200" fill="#78716c" />
+  <!-- Right wall -->
+  <polygon points="300,0 250,40 250,130 300,200" fill="#78716c" />
+  <!-- Ceiling -->
+  <polygon points="0,0 300,0 250,40 50,40" fill="#57534e" />
+  <!-- Back wall with exit door -->
+  <rect x="50" y="40" width="200" height="90" fill="#a8a29e" />
+  <rect x="125" y="55" width="50" height="75" fill="#78350f" />
+  <circle cx="167" cy="95" r="3" fill="#fbbf24" />
+
+  <!-- Fire glow at base with opacity flicker -->
+  <rect x="50" y="120" width="200" height="10" fill="#ef4444" opacity="0.5" />
+  <rect x="60" y="122" width="40" height="8" fill="#f97316" opacity="0.7">
+    <animate attributeName="opacity" values="0.7;0.3;0.7" dur="0.4s" repeatCount="indefinite" />
+  </rect>
+  <rect x="200" y="122" width="35" height="8" fill="#f97316" opacity="0.7">
+    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="0.5s" repeatCount="indefinite" />
+  </rect>
+
+  <!-- Animated rolling smoke clouds -->
+  <circle cx="80" cy="60" r="25" fill="#78716c" opacity="0.7">
+    <animate attributeName="cx" values="80;100;80" dur="4s" repeatCount="indefinite" />
+    <animate attributeName="r" values="25;30;25" dur="3s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="150" cy="55" r="30" fill="#a8a29e" opacity="0.6">
+    <animate attributeName="cx" values="150;170;150" dur="3.5s" repeatCount="indefinite" />
+    <animate attributeName="r" values="30;35;30" dur="4s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="220" cy="58" r="22" fill="#78716c" opacity="0.7">
+    <animate attributeName="cx" values="220;200;220" dur="3s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="120" cy="72" r="18" fill="#a8a29e" opacity="0.5">
+    <animate attributeName="cx" values="120;140;120" dur="5s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="190" cy="75" r="20" fill="#78716c" opacity="0.4">
+    <animate attributeName="cx" values="190;170;190" dur="4.5s" repeatCount="indefinite" />
+  </circle>
+
+  <text x="150" y="195" text-anchor="middle" font-size="11" fill="#fbbf24" font-weight="bold" font-family="sans-serif">🔥 FIRE — SMOKE FILLED CORRIDOR 🔥</text>
+</svg>

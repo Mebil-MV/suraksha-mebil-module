@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" width="100%" height="100%">
+  <!-- Sky gradient -->
+  <defs>
+    <linearGradient id="floodSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6b7280" />
+      <stop offset="100%" stop-color="#9ca3af" />
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#1e40af" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="300" height="200" fill="url(#floodSky)" />
+  
+  <!-- Animated Rain Streaks -->
+  <line x1="20" y1="0" x2="12" y2="15" stroke="#bfdbfe" stroke-width="1.5" opacity="0.6">
+    <animate attributeName="y1" values="0;180;0" dur="0.6s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="15;195;15" dur="0.6s" repeatCount="indefinite" />
+  </line>
+  <line x1="50" y1="0" x2="42" y2="15" stroke="#bfdbfe" stroke-width="1.5" opacity="0.6">
+    <animate attributeName="y1" values="13;193;13" dur="0.7s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="28;208;28" dur="0.7s" repeatCount="indefinite" />
+  </line>
+  <line x1="90" y1="0" x2="82" y2="15" stroke="#bfdbfe" stroke-width="1.5" opacity="0.6">
+    <animate attributeName="y1" values="26;206;26" dur="0.8s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="41;221;41" dur="0.8s" repeatCount="indefinite" />
+  </line>
+  <line x1="140" y1="0" x2="132" y2="15" stroke="#bfdbfe" stroke-width="1.5" opacity="0.6">
+    <animate attributeName="y1" values="5;185;5" dur="0.65s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="20;200;20" dur="0.65s" repeatCount="indefinite" />
+  </line>
+  <line x1="190" y1="0" x2="182" y2="15" stroke="#bfdbfe" stroke-width="1.5" opacity="0.6">
+    <animate attributeName="y1" values="18;198;18" dur="0.75s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="33;213;33" dur="0.75s" repeatCount="indefinite" />
+  </line>
+  <line x1="240" y1="0" x2="232" y2="15" stroke="#bfdbfe" stroke-width="1.5" opacity="0.6">
+    <animate attributeName="y1" values="10;190;10" dur="0.7s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="25;205;25" dur="0.7s" repeatCount="indefinite" />
+  </line>
+  <line x1="280" y1="0" x2="272" y2="15" stroke="#bfdbfe" stroke-width="1.5" opacity="0.6">
+    <animate attributeName="y1" values="20;200;20" dur="0.85s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="35;215;35" dur="0.85s" repeatCount="indefinite" />
+  </line>
+
+  <!-- House 1 -->
+  <rect x="40" y="55" width="55" height="60" fill="#d4a574" stroke="#92400e" stroke-width="1.5" />
+  <polygon points="35,57 67,25 100,57" fill="#b91c1c" stroke="#991b1b" stroke-width="1.5" />
+  <rect x="55" y="75" width="15" height="20" fill="#78350f" />
+  <rect x="77" y="65" width="12" height="12" fill="#bfdbfe" stroke="#92400e" stroke-width="1" />
+
+  <!-- House 2 -->
+  <rect x="180" y="65" width="50" height="50" fill="#d4a574" stroke="#92400e" stroke-width="1.5" />
+  <polygon points="175,67 205,38 235,67" fill="#b91c1c" stroke="#991b1b" stroke-width="1.5" />
+  <rect x="197" y="80" width="14" height="20" fill="#78350f" />
+
+  <!-- Tree -->
+  <rect x="138" y="70" width="8" height="45" fill="#78350f" />
+  <circle cx="142" cy="58" r="20" fill="#166534" />
+  <circle cx="130" cy="65" r="14" fill="#15803d" />
+  <circle cx="155" cy="63" r="16" fill="#15803d" />
+
+  <!-- Animated water surface morph -->
+  <path fill="url(#water)">
+    <animate attributeName="d"
+      values="M0,110 Q30,100 60,110 T120,110 T180,110 T240,110 T300,110 L300,200 L0,200 Z;M0,110 Q30,120 60,110 T120,110 T180,110 T240,110 T300,110 L300,200 L0,200 Z;M0,110 Q30,100 60,110 T120,110 T180,110 T240,110 T300,110 L300,200 L0,200 Z"
+      dur="2s" repeatCount="indefinite" />
+  </path>
+
+  <!-- Water level rising wave indicator -->
+  <path d="M0,120 Q40,112 80,120 T160,120 T240,120 T300,120 L300,200 L0,200 Z" fill="#2563eb" opacity="0.3">
+    <animate attributeName="d"
+      values="M0,130 Q40,122 80,130 T160,130 T240,130 T300,130 L300,200 L0,200 Z;M0,125 Q40,132 80,125 T160,125 T240,125 T300,125 L300,200 L0,200 Z;M0,130 Q40,122 80,130 T160,130 T240,130 T300,130 L300,200 L0,200 Z"
+      dur="2.5s" repeatCount="indefinite" />
+  </path>
+  
+  <text x="150" y="170" text-anchor="middle" font-size="11" fill="white" font-weight="bold" font-family="sans-serif">🌊 RISING FLOOD WATERS 🌊</text>
+</svg>
