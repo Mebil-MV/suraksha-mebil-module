@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>School Fire Evacuation & Safety</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+       </style>
+</head>
+
+<body>
+       <canvas id="c" width="1280" height="720"></canvas>
+       <div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div>
+       <div class="bar">
+              <button id="pp" disabled>Play</button>
+              <!-- Extended slider max to 16.5 seconds -->
+              <input id="sk" type="range" min="0" max="20" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Hindi Subtitles: Off</button><button id="mute">Audio: On</button>
+       </div>
+<script>
+const W=1280,H=720,D=20,cv=document.getElementById('c'),ctx=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2),TAU=Math.PI*2;
+cv.width=W*dpr;cv.height=H*dpr;
+const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),lp=(a,b,t)=>a+(b-a)*t,sm=t=>t*t*(3-2*t);
+function hs(n){return (Math.sin(n*127.1+311.7)*43758.5453)%1+.5}
+function poly(p,c){ctx.fillStyle=c;ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function tri(a,b,c,col){poly([a,b,c],col)}
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
+function rr(x,y,w,h,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function text(s,x,y,size=24,col='#f4ead2',align='left'){ctx.font=`600 ${size}px system-ui,sans-serif`;ctx.textAlign=align;ctx.fillStyle=col;ctx.fillText(s,x,y)}
+function line(p,c,w=5){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()}
+function box(x,y,w,h,d,c='#c6a97b'){rect(x,y-h,w,h,c);poly([[x,y-h],[x+d,y-h-d*.55],[x+w+d,y-h-d*.55],[x+w,y-h]],'#ead8b2');poly([[x+w,y-h],[x+w+d,y-h-d*.55],[x+w+d,y-d*.55],[x+w,y]],'#8c795e');tri([x,y-h],[x+w,y-h],[x+w*.48,y-h*.35],'#ffffff0d')}
+function icon(x,y,good,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.shadowColor=good?'#43f3a2':'#ff484f';ctx.shadowBlur=24;ctx.fillStyle=good?'#167e53':'#a62939';ctx.beginPath();ctx.arc(0,0,29,0,TAU);ctx.fill();ctx.shadowBlur=0;if(good)line([[-14,0],[-3,12],[16,-13]],'#c8ffe8',7);else{line([[-11,-11],[11,11]],'#fff0e7',7);line([[11,-11],[-11,11]],'#fff0e7',7)}ctx.restore()}
+function person(x,y,s=1,c='#377a90',crawl=false,phase=0,teacher=false){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle='#17263222';ctx.beginPath();ctx.ellipse(0,2,30,8,0,0,TAU);ctx.fill();let z=Math.sin(phase)*8;if(crawl){poly([[-31,-38],[7,-43],[18,-20],[-23,-20]],c);line([[-23,-22],[-35,-6],[-17,-4]],'#263a4c',9);line([[7,-22],[23,-5],[40,-5]],'#263a4c',9);line([[2,-34],[29,-17],[42,-12]],'#d3a27c',7);poly([[18,-64],[37,-64],[46,-50],[39,-36],[20,-39],[13,-50]],'#d9ae85');tri([18,-64],[37,-64],[39,-55],'#413a35')}else{line([[-9,-40],[-12-z*.4,0]],'#283a4c',12);line([[10,-40],[13+z*.4,0]],'#283a4c',12);poly([[-19,-88],[16,-88],[23,-39],[-22,-39]],c);tri([-19,-88],[16,-88],[0,-43],'#ffffff18');line([[-16,-78],[-31,-49+z]],'#d3a27c',9);line([[17,-78],[teacher?51:29,teacher?-80:-49-z]],'#d3a27c',9);poly([[-16,-117],[3,-123],[20,-110],[16,-90],[-2,-83],[-19,-97]],'#d9ae85');poly([[-18,-113],[2,-126],[21,-112],[18,-103],[-13,-108]],'#413a35');if(teacher)poly([[-10,-85],[1,-70],[10,-85]],'#ece4ce')}ctx.restore()}
+function tree(x,y,s){rect(x-4*s,y-50*s,8*s,50*s,'#72543b');for(let i=0;i<3;i++)tri([x-32*s+i*7*s,y-20*s-i*22*s],[x,y-90*s-i*18*s],[x+32*s-i*7*s,y-20*s-i*22*s],['#537654','#64865a','#759b67'][i])}
+function label(s,x,y,good=true){ctx.font='600 25px system-ui';let w=ctx.measureText(s).width+32;rr(x,y,w,45,10,'#0d1929db');rect(x,y+41,w,4,good?'#52d99a':'#ff6266');text(s,x+16,y+30,25)}
+const EN=['Stay calm. Follow your evacuation plan. Stay low in smoke. Check doors for heat; if hot, use another exit.','Never hide indoors or in toilets. Exit to an open area. Call the Fire Brigade.','Gather at your assembly point for roll call. Children must never leave alone or with strangers.'];
+const HI=['शांत रहें। निकासी योजना का पालन करें। धुएँ में नीचे रहें। दरवाज़ा गरम हो तो दूसरा रास्ता लें।','अंदर या शौचालय में न छिपें। खुले स्थान पर जाएँ। अग्निशमन दल को बुलाएँ।','तय स्थान पर इकट्ठा होकर हाज़िरी दें। बच्चे अकेले या अजनबियों के साथ न जाएँ।'];
+const starts=[0,8,14];let hindi=false,muted=false;
+function room(t){let emergency=sm(cl(t/2));let g=ctx.createLinearGradient(0,0,0,580);g.addColorStop(0,'#c1c8bf');g.addColorStop(1,'#ddd0ae');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);poly([[0,430],[1280,430],[1280,720],[0,720]],'#a58e70');for(let i=0;i<10;i++)line([[640,430],[i*160-160,720]],'#86776066',1);for(let y=470;y<720;y+=65)line([[0,y],[1280,y]],'#8c7b6266',1);rect(55,165,300,177,'#758d7a');rect(64,174,282,159,'#345b50');text('OUR EVACUATION PLAN',84,205,18,'#e6e5ce');line([[94,251],[157,251],[157,294],[270,294]],'#dce5bb',4);text('EXIT →',218,269,20,'#dcf3c4');for(let i=0;i<2;i++){box(80+i*210,510,125,65,30);line([[95+i*210,511],[90+i*210,563]],'#66584b',8);line([[195+i*210,511],[200+i*210,563]],'#66584b',8)}
+rect(760,140,150,315,'#5c4843');box(773,452,118,290,14,'#9c6653');rect(867,308,8,8,'#f5c26e');rect(1030,140,158,315,'#344c43');rect(1041,154,133,300,'#8b9e7c');label('EXIT →',1042,91);rect(600,116,38,17,'#ff4a43');ctx.fillStyle=`rgba(158,29,32,${emergency*(.08+.035*Math.sin(t*9))})`;ctx.fillRect(0,0,W,H);
+if(t<4){person(580,530,1,'#a97c4c',false,t*8,true);for(let i=0;i<3;i++)person(720+i*105,550,.82,['#477c9a','#a38951','#73834c'][i],true,t*8+i);icon(790,418,true);label(hindi?'धुएँ में नीचे रहें':'Stay low in smoke',50,90)}else{let move=sm(cl((t-5.7)/2));person(lp(714,998,move),518,1,'#a97c4c',false,t*8,true);for(let i=0;i<3;i++)person(lp(510-i*95,1090-i*42,move),560,.8,['#477c9a','#a38951','#73834c'][i],true,t*8+i);icon(842,225,false,1+.08*Math.sin(t*10));label(hindi?'दरवाज़े की गर्मी जाँचें':'Feel doors for heat',50,90,false);if(t>5.4){line([[740,575],[942,575],[1010,498]],'#58e0a3',7);label(hindi?'गरम हो तो दूसरा रास्ता लें':'Hot? Use another exit',50,148)}}
+for(let i=0;i<26;i++){let x=((i*113+t*(13+i%4*6))%1520)-150,y=170+Math.sin(i*3.2)*95;ctx.globalAlpha=(.10+emergency*.2);let r=60+i%4*17;poly(Array.from({length:7},(_,j)=>[x+Math.cos(j/7*TAU)*r,y+Math.sin(j/7*TAU)*r*.5]),i%2?'#677079':'#919693')}ctx.globalAlpha=1}
+function outside(t){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#83b3c7');g.addColorStop(.65,'#e7e0bc');g.addColorStop(1,'#acc49a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);for(let i=0;i<6;i++)tri([i*270-160,460],[i*270+60,285+i%2*50],[i*270+300,460],i%2?'#9cae8e':'#acb99b');rect(0,447,W,273,'#9aaf78');for(let i=0;i<17;i++){let x=i*89;tri([x,465],[x+117,720],[x-115,720],i%2?'#92a66f':'#a0b77d')}box(50,455,340,240,45,'#c8b68c');poly([[35,215],[215,135],[445,190],[390,215]],'#846e5a');text('SCHOOL',220,267,24,'#514b3d','center');rect(182,340,67,115,'#3d6656');for(let x of [86,290]){rect(x,294,59,58,'#91b6bf');line([[x+29,295],[x+29,351]],'#d7dbbd',4)}for(let x of [30,450,1180,1245])tree(x,475,1);poly([[187,456],[254,456],[650,720],[390,720]],'#d9cbaa');if(t<14){let p=cl((t-10.3)/3.5);for(let i=0;i<4;i++)person(lp(219-i*25,650+i*95,p),lp(458,545+i%2*30,p),.65+p*.17,['#477c9a','#a38951','#73834c','#68769a'][i],false,t*11+i);person(lp(230,1030,p),lp(461,535,p),.8,'#a97c4c',false,t*10,true);label(hindi?'खुले स्थान पर जाएँ':'Exit to an open area',550,104);if(t>12){rr(875,176,300,75,12,'#102735df');text(hindi?'अग्निशमन दल को कॉल करें':'Call the Fire Brigade',1025,222,24,'#f4ead2','center');icon(1020,305,true)} }else{rect(830,245,8,220,'#657263');rr(750,216,174,94,8,'#2f785a');text('ASSEMBLY',837,252,19,'#fff5db','center');text('POINT',837,278,22,'#fff5db','center');for(let i=0;i<6;i++)person(540+i%3*100,510+Math.floor(i/3)*75,.8,['#477c9a','#a38951','#73834c'][i%3],false,0);person(935,540,1.05,'#a97c4c',false,0,true);box(966,474,48,65,4,'#bfab7e');text('✓ ✓',975,438,17,'#2b6b49');text('✓ ✓',975,462,17,'#2b6b49');icon(1015,365,true);label(hindi?'तय स्थान पर हाज़िरी दें':'Go to pre-arranged locations',50,85);if(t>16.6){person(1150,570,1.05,'#766c77',false,0);icon(1130,417,false);line([[1065,490],[1065,590]],'#f46169',7);label(hindi?'अजनबियों के साथ न जाएँ':'Do not leave with strangers',50,143,false)}}}
+function frame(t){ctx.setTransform(dpr,0,0,dpr,0,0);if(t<8)room(t);else if(t<10.4){room(7.8);rr(390,150,490,420,14,'#c3bba2');rect(420,215,400,320,'#7f9290');for(let i=0;i<3;i++)line([[420+i*135,215],[420+i*135,535]],'#d3d4bd',6);rect(540,225,122,303,'#d3c5a0');rect(636,345,8,8,'#766c59');person(591,520,.75,'#477c9a',true,t*4);icon(602,317,false);person(859,548,1,'#a97c4c',false,t,true);label(hindi?'अंदर न छिपें':'Do not hide indoors',50,90,false);text('TOILETS',633,193,24,'#46554f','center')}else outside(t);
+let vign=ctx.createRadialGradient(640,320,220,640,360,760);vign.addColorStop(0,'#08121a00');vign.addColorStop(1,'#08121a55');ctx.fillStyle=vign;ctx.fillRect(0,0,W,H);text('SCHOOL FIRE • EVACUATE SAFELY',36,43,19);text(t<8?'01 / EVACUATE':t<14?'02 / GET OUT':'03 / ACCOUNT FOR EVERYONE',1244,43,17,'#f8eed8','right');
+const caps=t<4?['Stay calm. Follow your evacuation plan.','Stay low to avoid smoke.']:t<8?['Check closed doors for heat.','If hot, take another exit.']:t<10.4?['Never hide indoors or in toilets.']:t<14?['Move to an open area. Call the Fire Brigade.']:t<17?['Gather at the assembly point for roll call.']:['Children must never leave alone or with strangers.'];let lines=hindi?[HI[t<8?0:t<14?1:2]]:caps;if(hindi){const words=lines[0].split(' ');lines=[];let s='';for(const w of words){if((s+w).length>62){lines.push(s);s=''}s+=w+' '}if(s)lines.push(s)}let h=lines.length*31+22;rr(40,690-h,1200,h,17,'#0b1527d9');lines.forEach((l,i)=>text(l,640,690-h+34+i*31,24,'#f4ead2','center'));rect(0,714,W*t/D,6,'#59dca6');for(let cut of [8,10.4,14]){let a=cl(1-Math.abs(t-cut)/.19);if(a){ctx.fillStyle=`rgba(235,233,212,${a*.7})`;ctx.fillRect(0,0,W,H)}}}
+let ac,playing=false,t=0,prev=-.01,last=performance.now(),started=false;const pp=document.getElementById('pp'),sk=document.getElementById('sk'),tm=document.getElementById('tm');
+function tone(f,d=.15,v=.035,type='sine',delay=0){if(!ac||muted)return;let o=ac.createOscillator(),g=ac.createGain(),a=ac.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,a);g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(v,a+.015);g.gain.exponentialRampToValueAtTime(.0001,a+d);o.connect(g).connect(ac.destination);o.start(a);o.stop(a+d+.03)}
+function noise(d=.4,v=.03){if(!ac||muted)return;let b=ac.createBuffer(1,ac.sampleRate*d,ac.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=(Math.random()*2-1)*(1-i/a.length);let s=ac.createBufferSource(),g=ac.createGain(),f=ac.createBiquadFilter();s.buffer=b;f.type='lowpass';f.frequency.value=800;g.gain.value=v;s.connect(f).connect(g).connect(ac.destination);s.start()}
+function stopSpeech(){if(window.speechSynthesis)speechSynthesis.cancel()}
+function speak(i,offset=0){if(muted||!window.speechSynthesis)return;stopSpeech();let s=(hindi?HI:EN)[i];if(offset>0){let a=s.split(' ');s=a.slice(Math.floor(a.length*offset)).join(' ')}let u=new SpeechSynthesisUtterance(s);u.lang=hindi?'hi-IN':'en-IN';u.rate=hindi?1.3:1.48;u.volume=.95;let v=speechSynthesis.getVoices().find(v=>v.lang.startsWith(hindi?'hi':'en')&&v.localService);if(v)u.voice=v;speechSynthesis.speak(u)}
+function resumeNarration(){let i=t<8?0:t<14?1:2;speak(i,cl((t-starts[i])/([8,6,6][i])))}
+const events=[[.08,'voice',0],[8,'voice',1],[14,'voice',2],[.3,'alarm'],[1.5,'noise'],[2.3,'alarm'],[4.4,'bad'],[5.9,'ok'],[8.5,'bad'],[10.4,'noise'],[11,'step'],[11.5,'step'],[12,'step'],[14.8,'ok'],[17,'bad'],[19,'ok']];
+function fire(e){if(e[1]==='voice')speak(e[2]);if(e[1]==='alarm'){tone(730,.3,.022,'triangle');tone(910,.3,.022,'triangle',.35)}if(e[1]==='bad'){tone(150,.18,.05,'sawtooth');tone(125,.2,.04,'sawtooth',.22)}if(e[1]==='ok'){tone(660,.22);tone(990,.3,.035,'sine',.12)}if(e[1]==='noise')noise();if(e[1]==='step')tone(100,.08,.025,'triangle')}
+async function play(){if(!ac){let A=window.AudioContext||window.webkitAudioContext;if(A)ac=new A()}if(ac)await ac.resume();if(t>=D){t=0;prev=-.01}playing=true;last=performance.now();pp.textContent='Pause';if(t>.1)resumeNarration()}
+document.getElementById('start-btn').onclick=()=>{started=true;document.getElementById('start-overlay').style.display='none';pp.disabled=sk.disabled=false;play()};
+pp.onclick=()=>{if(playing){playing=false;stopSpeech();if(ac)ac.suspend();pp.textContent='Play'}else play()};sk.oninput=()=>{playing=false;t=+sk.value;prev=t;stopSpeech();if(ac)ac.suspend();pp.textContent=t>=D?'Replay':'Play';frame(t)};
+document.getElementById('lang').onclick=()=>{hindi=!hindi;document.getElementById('lang').textContent='Hindi Subtitles: '+(hindi?'On':'Off');frame(t)};document.getElementById('mute').onclick=()=>{muted=!muted;document.getElementById('mute').textContent='Audio: '+(muted?'Off':'On');if(muted){stopSpeech();if(ac)ac.suspend()}else if(playing){if(ac)ac.resume();resumeNarration()}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing){playing=false;stopSpeech();if(ac)ac.suspend();pp.textContent='Play'}});
+function loop(n){let dt=Math.min((n-last)/1000,.1);last=n;if(playing){t=Math.min(D,t+dt);for(const e of events)if(prev<e[0]&&e[0]<=t)fire(e);prev=t;if(t>=D){playing=false;stopSpeech();pp.textContent='Replay';if(ac)ac.suspend()}}sk.value=t;tm.textContent=t.toFixed(1)+' / 20.0s';frame(t);requestAnimationFrame(loop)}requestAnimationFrame(loop);
+window.renderFrame=frame;
+</script></body></html>

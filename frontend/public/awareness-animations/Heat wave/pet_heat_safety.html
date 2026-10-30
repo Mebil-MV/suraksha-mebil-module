@@ -1,0 +1,280 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>Pet Heat Safety</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+       </style>
+</head>
+
+<body>
+       <canvas id="c" width="1280" height="720"></canvas>
+       <div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div>
+       <div class="bar">
+              <button id="pp" disabled>Play</button>
+              <!-- Extended slider max to 16.5 seconds -->
+              <input id="sk" type="range" min="0" max="20" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Language: English</button>
+       </div>
+       <p id="note" style="font-size:13px">Voice uses your browser’s installed English / Hindi voices.</p><script>const W = 1280, H = 720, D = 20, TAU = Math.PI * 2, cv = document.getElementById('c'), ctx = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
+              cv.width = W * dpr; cv.height = H * dpr;
+              const cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lp = (a, b, k) => a + (b - a) * k, sm = k => k * k * (3 - 2 * k), mod = (a, n) => ((a % n) + n) % n;
+              function hs(n) { n |= 0; n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296 }
+              const hx = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mx = (a, b, k) => a.map((v, i) => lp(v, b[i], k)), rg = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+              const sh = (c, f, k) => rg(mx(hx(c), [22, 32, 44], k * .45).map(v => Math.min(255, v * f)));
+              const tri = (a, b, c, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.fill() };
+              const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h) };
+              const fan = (P, c, col, f, k) => { for (let i = 0; i < P.length; i++)tri(c, P[i], P[(i + 1) % P.length], sh(col, f + (hs(i * 7 + P[0][0]) - .5) * .4, k)) };
+              const gy = x => 550 + 14 * Math.sin(x * .007) + 50 * Math.exp(-(((x - 1400) / 85) ** 2));
+
+              
+let showHindi=false;
+const VE=['Heavy panting and excessive drooling warn that your dog is overheating.','Never leave pets in a locked vehicle.','Walk your dog at dawn or dusk, away from hot pavement.','Always provide shade and plenty of fresh drinking water.','Keep your companions safe. Stay alert. Stay safe.'];
+const VH=['तेज़ हाँफना और अधिक लार टपकना गर्मी के खतरे के संकेत हैं।','पालतू जानवरों को बंद गाड़ी में कभी न छोड़ें।','कुत्ते को सुबह या शाम टहलाएँ। गर्म सड़क से बचाएँ।','हमेशा छाया और भरपूर साफ पीने का पानी दें।','अपने साथी को सुरक्षित रखें। सतर्क रहें। सुरक्षित रहें।'];
+const CT=[[.3,4],[4.1,8],[8.2,12.2],[12.3,16],[16.4,19.8]];
+function poly(p,c){ctx.fillStyle=c;ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function text(s,x,y,size=28,c='#f4ead2'){ctx.font=`700 ${size}px system-ui,sans-serif`;ctx.fillStyle=c;ctx.textAlign='center';ctx.fillText(s,x,y)}
+function block(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);poly([[x+w,y],[x+w+20,y-16],[x+w+20,y+h-16],[x+w,y+h]],sh(c,.65,0));poly([[x,y],[x+20,y-16],[x+w+20,y-16],[x+w,y]],sh(c,1.2,0))}
+function limb(a,b,w,c){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke()}
+function person(x,y,t,sick=false,manager=false,seated=false){ctx.save();ctx.translate(x,y);ctx.rotate(sick?Math.sin(t*3)*.035:0);const shirt=manager?'#4697b1':'#f59a36';ctx.fillStyle='rgba(25,30,35,.18)';ctx.beginPath();ctx.ellipse(0,4,65,16,0,0,TAU);ctx.fill();
+if(seated){limb([-18,-90],[20,-63],25,'#324c67');limb([20,-63],[38,-8],23,'#263f59');limb([12,-90],[60,-62],23,'#3b5874');limb([60,-62],[73,-8],22,'#30475f');limb([32,-4],[55,-4],15,'#25303b');limb([68,-4],[91,-4],15,'#25303b')}
+else{limb([-19,-92],[-24,-10],25,'#324c67');limb([20,-92],[27,-10],25,'#263f59');limb([-26,-4],[-7,-4],16,'#25303b');limb([25,-4],[46,-4],16,'#25303b')}
+poly([[-35,-178],[30,-178],[39,-90],[-35,-90]],shirt);poly([[12,-178],[30,-178],[39,-90],[12,-90]],sh(shirt,.8,0));ctx.fillStyle='#e9ef9d';ctx.fillRect(-26,-172,9,77);ctx.fillRect(17,-172,9,77);ctx.fillRect(-30,-116,65,8);
+limb([0,-177],[0,-196],18,'#c58a61');poly([[-26,-238],[14,-243],[29,-224],[22,-194],[-18,-190],[-29,-211]],'#dca275');poly([[4,-241],[29,-224],[22,-194],[4,-198]],'#bd8058');ctx.fillStyle='#343342';ctx.fillRect(-17,-216,5,5);ctx.fillRect(11,-216,5,5);
+poly([[-35,-235],[-25,-257],[12,-264],[32,-244],[37,-231],[-35,-231]],manager?'#f3eee0':'#f8cc49');block(-39,-235,79,7,manager?'#e6e4da':'#dca72e');
+limb([-31,-167],[-49,-126],20,shirt);limb([-49,-126],sick?[-38,-204]:[-47,-87],16,'#dca275');limb([31,-167],[52,-130],20,shirt);limb([52,-130],seated?[50,-108]:[68,-97],16,'#dca275');
+if(sick){for(let i=0;i<5;i++){const q=(t*.9+i*.2)%1;poly([[34+i%2*9,-218+q*80],[29+i%2*9,-205+q*80],[39+i%2*9,-205+q*80]],'#b2edff')}ctx.strokeStyle='#ffcf5d';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,-277,47,12,t,0,TAU);ctx.stroke()}
+ctx.restore()}
+function badge(x,y,good,t){ctx.save();ctx.translate(x,y);ctx.shadowColor=good?'#52ff9a':'#ff493e';ctx.shadowBlur=25;ctx.strokeStyle=good?'#40eb8a':'#ff4a46';ctx.lineWidth=14;ctx.lineCap='round';ctx.scale(1+.04*Math.sin(t*7),1+.04*Math.sin(t*7));ctx.beginPath();if(good){ctx.moveTo(-30,0);ctx.lineTo(-5,25);ctx.lineTo(39,-30)}else{ctx.moveTo(-27,-27);ctx.lineTo(27,27);ctx.moveTo(27,-27);ctx.lineTo(-27,27)}ctx.stroke();ctx.restore()}
+
+function dog(x,y,t,hot=false,walking=false,drink=false){ctx.save();ctx.translate(x,y);const step=walking?Math.sin(t*9)*12:0;ctx.fillStyle='rgba(15,35,36,.18)';ctx.beginPath();ctx.ellipse(0,8,100,17,0,0,TAU);ctx.fill();
+// Four legs stay anchored to the same body transform.
+limb([-54,-63],[-57+step,-4],17,'#815235');limb([45,-63],[48-step,-4],17,'#815235');poly([[-75,-101],[36,-111],[69,-78],[44,-43],[-61,-47]],'#ba8955');poly([[-75,-101],[36,-111],[16,-77],[-61,-47]],'#d2a673');limb([-43,-54],[-39-step,-3],19,'#c29966');limb([26,-55],[31+step,-3],19,'#c29966');
+limb([-70,-88],[-105,-126+Math.sin(t*8)*(hot?2:12)],13,'#bb8a55');
+ctx.save();ctx.translate(49,-101);ctx.rotate(drink?.6:hot?Math.sin(t*5)*.025:0);poly([[-12,-34],[22,-42],[53,-21],[63,5],[33,20],[-11,8]],'#c79a63');poly([[36,-10],[75,-7],[78,12],[41,20]],'#dbc199');poly([[-10,-31],[9,-32],[13,13],[-4,24],[-21,-2]],'#77513a');ctx.fillStyle='#22313b';ctx.beginPath();ctx.arc(33,-14,5,0,TAU);ctx.fill();poly([[69,-10],[80,-9],[80,2],[69,3]],'#25303b');if(hot){ctx.fillStyle='#df7b85';rr(50,18,12,19+Math.sin(t*12)*3,5);ctx.fill();for(let i=0;i<3;i++){let q=(t*1.5+i*.33)%1;ctx.fillStyle='rgba(187,235,249,.9)';ctx.beginPath();ctx.ellipse(66+i*8,20+q*55,2,5,0,0,TAU);ctx.fill()}}ctx.restore();limb([38,-103],[60,-79],7,'#49a5b4');ctx.restore()}
+function car(x,y){ctx.save();ctx.translate(x,y);poly([[0,-85],[47,-167],[203,-167],[280,-94],[322,-80],[322,-10],[-13,-10],[-13,-65]],'#c6473d');poly([[55,-151],[117,-151],[117,-92],[24,-92]],'#a7ccda');poly([[129,-151],[198,-151],[253,-92],[129,-92]],'#7299ac');poly([[0,-85],[280,-94],[322,-80],[24,-69]],'#e56c52');ctx.fillStyle='#f6c079';ctx.fillRect(292,-64,28,15);ctx.fillStyle='#732e32';ctx.fillRect(140,-68,22,6);for(let x of [52,260]){ctx.fillStyle='#273444';ctx.beginPath();ctx.arc(x,-12,31,0,TAU);ctx.fill();ctx.fillStyle='#9caeba';ctx.beginPath();ctx.arc(x,-12,15,0,TAU);ctx.fill()}ctx.strokeStyle='#f6dfb1';ctx.lineWidth=5;ctx.beginPath();ctx.arc(164,-117,12,Math.PI,TAU);ctx.stroke();ctx.fillStyle='#f6dfb1';ctx.fillRect(149,-117,30,23);ctx.restore()}
+function girl(x,y,t,walk){ctx.save();ctx.translate(x,y);let step=walk?Math.sin(t*8)*12:0;limb([-11,-85],[-13+step,-5],18,'#465d85');limb([13,-85],[17-step,-5],18,'#344b6d');poly([[-27,-157],[24,-157],[31,-81],[-29,-81]],'#68adb7');limb([0,-155],[0,-177],14,'#d8a17b');poly([[-24,-206],[17,-211],[29,-193],[20,-168],[-17,-168],[-29,-185]],'#e4af87');poly([[-29,-185],[-28,-211],[5,-223],[28,-205],[29,-188],[10,-207],[-13,-198]],'#503e3a');poly([[-24,-200],[-39,-170],[-26,-153],[-13,-183]],'#59413b');limb([-24,-147],[-37,-108],15,'#68adb7');limb([-37,-108],[-31,-88],12,'#e4af87');limb([23,-146],[44,-118],15,'#68adb7');limb([44,-118],[64,-105],12,'#e4af87');ctx.restore()}
+function frame(t){ctx.setTransform(dpr,0,0,dpr,0,0);let k=sm(cl((t-7.7)/1.4));let g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,rg(mx(hx('#ce713e'),hx('#263b65'),k)));g.addColorStop(1,rg(mx(hx('#f8ce84'),hx('#9caec1'),k)));ctx.fillStyle=g;ctx.fillRect(0,0,1280,720);
+if(t<16){ctx.save();ctx.globalAlpha=1-k;ctx.fillStyle='#ffdf86';ctx.beginPath();ctx.arc(1060,143,66,0,TAU);ctx.fill();for(let i=0;i<12;i++){const a=i*TAU/12+t*.07;limb([1060+Math.cos(a)*82,143+Math.sin(a)*82],[1060+Math.cos(a)*110,143+Math.sin(a)*110],5,'#ffcb70')}ctx.restore();ctx.save();ctx.globalAlpha=k;ctx.fillStyle='#e6e9ce';ctx.beginPath();ctx.arc(1080,120,45,0,TAU);ctx.fill();ctx.fillStyle='#2c406a';ctx.beginPath();ctx.arc(1098,107,43,0,TAU);ctx.fill();for(let i=0;i<28;i++){ctx.fillStyle='#d7e3df';ctx.fillRect(45+hs(i)*1180,95+hs(i+43)*200,2,2)}ctx.restore();
+poly([[0,445],[1280,415],[1280,720],[0,720]],rg(mx(hx('#bda58e'),hx('#57876c'),k)));for(let i=0;i<22;i++)tri([i*75,480],[i*75+70,710],[i*75+160,470],rg(mx(hx(i%2?'#c5ad94':'#ad9784'),hx(i%2?'#608e71':'#4b795e'),k)));
+if(t<8){car(190,520);dog(770,555,t,true);badge(380,255,false,t);ctx.strokeStyle='rgba(255,228,185,.25)';ctx.lineWidth=3;for(let i=0;i<7;i++){ctx.beginPath();for(let j=0;j<16;j++){let x=620+i*73+Math.sin(j*.8+t*3)*8,y=280+j*17;j?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}text(showHindi?'पालतू जानवर को बंद गाड़ी में कभी न छोड़ें':'Never leave pets in a locked vehicle',640,615,32);text(showHindi?'ज़्यादा हाँफना • अधिक लार':'Heavy panting • Excessive drooling',760,309,25)}
+else{const q=sm(cl((t-8)/3));for(const x of [110,1040,1180]){block(x,330,18,220,'#715c4d');for(let j=0;j<3;j++)fan([[x-115,380-j*50],[x,225-j*35],[x+130,380-j*50]],[x,325-j*35],'#3d7660',.85+j*.1,0)}
+// Open shade canopy and dog house.
+poly([[825,310],[1000,215],[1170,310]],'#61968b');limb([840,313],[840,568],8,'#b2c5b0');limb([1150,313],[1150,568],8,'#b2c5b0');block(920,419,152,132,'#b0916a');poly([[900,422],[996,344],[1091,422]],'#637d85');ctx.fillStyle='#334b50';rr(965,464,64,88,31);ctx.fill();text('SHADE',1000,449,16,'#ede4c8');
+let dx=lp(615,817,q),gx=dx-143;girl(gx,560,t,t<11);dog(dx,565,t,false,t<11,t>12);ctx.strokeStyle='#e8d4a4';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(gx+64,455);ctx.quadraticCurveTo(dx-20,435,dx+42,466);ctx.stroke();ctx.fillStyle='#c5e0df';ctx.beginPath();ctx.ellipse(919,564,52,16,0,0,TAU);ctx.fill();poly([[867,562],[877,588],[961,588],[971,562]],'#7caebd');ctx.fillStyle='#8de0ef';ctx.beginPath();ctx.ellipse(919,563,44,10,0,0,TAU);ctx.fill();if(t>12){ctx.strokeStyle='#e7f7f4';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(919,563,12+(t*18)%24,5,0,0,TAU);ctx.stroke()}badge(1100,155,true,t);text(showHindi?'सुबह या शाम टहलाएँ':'Walk at dawn or dusk',640,610,32);text(showHindi?'हमेशा छाया और साफ पानी दें':'Always provide shade & fresh water',640,112,27)}
+text(showHindi?'पालतू जानवरों को गर्मी से बचाएँ':'PET HEAT SAFETY',640,57,34);
+}else{let bg=ctx.createLinearGradient(0,0,0,720);bg.addColorStop(0,'#b9deee');bg.addColorStop(1,'#eff5e4');ctx.fillStyle=bg;ctx.fillRect(0,0,1280,720);ctx.save();ctx.translate(640,252);let z=sm(cl((t-16)/.65));ctx.scale(z,z);fan([[0,-115],[98,-75],[90,25],[54,91],[0,126],[-54,91],[-90,25],[-98,-75]],[0,0],'#2f9e5a',1,0);badge(0,0,true,t);ctx.restore();text(showHindi?'सतर्क रहें। सुरक्षित रहें।':'Stay Alert. Stay Safe.',640,465,44,'#183d51')}
+let i=CT.findIndex(([a,b])=>t>=a&&t<b);if(i>=0){let lines=[''];ctx.font='600 24px system-ui';for(let w of(showHindi?VH:VE)[i].split(' ')){let n=lines.length-1;if(ctx.measureText(lines[n]+w).width>1120)lines.push(w+' ');else lines[n]+=w+' '}ctx.fillStyle='rgba(8,20,32,.85)';rr(40,714-lines.length*32-20,1200,lines.length*32+15,16);ctx.fill();lines.forEach((l,j)=>text(l,640,704-(lines.length-1-j)*32,24))}ctx.fillStyle=t<8?'#f29c63':'#63c9bd';ctx.fillRect(0,715,1280*cl(t/20),5)}
+let ac, rumG, rainG, voices = [];
+              if (window.speechSynthesis) {
+                     const loadVoices = () => voices = speechSynthesis.getVoices();
+                     speechSynthesis.onvoiceschanged = loadVoices;
+                     loadVoices();
+              }
+
+              function initAudio() {
+                     try {
+                            ac = new (window.AudioContext || window.webkitAudioContext)(); const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = Math.random() * 2 - 1;
+                            const ns = (type, f) => { const s = ac.createBufferSource(); s.buffer = nb; s.loop = true; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; const g = ac.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); g.connect(ac.destination); s.start(); return g };
+                            rumG = ns('lowpass', 110); rainG = ns('highpass', 3500)
+                     } catch (e) { ac = null }
+              }
+
+              function tone(f, d, v, type, delay = 0) { if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), n = ac.currentTime + delay; o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, n); g.gain.exponentialRampToValueAtTime(.0001, n + d); o.connect(g); g.connect(ac.destination); o.start(n); o.stop(n + d + .05) }
+
+              function speak(i) {
+                     if (!window.speechSynthesis) return;
+
+                     speechSynthesis.cancel();
+
+                     setTimeout(() => {
+                            const u = new SpeechSynthesisUtterance((showHindi ? VH : VE)[i]);
+                            u.lang = showHindi ? 'hi-IN' : 'en-US';
+                            u.rate = 1.0;
+                            u.pitch = 1.0;
+
+                            const targetLang = showHindi ? 'hi' : 'en';
+
+                            let bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang) && v.localService && (v.name.includes('Google') || v.name.includes('Neural')));
+                            if (!bestVoice) bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang) && v.localService);
+                            if (!bestVoice) bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang));
+
+                            if (bestVoice) u.voice = bestVoice;
+                            speechSynthesis.speak(u);
+                     }, 40);
+              }
+
+              const EV = [[.3,'v',0],[4.1,'v',1],[8.2,'v',2],[12.3,'v',3],[16.4,'v',4],[1,'b'],[8.1,'c'],[16.1,'c']];
+              function fire(e) { if (e[1] === 'v') speak(e[2]); else if (e[1] === 'b') { tone(1500, .09, .08, 'square'); tone(1500, .09, .08, 'square', .14) } else { tone(880, 1.2, .18, 'sine'); tone(1320, 1.4, .12, 'sine', .12) } }
+              function audioTick(t) { if (!ac || !rumG) return; const rv = playing && t < 8 ? .025*(.5+.5*Math.sin(t*9)) : 0, rn = playing && t >= 12 && t < 16 ? .025 : 0; rumG.gain.setTargetAtTime(rv, ac.currentTime, .1); rainG.gain.setTargetAtTime(rn, ac.currentTime, .1) }
+
+              let t = 0, pt = 0, playing = false, last = performance.now();
+              const pp = document.getElementById('pp'), sk = document.getElementById('sk'), tm = document.getElementById('tm'), btnL = document.getElementById('lang'), overlay = document.getElementById('start-overlay');
+              const stopSpeech = () => { if (window.speechSynthesis) speechSynthesis.cancel() };
+
+              document.getElementById('start-btn').onclick = () => {
+                     overlay.style.display = 'none';
+                     initAudio();
+
+                     if (window.speechSynthesis) {
+                            let dummy = new SpeechSynthesisUtterance('');
+                            dummy.volume = 0;
+                            speechSynthesis.speak(dummy);
+                     }
+
+                     playing = true;
+                     last = performance.now();
+                     pp.disabled = sk.disabled = false;
+                     pp.textContent = 'Pause';
+              };
+
+              function loop(n) {
+                     const dt = Math.min((n - last) / 1000, .1); last = n;
+                     if (playing) { t += dt; if (t >= D) { t = D; playing = false; pp.textContent = 'Replay'; } sk.value = t; for (const e of EV) if (pt < e[0] && e[0] <= t) fire(e) }
+                     pt = t; audioTick(t); frame(t); tm.textContent = t.toFixed(1) + 's'; requestAnimationFrame(loop)
+              }
+
+              pp.onclick = () => {
+                     if(t>=D){t=0;pt=-.01} playing = !playing;
+                     pp.textContent = playing ? 'Pause' : 'Play';
+                     last = performance.now();
+                     if (playing) {
+                            if (ac) ac.resume();
+                     } else {
+                            stopSpeech();
+                            if (ac) ac.suspend();
+                     }
+              };
+
+              sk.oninput = () => {
+                     playing = false;
+                     pp.textContent = 'Play';
+                     t = +sk.value;
+                     pt = t;
+                     stopSpeech();
+                     if (ac) ac.suspend();
+              };
+
+              btnL.onclick = () => {
+                     showHindi = !showHindi;
+                     btnL.textContent = showHindi ? 'Language: हिन्दी' : 'Language: English'; if(showHindi && !voices.some(v=>v.lang.startsWith('hi'))) document.getElementById('note').textContent='Hindi voice unavailable on this device. Hindi captions remain available.'; else document.getElementById('note').textContent='Voice uses your browser’s installed English / Hindi voices.';
+                     stopSpeech();
+              };
+
+              requestAnimationFrame(loop);
+       </script>
+</body>
+
+</html>

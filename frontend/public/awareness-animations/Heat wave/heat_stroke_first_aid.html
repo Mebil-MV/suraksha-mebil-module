@@ -1,0 +1,168 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Heat Stroke First Aid</title><style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+        .note{max-width:1280px;font-size:13px;opacity:.8}select{padding:7px;border-radius:8px}</style><body><canvas id="c" width="1280" height="720" aria-label="Heat stroke first aid animation"></canvas><div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div><div class="bar"><button id="pp">Play</button><button id="replay">↻ Replay</button><input id="sk" aria-label="Timeline" type="range" min="0" max="20" step=".01" value="0"><span id="tm">0.0 / 20s</span><select id="language" aria-label="Narration language"><option value="en">English voice & subtitles</option><option value="hi">हिन्दी आवाज़ और उपशीर्षक</option></select><button id="mute">Sound: On</button></div><p class="note" id="status">Narration uses your browser’s available voices. Press Play to enable sound.</p><script>const W = 1280, H = 720, D = 20, TAU = Math.PI * 2, cv = document.getElementById('c'), ctx = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
+              cv.width = W * dpr; cv.height = H * dpr;
+              const cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lp = (a, b, k) => a + (b - a) * k, sm = k => k * k * (3 - 2 * k), mod = (a, n) => ((a % n) + n) % n;
+              function hs(n) { n |= 0; n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296 }
+              const hx = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mx = (a, b, k) => a.map((v, i) => lp(v, b[i], k)), rg = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+              const sh = (c, f, k) => rg(mx(hx(c), [22, 32, 44], k * .45).map(v => Math.min(255, v * f)));
+              const tri = (a, b, c, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.fill() };
+              const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h) };
+              const fan = (P, c, col, f, k) => { for (let i = 0; i < P.length; i++)tri(c, P[i], P[(i + 1) % P.length], sh(col, f + (hs(i * 7 + P[0][0]) - .5) * .4, k)) };
+
+const en=["Heat stroke is an emergency. Watch for headache, rapid pulse, hot skin, or confusion. Sweating may still occur.","Call an ambulance now. Move to shade. Wet the skin and fan. Apply wrapped ice packs to neck, armpits and back.","Keep cooling until help arrives. Stay safe in the heat."];
+const hi=["हीट स्ट्रोक आपात स्थिति है। सिरदर्द, तेज़ नाड़ी, गर्म त्वचा या भ्रम पहचानें। पसीना भी आ सकता है।","तुरंत एम्बुलेंस बुलाएँ। छाया में ले जाएँ। त्वचा गीली करें और हवा दें। गर्दन, बगल और पीठ पर कपड़े में लिपटी बर्फ रखें।","मदद आने तक ठंडा करते रहें। गर्मी में सुरक्षित रहें।"];
+let lang='en',t=0,playing=false,last=0,muted=false,ac,voices=[],spoken=-1,beat=-1;
+const $=id=>document.getElementById(id);
+function poly(p,c){ctx.fillStyle=c;ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function line(p,c,w=8){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()}
+function txt(s,x,y,size=28,c='#fff',align='center'){ctx.font=`700 ${size}px system-ui,sans-serif`;ctx.fillStyle=c;ctx.textAlign=align;ctx.fillText(s,x,y)}
+function box(x,y,w,h,c){ctx.fillStyle=c;rr(x,y,w,h,12);ctx.fill()}
+function icon(x,y,ok,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.shadowColor=ok?'#49ffae':'#ff4859';ctx.shadowBlur=24;ctx.fillStyle=ok?'#168c64':'#b82e43';ctx.beginPath();ctx.arc(0,0,42,0,TAU);ctx.fill();ctx.shadowBlur=0;if(ok)line([[-21,0],[-5,17],[24,-20]],'#fff',10);else{line([[-16,-16],[16,16]],'#fff',10);line([[16,-16],[-16,16]],'#fff',10)}ctx.restore()}
+function person(x,y,s,patient=false,seated=false,phase=0,helping=false){ctx.save();ctx.translate(x,y);ctx.scale(s,s);let sway=patient&&!seated?Math.sin(phase*5)*3:0;ctx.translate(sway,0);const skin=patient&&!seated?'#d9795f':'#cd9b78';ctx.fillStyle='rgba(14,30,38,.18)';ctx.beginPath();ctx.ellipse(0,4,55,12,0,0,TAU);ctx.fill();
+if(seated){line([[-17,-100],[-55,-74],[-46,-9]],'#273f55',24);line([[17,-100],[53,-73],[62,-9]],'#34536b',24)}else{line([[-17,-100],[-23,-9]],'#273f55',24);line([[17,-100],[28,-9]],'#34536b',24)}
+line([[-23,-7],[-43,-7]],'#182c3a',13);line([[seated?62:28,-7],[seated?80:47,-7]],'#182c3a',13);
+fan([[-34,-190],[28,-190],[36,-102],[-32,-102]],[0,-148],patient?'#e6b556':'#398a9c',1,0);
+ctx.fillStyle=skin;ctx.fillRect(-10,-211,20,29);fan([[-28,-245],[-15,-268],[17,-267],[33,-245],[26,-214],[0,-204],[-26,-217]],[0,-237],skin,1,0);poly([[-29,-246],[-22,-267],[10,-277],[30,-263],[34,-244],[9,-252]],'#3c3030');line([[-11,-237],[-5,-237]],'#3b2c2a',3);line([[12,-237],[18,-237]],'#3b2c2a',3);
+if(patient&&!seated){line([[-30,-182],[-58,-169],[-33,-237]],skin,16);line([[32,-181],[48,-133],[33,-115]],skin,16)}else{if(helping){const q=Math.sin(phase*5);line([[-31,-182],[-77,-190],[-132+q*8,-188]],skin,16)}else{line([[-31,-182],[-43,-139],[-24,-116]],skin,16)}line([[31,-182],[47,-144],[seated?18:70,-125]],skin,16)}ctx.restore()}
+function pack(x,y,rot=0){ctx.save();ctx.translate(x,y);ctx.rotate(rot);box(-23,-13,46,26,'#e7f4f4');box(-19,-10,38,20,'#56c8e8');line([[-10,-3],[8,3]],'#c4f8ff',3);ctx.restore()}
+function tree(x,y,s){ctx.fillStyle='#71503b';ctx.fillRect(x-8*s,y-140*s,16*s,140*s);fan([[x-125*s,y-112*s],[x-105*s,y-215*s],[x,y-265*s],[x+108*s,y-213*s],[x+140*s,y-115*s]],[x,y-177*s],'#418663',1,0)}
+function label(s,x,y,w){box(x,y,w,45,'rgba(16,30,42,.84)');txt(s,x+w/2,y+30,22)}
+function wrap(s,max){let lines=[],cur='';for(const word of s.split(' ')){let v=cur?cur+' '+word:word;if(ctx.measureText(v).width>max&&cur){lines.push(cur);cur=word}else cur=v}if(cur)lines.push(cur);return lines}
+
+function ambulance(x,y,t){ctx.save();ctx.translate(x,y);ctx.scale(.93,.93);
+ctx.fillStyle='rgba(24,42,47,.2)';ctx.beginPath();ctx.ellipse(160,9,175,16,0,0,TAU);ctx.fill();
+poly([[0,-115],[222,-115],[247,-91],[302,-88],[337,-36],[337,0],[0,0]],'#f3f1e8');poly([[222,-115],[237,-126],[260,-100],[247,-91]],'#c6dce1');poly([[0,-115],[17,-128],[237,-128],[222,-115]],'#ffffff');poly([[0,-115],[17,-128],[17,-10],[0,0]],'#c6d4d8');
+poly([[248,-83],[293,-80],[317,-40],[248,-40]],'#548f9f');poly([[257,-78],[290,-76],[309,-45],[257,-45]],'#a4d1d9');ctx.fillStyle='#e7564f';ctx.fillRect(18,-35,220,14);ctx.fillRect(256,-31,70,10);
+box(48,-104,104,56,'#e2edf0');ctx.fillStyle='#d94246';ctx.fillRect(87,-96,22,42);ctx.fillRect(77,-86,42,22);line([[231,-88],[231,-7]],'#8fa4aa',2);line([[263,-30],[275,-30]],'#657f89',3);
+for(const wx of [68,272]){ctx.fillStyle='#243744';ctx.beginPath();ctx.arc(wx,0,29,0,TAU);ctx.fill();ctx.fillStyle='#9bafb7';ctx.beginPath();ctx.arc(wx,0,15,0,TAU);ctx.fill();ctx.fillStyle='#dae4e4';ctx.beginPath();ctx.arc(wx,0,7,0,TAU);ctx.fill()}
+box(177,-141,61,15,'#263c4b');ctx.fillStyle=Math.sin(t*12)>0?'#ff5359':'#4fc5ff';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=22;ctx.fillRect(181,-139,24,12);ctx.fillStyle=Math.sin(t*12)>0?'#4fc5ff':'#ff5359';ctx.fillRect(210,-139,24,12);ctx.shadowBlur=0;box(322,-32,14,13,'#ffe4a2');txt('AMBULANCE',120,-47,14,'#275b6c');ctx.restore()}
+
+function frame(t){ctx.setTransform(dpr,0,0,dpr,0,0);let safe=sm(cl((t-7.7)/1));let g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,rg(mx(hx('#ec965e'),hx('#86c7e0'),safe)));g.addColorStop(1,rg(mx(hx('#f9dc9c'),hx('#e3f2dc'),safe)));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+if(t<16){ctx.save();ctx.translate(-sm(cl((t-7.7)/1.4))*180,0);for(let i=0;i<9;i++){let x=i*175-120;let h=130+hs(i)*140;fan([[x,420],[x,420-h],[x+105,400-h],[x+145,420-h+20],[x+145,420]],[x+70,370],'#af8b76',1,0);for(let j=0;j<3;j++)ctx.fillRect(x+20+j*29,440-h,13,28)}
+ctx.fillStyle='#9d8b79';ctx.fillRect(0,420,1650,150);poly([[0,550],[1650,550],[1650,615],[0,640]],'#6d5441');for(let i=0;i<18;i++)tri([i*100,570],[i*100+110,615],[i*100,630],sh('#806248',.8+hs(i)*.3,0));
+ctx.fillStyle='#f9e69c';ctx.beginPath();ctx.arc(1080,130,55,0,TAU);ctx.fill();for(let i=0;i<12;i++){let a=i*TAU/12;line([[1080+Math.cos(a)*74,130+Math.sin(a)*74],[1080+Math.cos(a)*94,130+Math.sin(a)*94]],'#ffeaa2',5)}
+ctx.globalAlpha=1-safe;for(let i=0;i<10;i++){line(Array.from({length:20},(_,j)=>[110+i*108+Math.sin(j*.6+t*3+i)*8,260+j*14]),'rgba(255,236,170,.3)',3)}ctx.globalAlpha=1;
+ctx.save();ctx.globalAlpha=safe;poly([[780,430],[1580,430],[1600,570],[660,570]],'#6b9f71');tree(1150,500,1.2);tree(1480,460,.8);poly([[700,450],[1150,450],[1210,570],[620,570]],'rgba(27,75,75,.2)');ctx.restore();
+if(t>=11){const arrival=sm(cl((t-11)/3.7));ambulance(lp(-380,365,arrival),553,t);if(t>14.7){label(lang==='hi'?'एम्बुलेंस आ गई':'AMBULANCE ARRIVES',360,238,330)}}
+const move=sm(cl((t-8)/2));let px=lp(545,1000,move);let py=lp(556,560,move);let seated=t>=10;ctx.save();ctx.translate(px,py);if(seated){line([[-65,-98],[80,-98]],'#76583f',16);line([[-53,-90],[-53,0]],'#624c39',9);line([[67,-90],[67,0]],'#624c39',9)}person(0,0,1.05,true,seated,t);ctx.restore();
+if(t<8){icon(730,264,false,1+.06*Math.sin(t*7));label(lang==='hi'?'सिरदर्द • तेज़ नाड़ी':'Headache • rapid pulse',120,282,330);label(lang==='hi'?'गर्म त्वचा • भ्रम':'Hot skin • confusion',120,338,330);label(lang==='hi'?'पसीना भी आ सकता है':'Sweating may still occur',120,394,330);let pulse=1+.1*Math.sin(t*12);txt('♥',755,430,58*pulse,'#db3a45')}
+if(t>=8){person(1190,560,1.05,false,false,t,t>10);ctx.save();ctx.globalAlpha=cl((t-10)/1);pack(1001,345);pack(968,375,-.3);pack(1033,375,.3);pack(1039,421,1.57);ctx.restore();if(t>10){let q=Math.sin(t*5);box(1035+q*8,354,30,18,'#d9f5ef');for(let i=0;i<5;i++)line([[840,380+i*28],[890+Math.sin(t*3+i)*15,372+i*28],[930,380+i*28]],'rgba(207,250,255,.65)',3)}icon(1110,237,true,cl((t-9)/.6));label(lang==='hi'?'गीला कपड़ा + हवा':'Wet skin + fan continuously',500,315,350);label(lang==='hi'?'कपड़े में लिपटे आइस पैक':'Wrapped ice: neck, armpits, back',490,370,360);label(lang==='hi'?'अभी एम्बुलेंस बुलाएँ':'CALL AN AMBULANCE NOW',480,425,370)}ctx.restore();
+box(36,28,1208,83,'rgba(19,33,42,.87)');txt(lang==='hi'?'हीट स्ट्रोक: तुरंत प्राथमिक सहायता':'HEAT STROKE • FIRST AID',65,64,29,'#f4ead2','left');txt(t<8?(lang==='hi'?'01 / खतरे पहचानें':'01 / RECOGNIZE THE EMERGENCY'):(lang==='hi'?'02 / ठंडा करें • मदद बुलाएँ':'02 / COOL QUICKLY • CALL FOR HELP'),65,94,17,t<8?'#ffc28c':'#8df0d2','left');
+}else{let bg=ctx.createLinearGradient(0,0,1280,720);bg.addColorStop(0,'#b9dfeb');bg.addColorStop(1,'#e7f1e9');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(640,240);let s=.85+.15*sm(cl((t-16)/.5));ctx.scale(s,s);fan([[0,-125],[98,-82],[88,32],[55,93],[0,128],[-55,93],[-88,32],[-98,-82]],[0,0],'#29946b',1,0);line([[-43,-5],[-12,29],[47,-40]],'#fff',19);ctx.restore();txt('Stay Alert. Stay Safe.',640,465,46,'#153e51')}
+if(t<16){const i=t<8?0:1;ctx.font='600 24px system-ui';const ls=wrap((lang==='hi'?hi:en)[i],1130);box(45,710-ls.length*31-18,1190,ls.length*31+10,'rgba(8,24,35,.88)');ls.forEach((s,j)=>txt(s,640,710-ls.length*31+9+j*31,24,'#fff'));}ctx.fillStyle='#35d9ac';ctx.fillRect(0,716,W*t/D,4)}
+function loadVoices(){voices=window.speechSynthesis?speechSynthesis.getVoices():[];statusVoice()}
+function statusVoice(){let yes=voices.some(v=>v.lang.toLowerCase().startsWith(lang));$('status').textContent=yes?'Browser narration ready. English / Hindi audio follows the selected language.':(lang==='hi'?'No Hindi voice detected. Hindi subtitles are available; install a Hindi system voice for narration.':'Narration needs an English browser voice. Subtitles remain available.')}
+if(window.speechSynthesis){speechSynthesis.onvoiceschanged=loadVoices;loadVoices()}
+function speak(i){if(muted||!window.speechSynthesis)return;speechSynthesis.cancel();let voice=voices.find(v=>v.lang.toLowerCase().startsWith(lang));if(!voice){statusVoice();return}let u=new SpeechSynthesisUtterance((lang==='hi'?hi:en)[i]);u.voice=voice;u.lang=lang==='hi'?'hi-IN':'en-US';u.rate=lang==='hi'?1.22:1.16;speechSynthesis.speak(u)}
+function tone(f,d=.2,v=.06,type='sine'){if(!ac||muted)return;let o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}
+function start(){if(!ac)try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}if(ac)ac.resume();$('start-overlay').style.display='none';if(t>=20)t=0;playing=true;spoken=-1;last=performance.now();$('pp').textContent='Pause'}
+function pause(){playing=false;if(window.speechSynthesis)speechSynthesis.cancel();$('pp').textContent=t>=20?'Replay':'Play'}
+$('start-btn').onclick=start;$('pp').onclick=()=>playing?pause():start();$('replay').onclick=()=>{t=0;beat=-1;start()};$('sk').oninput=()=>{pause();t=+$('sk').value;spoken=-1};$('language').onchange=()=>{lang=$('language').value;spoken=-1;if(window.speechSynthesis)speechSynthesis.cancel();statusVoice()};$('mute').onclick=()=>{muted=!muted;$('mute').textContent='Sound: '+(muted?'Off':'On');if(window.speechSynthesis)speechSynthesis.cancel();spoken=-1};document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+function loop(n){if(playing){t=Math.min(D,t+Math.min((n-last)/1000,.1));let i=t<8?0:t<16?1:2;if(i!==spoken){if(i>0){tone(i===1?880:660,.7);setTimeout(()=>{if(playing)tone(1320,.6,.04)},120)}speak(i);spoken=i}let b=Math.floor(t*2.6);if(t<8&&b!==beat){tone(65,.13,.11);if(b===3)tone(180,.25,.035,'sawtooth');beat=b}if(t>=20)pause()}last=n;frame(t);$('sk').value=t;$('tm').textContent=t.toFixed(1)+' / 20s';requestAnimationFrame(loop)}requestAnimationFrame(loop);
+</script></body></html>

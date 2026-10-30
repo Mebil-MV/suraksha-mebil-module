@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hazard Warning: Tree in a Storm</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050510;
+            font-family: Arial, sans-serif;
+        }
+        
+        canvas {
+            display: block;
+        }
+
+        #warning {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff3333;
+            text-align: center;
+            text-shadow: 2px 2px 8px #000;
+            pointer-events: none;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #warning h1 {
+            font-size: 3rem;
+            margin: 20px 0 0 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #warning p {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-top: 10px;
+        }
+
+        .x-sign {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        .x-sign::before,
+        .x-sign::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 65px;
+            width: 20px;
+            height: 150px;
+            background-color: #ff3333;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #ff3333, 0 0 40px #ff0000;
+        }
+
+        .x-sign::before {
+            transform: rotate(45deg);
+        }
+
+        .x-sign::after {
+            transform: rotate(-45deg);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.7;
+                filter: drop-shadow(0 0 10px rgba(255, 51, 51, 0.4));
+            }
+            50% {
+                transform: scale(1.25);
+                opacity: 1;
+                filter: drop-shadow(0 0 50px rgba(255, 0, 0, 1));
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.7;
+                filter: drop-shadow(0 0 10px rgba(255, 51, 51, 0.4));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="warning">
+        <div class="x-sign"></div>
+        <h1>Danger</h1>
+        <p>Never stand beneath a tree during heavy rain, wind, or lightning.</p>
+    </div>
+    <canvas id="stormCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('stormCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const rainParticles = [];
+        const numRaindrops = 800;
+
+        for (let i = 0; i < numRaindrops; i++) {
+            rainParticles.push({
+                x: Math.random() * width * 1.5 - width * 0.2,
+                y: Math.random() * height,
+                length: Math.random() * 20 + 10,
+                speed: Math.random() * 15 + 15,
+                weight: Math.random() * 1.5 + 0.5
+            });
+        }
+
+        let time = 0;
+        let lightningFlash = 0;
+
+        const sizeScale = 2.2;
+
+        function drawTree(x, y, windForce) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(sizeScale, sizeScale);
+            
+            const trunkSway = Math.sin(time * 2) * windForce;
+            ctx.rotate(trunkSway * Math.PI / 180);
+            
+            ctx.fillStyle = "#2d1a11";
+            ctx.fillRect(-15, -150, 30, 150);
+            
+            ctx.translate(0, -140);
+            const leavesSway = Math.sin(time * 2.2 + 1) * (windForce * 1.5);
+            ctx.rotate(leavesSway * Math.PI / 180);
+            
+            ctx.fillStyle = "#1a3b1a";
+            ctx.beginPath();
+            ctx.arc(0, -50, 80, 0, Math.PI * 2);
+            ctx.arc(-40, -20, 60, 0, Math.PI * 2);
+            ctx.arc(40, -20, 60, 0, Math.PI * 2);
+            ctx.arc(0, -100, 70, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        function drawFigure(x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(sizeScale, sizeScale);
+            
+            const r = Math.floor(220 + (lightningFlash * 35));
+            const g = Math.floor(180 + (lightningFlash * 75));
+            const b = Math.floor(40 + (lightningFlash * 215));
+            
+            const darkShade = Math.floor(lightningFlash * 100);
+            const pantsColor = `rgb(${darkShade}, ${darkShade}, ${darkShade})`;
+            const coatColor = `rgb(${r}, ${g}, ${b})`;
+
+            ctx.strokeStyle = pantsColor;
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(3, -15);
+            ctx.lineTo(8, -5);
+            ctx.lineTo(13, -5);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(-5, -15);
+            ctx.lineTo(-8, -5);
+            ctx.lineTo(-14, -5);
+            ctx.stroke();
+
+            ctx.fillStyle = coatColor;
+            ctx.beginPath();
+            ctx.moveTo(-10, -35);
+            ctx.lineTo(10, -35);
+            ctx.lineTo(14, -12);
+            ctx.lineTo(-14, -12);
+            ctx.fill();
+
+            ctx.strokeStyle = coatColor;
+            ctx.lineWidth = 5.5;
+
+            ctx.beginPath();
+            ctx.moveTo(9, -33);
+            ctx.lineTo(12, -22);
+            ctx.lineTo(-3, -20);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(-9, -33);
+            ctx.lineTo(-15, -25);
+            ctx.lineTo(-6, -37);
+            ctx.stroke();
+
+            ctx.fillStyle = `rgb(${Math.floor(224 + lightningFlash*30)}, ${Math.floor(172 + lightningFlash*30)}, ${Math.floor(105 + lightningFlash*30)})`;
+            
+            ctx.beginPath();
+            ctx.arc(-5, -20, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(-5, -38, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = coatColor;
+            ctx.beginPath();
+            ctx.arc(0, -38, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#111";
+            ctx.beginPath();
+            ctx.arc(-4, -37, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(5, 5, 16, 0.4)';
+            ctx.fillRect(0, 0, width, height);
+
+            if (Math.random() < 0.015) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillRect(0, 0, width, height);
+                lightningFlash = 1;
+            }
+
+            const wind = 25;
+
+            ctx.strokeStyle = 'rgba(174, 194, 224, 0.6)';
+            ctx.lineCap = 'round';
+            for (let i = 0; i < rainParticles.length; i++) {
+                let p = rainParticles[i];
+                ctx.lineWidth = p.weight;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + wind * (p.speed / 20), p.y + p.length);
+                ctx.stroke();
+
+                p.y += p.speed;
+                p.x += wind * (p.speed / 20);
+
+                if (p.y > height) {
+                    p.y = -20;
+                    p.x = Math.random() * width * 1.5 - width * 0.2;
+                }
+            }
+
+            ctx.fillStyle = "#111";
+            ctx.fillRect(0, height - 50, width, 50);
+
+            const treeX = width / 2;
+            const treeY = height - 50;
+            
+            drawTree(treeX, treeY, 10);
+            drawFigure(treeX + 80, treeY);
+
+            time += 0.05;
+            lightningFlash *= 0.85;
+            
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

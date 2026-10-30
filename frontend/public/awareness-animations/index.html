@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suraksha Community Awareness Animation Catalog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090e17;
+      --card-bg: #121c2b;
+      --card-hover: #172437;
+      --border: #1e314b;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.2);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      padding: 30px 20px 80px;
+      line-height: 1.5;
+    }
+    header {
+      max-width: 1300px;
+      margin: 0 auto 30px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 720px;
+      margin: 0 auto 20px;
+    }
+    .stats {
+      display: inline-flex;
+      gap: 16px;
+      background: #0f172a;
+      padding: 8px 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-bottom: 25px;
+    }
+    .controls {
+      max-width: 1300px;
+      margin: 0 auto 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .search-row {
+      display: flex;
+      gap: 12px;
+    }
+    .search-bar {
+      flex: 1;
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #09111c;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-bar:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .filter-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+    .pill {
+      background: #0d1624;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .pill:hover, .pill.active {
+      background: var(--accent);
+      color: #08202b;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 22px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .cat-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #18283d;
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .phase-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .phase-Before { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .phase-During { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .phase-After { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .phase-General, .phase-Media { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.4;
+    }
+    .card-path {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      word-break: break-all;
+      font-family: monospace;
+      background: #070c14;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 10px;
+    }
+    .btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #08202b;
+    }
+    .btn-primary:hover {
+      background: #7dd3fc;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover {
+      background: #1e314b;
+      color: #fff;
+    }
+    #previewModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 1100px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+    }
+    .modal-header {
+      padding: 14px 20px;
+      background: #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { font-size: 1.1rem; color: #fff; }
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .modal-body iframe {
+      width: 100%;
+      height: 650px;
+      border: none;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎬 Mebil's Community Awareness Animations</h1>
+    <p>Comprehensive interactive disaster awareness and survival simulations organized by hazard category and response timeline.</p>
+    <div class="stats">
+      <span>📦 49 Standalone Animations</span>
+      <span>•</span>
+      <span>🏷️ 49 Disaster Domains</span>
+      <span>•</span>
+      <span>⚡ Built for React iframe Integration</span>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="search-row">
+      <input type="text" id="search" class="search-bar" placeholder="🔍 Search by title, keyword, or disaster type...">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Category:</span>
+      <button class="pill active" data-cat="all">All Categories</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\earthquake_safety_building_angles.html">Building guids resist earth quake and cyclones\earthquake_safety_building_angles.html</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\earthquake_safety_building_elevation.html">Building guids resist earth quake and cyclones\earthquake_safety_building_elevation.html</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\earthquake_safety_building_length.html">Building guids resist earth quake and cyclones\earthquake_safety_building_length.html</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\earthquake_safety_building_shapes.html">Building guids resist earth quake and cyclones\earthquake_safety_building_shapes.html</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\earthquake_safety_open_ground_storeys (1).html">Building guids resist earth quake and cyclones\earthquake_safety_open_ground_storeys (1).html</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\earthquake_safety_wall_openings.html">Building guids resist earth quake and cyclones\earthquake_safety_wall_openings.html</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\flood_safety_above_hfl.html">Building guids resist earth quake and cyclones\flood_safety_above_hfl.html</button>
+      <button class="pill" data-cat="Building guids resist earth quake and cyclones\soil_safety_liquefaction.html">Building guids resist earth quake and cyclones\soil_safety_liquefaction.html</button>
+      <button class="pill" data-cat="Cold wave frost\During\2coldwave.html">Cold wave frost\During\2coldwave.html</button>
+      <button class="pill" data-cat="Cold wave frost\During\Dressing &amp; Personal Protection – Cold Wave PSA.html">Cold wave frost\During\Dressing &amp; Personal Protection – Cold Wave PSA.html</button>
+      <button class="pill" data-cat="Cold wave frost\During\Home Safety &amp; Animal Care PSA.html">Cold wave frost\During\Home Safety &amp; Animal Care PSA.html</button>
+      <button class="pill" data-cat="Cold wave frost\During\diet_immunity_hidden_dangers.html">Cold wave frost\During\diet_immunity_hidden_dangers.html</button>
+      <button class="pill" data-cat="Cold wave frost\During\first-aid-psa.html">Cold wave frost\During\first-aid-psa.html</button>
+      <button class="pill" data-cat="Cold wave frost\before\1Cold Wave PSA_ Preparation &amp; Safe Indoor Heating.html">Cold wave frost\before\1Cold Wave PSA_ Preparation &amp; Safe Indoor Heating.html</button>
+      <button class="pill" data-cat="Cold wave frost\before\Cold Wave Preparation &amp; Prevention.html">Cold wave frost\before\Cold Wave Preparation &amp; Prevention.html</button>
+      <button class="pill" data-cat="Earth quake\After\Earthquake Safety_ After the Quake.html">Earth quake\After\Earthquake Safety_ After the Quake.html</button>
+      <button class="pill" data-cat="Earth quake\After\Earthquake Safety_ Utilities &amp; Family Plan.html">Earth quake\After\Earthquake Safety_ Utilities &amp; Family Plan.html</button>
+      <button class="pill" data-cat="Earth quake\Before\before_the_earthquake.html">Earth quake\Before\before_the_earthquake.html</button>
+      <button class="pill" data-cat="Earth quake\During\During an Earthquake.html">Earth quake\During\During an Earthquake.html</button>
+      <button class="pill" data-cat="Earth quake\During\Earthquake Safety PSA.html">Earth quake\During\Earthquake Safety PSA.html</button>
+      <button class="pill" data-cat="Emergency kit\disability_emergency_kit.html">Emergency kit\disability_emergency_kit.html</button>
+      <button class="pill" data-cat="Emergency kit\emergency_kit_complete.html">Emergency kit\emergency_kit_complete.html</button>
+      <button class="pill" data-cat="FIre awanesss\After\school_fire.html">FIre awanesss\After\school_fire.html</button>
+      <button class="pill" data-cat="FIre awanesss\Before\School Fire Awareness &amp; Prevention PSA (1).html">FIre awanesss\Before\School Fire Awareness &amp; Prevention PSA (1).html</button>
+      <button class="pill" data-cat="FIre awanesss\During\school_fire_evacuation_safety.html">FIre awanesss\During\school_fire_evacuation_safety.html</button>
+      <button class="pill" data-cat="Flood\does and donts\After\post_flood_sheltering_safety.html">Flood\does and donts\After\post_flood_sheltering_safety.html</button>
+      <button class="pill" data-cat="Flood\does and donts\Before\before_flooding (1).html">Flood\does and donts\Before\before_flooding (1).html</button>
+      <button class="pill" data-cat="Flood\does and donts\During\Flood_family\index.html">Flood\does and donts\During\Flood_family\index.html</button>
+      <button class="pill" data-cat="Flood\does and donts\During\evacuation_protocols (1).html">Flood\does and donts\During\evacuation_protocols (1).html</button>
+      <button class="pill" data-cat="Flood\does and donts\During\flood_warning_actions.html">Flood\does and donts\During\flood_warning_actions.html</button>
+      <button class="pill" data-cat="Heat wave\heat_stroke_first_aid.html">Heat wave\heat_stroke_first_aid.html</button>
+      <button class="pill" data-cat="Heat wave\outdoor_worker_safety.html">Heat wave\outdoor_worker_safety.html</button>
+      <button class="pill" data-cat="Heat wave\pet_heat_safety.html">Heat wave\pet_heat_safety.html</button>
+      <button class="pill" data-cat="Heat wave\protecting_children_in_heat (1).html">Heat wave\protecting_children_in_heat (1).html</button>
+      <button class="pill" data-cat="Storm hazard\does and donts\During\under_tree.html">Storm hazard\does and donts\During\under_tree.html</button>
+      <button class="pill" data-cat="landslide\For media\After_Landslide Community Education PSA.html">landslide\For media\After_Landslide Community Education PSA.html</button>
+      <button class="pill" data-cat="landslide\For media\Landslide Media &amp; Community Education.html">landslide\For media\Landslide Media &amp; Community Education.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\After\After a Landslide_ Survival PSA.html">landslide\does  and donts\After\After a Landslide_ Survival PSA.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\Before\Before_intense_rainfall.html">landslide\does  and donts\Before\Before_intense_rainfall.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\Before\Drainage_cleaning.html">landslide\does  and donts\Before\Drainage_cleaning.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\Before\Landslide Ready Reckoner.html">landslide\does  and donts\Before\Landslide Ready Reckoner.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\Before\Landslide Safe Zones.html">landslide\does  and donts\Before\Landslide Safe Zones.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\Before\Tree_cutting .html">landslide\does  and donts\Before\Tree_cutting .html</button>
+      <button class="pill" data-cat="landslide\does  and donts\Before\landslide_before_the_slide (1).html">landslide\does  and donts\Before\landslide_before_the_slide (1).html</button>
+      <button class="pill" data-cat="landslide\does  and donts\During\During a Landslide_ Survival PSA.html">landslide\does  and donts\During\During a Landslide_ Survival PSA.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\During\During_indicaitons.html">landslide\does  and donts\During\During_indicaitons.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\During\Imminent Landslide Steps.html">landslide\does  and donts\During\Imminent Landslide Steps.html</button>
+      <button class="pill" data-cat="landslide\does  and donts\During\landslide_indications.html">landslide\does  and donts\During\landslide_indications.html</button>
+      <button class="pill" data-cat="snake bite\does&amp;donts\Snake Bite First Aid PSA.html">snake bite\does&amp;donts\Snake Bite First Aid PSA.html</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Phase:</span>
+      <button class="pill active" data-phase="all">All Phases</button>
+      <button class="pill" data-phase="Before">Before</button>
+      <button class="pill" data-phase="During">During</button>
+      <button class="pill" data-phase="After">After</button>
+      <button class="pill" data-phase="General">General</button>
+    </div>
+  </div>
+
+  <main class="grid" id="cardGrid"></main>
+
+  <div id="previewModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Animation Preview</h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="modalFrame" src=""></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const data = [{"id": 1, "title": "Earthquake Safety: Building Angles", "category": "Building guids resist earth quake and cyclones\\earthquake_safety_building_angles.html", "phase": "General", "fileName": "earthquake_safety_building_angles.html", "relativePath": "Building guids resist earth quake and cyclones\\earthquake_safety_building_angles.html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\earthquake_safety_building_angles.html", "fileSizeBytes": 13558}, {"id": 2, "title": "Earthquake Safety \u2014 Building Elevation", "category": "Building guids resist earth quake and cyclones\\earthquake_safety_building_elevation.html", "phase": "General", "fileName": "earthquake_safety_building_elevation.html", "relativePath": "Building guids resist earth quake and cyclones\\earthquake_safety_building_elevation.html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\earthquake_safety_building_elevation.html", "fileSizeBytes": 19858}, {"id": 3, "title": "Earthquake Safety \u2014 Building Length", "category": "Building guids resist earth quake and cyclones\\earthquake_safety_building_length.html", "phase": "General", "fileName": "earthquake_safety_building_length.html", "relativePath": "Building guids resist earth quake and cyclones\\earthquake_safety_building_length.html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\earthquake_safety_building_length.html", "fileSizeBytes": 19811}, {"id": 4, "title": "Earthquake Safety \u2014 Building Shapes", "category": "Building guids resist earth quake and cyclones\\earthquake_safety_building_shapes.html", "phase": "General", "fileName": "earthquake_safety_building_shapes.html", "relativePath": "Building guids resist earth quake and cyclones\\earthquake_safety_building_shapes.html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\earthquake_safety_building_shapes.html", "fileSizeBytes": 19955}, {"id": 5, "title": "Earthquake Safety \u2014 Open Ground Storeys", "category": "Building guids resist earth quake and cyclones\\earthquake_safety_open_ground_storeys (1).html", "phase": "General", "fileName": "earthquake_safety_open_ground_storeys (1).html", "relativePath": "Building guids resist earth quake and cyclones\\earthquake_safety_open_ground_storeys (1).html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\earthquake_safety_open_ground_storeys (1).html", "fileSizeBytes": 21891}, {"id": 6, "title": "Earthquake Safety \u2014 Wall Openings", "category": "Building guids resist earth quake and cyclones\\earthquake_safety_wall_openings.html", "phase": "General", "fileName": "earthquake_safety_wall_openings.html", "relativePath": "Building guids resist earth quake and cyclones\\earthquake_safety_wall_openings.html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\earthquake_safety_wall_openings.html", "fileSizeBytes": 20542}, {"id": 7, "title": "Flood Safety \u2014 Building Above HFL", "category": "Building guids resist earth quake and cyclones\\flood_safety_above_hfl.html", "phase": "General", "fileName": "flood_safety_above_hfl.html", "relativePath": "Building guids resist earth quake and cyclones\\flood_safety_above_hfl.html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\flood_safety_above_hfl.html", "fileSizeBytes": 17965}, {"id": 8, "title": "Soil Safety & Earthquake Liquefaction", "category": "Building guids resist earth quake and cyclones\\soil_safety_liquefaction.html", "phase": "General", "fileName": "soil_safety_liquefaction.html", "relativePath": "Building guids resist earth quake and cyclones\\soil_safety_liquefaction.html", "publicUrl": "/awareness-animations/Building guids resist earth quake and cyclones\\soil_safety_liquefaction.html", "fileSizeBytes": 10872}, {"id": 9, "title": "Cold Wave Ready: Preparation &amp; Safe Heating", "category": "Cold wave frost\\before\\1Cold Wave PSA_ Preparation & Safe Indoor Heating.html", "phase": "General", "fileName": "1Cold Wave PSA_ Preparation & Safe Indoor Heating.html", "relativePath": "Cold wave frost\\before\\1Cold Wave PSA_ Preparation & Safe Indoor Heating.html", "publicUrl": "/awareness-animations/Cold wave frost\\before\\1Cold Wave PSA_ Preparation & Safe Indoor Heating.html", "fileSizeBytes": 17854}, {"id": 10, "title": "Cold Wave Preparation & Prevention", "category": "Cold wave frost\\before\\Cold Wave Preparation & Prevention.html", "phase": "General", "fileName": "Cold Wave Preparation & Prevention.html", "relativePath": "Cold wave frost\\before\\Cold Wave Preparation & Prevention.html", "publicUrl": "/awareness-animations/Cold wave frost\\before\\Cold Wave Preparation & Prevention.html", "fileSizeBytes": 20520}, {"id": 11, "title": "Health Risks, Diet & Care", "category": "Cold wave frost\\During\\2coldwave.html", "phase": "General", "fileName": "2coldwave.html", "relativePath": "Cold wave frost\\During\\2coldwave.html", "publicUrl": "/awareness-animations/Cold wave frost\\During\\2coldwave.html", "fileSizeBytes": 21877}, {"id": 12, "title": "Dressing &amp; Personal Protection \u2013 Cold Wave PSA", "category": "Cold wave frost\\During\\Dressing & Personal Protection \u2013 Cold Wave PSA.html", "phase": "General", "fileName": "Dressing & Personal Protection \u2013 Cold Wave PSA.html", "relativePath": "Cold wave frost\\During\\Dressing & Personal Protection \u2013 Cold Wave PSA.html", "publicUrl": "/awareness-animations/Cold wave frost\\During\\Dressing & Personal Protection \u2013 Cold Wave PSA.html", "fileSizeBytes": 21037}, {"id": 13, "title": "Home Safety &amp; Animal Care", "category": "Cold wave frost\\During\\Home Safety & Animal Care PSA.html", "phase": "General", "fileName": "Home Safety & Animal Care PSA.html", "relativePath": "Cold wave frost\\During\\Home Safety & Animal Care PSA.html", "publicUrl": "/awareness-animations/Cold wave frost\\During\\Home Safety & Animal Care PSA.html", "fileSizeBytes": 20151}, {"id": 14, "title": "Diet, Immunity & Hidden Dangers", "category": "Cold wave frost\\During\\diet_immunity_hidden_dangers.html", "phase": "General", "fileName": "diet_immunity_hidden_dangers.html", "relativePath": "Cold wave frost\\During\\diet_immunity_hidden_dangers.html", "publicUrl": "/awareness-animations/Cold wave frost\\During\\diet_immunity_hidden_dangers.html", "fileSizeBytes": 13611}, {"id": 15, "title": "First Aid & Emergency Response", "category": "Cold wave frost\\During\\first-aid-psa.html", "phase": "General", "fileName": "first-aid-psa.html", "relativePath": "Cold wave frost\\During\\first-aid-psa.html", "publicUrl": "/awareness-animations/Cold wave frost\\During\\first-aid-psa.html", "fileSizeBytes": 20099}, {"id": 16, "title": "Earthquake Safety: After the Quake", "category": "Earth quake\\After\\Earthquake Safety_ After the Quake.html", "phase": "General", "fileName": "Earthquake Safety_ After the Quake.html", "relativePath": "Earth quake\\After\\Earthquake Safety_ After the Quake.html", "publicUrl": "/awareness-animations/Earth quake\\After\\Earthquake Safety_ After the Quake.html", "fileSizeBytes": 23487}, {"id": 17, "title": "Earthquake Safety: Utilities &amp; Family Plan", "category": "Earth quake\\After\\Earthquake Safety_ Utilities & Family Plan.html", "phase": "General", "fileName": "Earthquake Safety_ Utilities & Family Plan.html", "relativePath": "Earth quake\\After\\Earthquake Safety_ Utilities & Family Plan.html", "publicUrl": "/awareness-animations/Earth quake\\After\\Earthquake Safety_ Utilities & Family Plan.html", "fileSizeBytes": 22136}, {"id": 18, "title": "Before the Earthquake", "category": "Earth quake\\Before\\before_the_earthquake.html", "phase": "General", "fileName": "before_the_earthquake.html", "relativePath": "Earth quake\\Before\\before_the_earthquake.html", "publicUrl": "/awareness-animations/Earth quake\\Before\\before_the_earthquake.html", "fileSizeBytes": 38807}, {"id": 19, "title": "During an Earthquake", "category": "Earth quake\\During\\During an Earthquake.html", "phase": "General", "fileName": "During an Earthquake.html", "relativePath": "Earth quake\\During\\During an Earthquake.html", "publicUrl": "/awareness-animations/Earth quake\\During\\During an Earthquake.html", "fileSizeBytes": 24879}, {"id": 20, "title": "Earthquake Safety PSA", "category": "Earth quake\\During\\Earthquake Safety PSA.html", "phase": "General", "fileName": "Earthquake Safety PSA.html", "relativePath": "Earth quake\\During\\Earthquake Safety PSA.html", "publicUrl": "/awareness-animations/Earth quake\\During\\Earthquake Safety PSA.html", "fileSizeBytes": 43740}, {"id": 21, "title": "Emergency Kit for People with Disabilities", "category": "Emergency kit\\disability_emergency_kit.html", "phase": "General", "fileName": "disability_emergency_kit.html", "relativePath": "Emergency kit\\disability_emergency_kit.html", "publicUrl": "/awareness-animations/Emergency kit\\disability_emergency_kit.html", "fileSizeBytes": 17857}, {"id": 22, "title": "Emergency Kit \u2014 Complete 40-second PSA", "category": "Emergency kit\\emergency_kit_complete.html", "phase": "General", "fileName": "emergency_kit_complete.html", "relativePath": "Emergency kit\\emergency_kit_complete.html", "publicUrl": "/awareness-animations/Emergency kit\\emergency_kit_complete.html", "fileSizeBytes": 14082}, {"id": 23, "title": "Post-Fire School Safety &amp; Recovery", "category": "FIre awanesss\\After\\school_fire.html", "phase": "General", "fileName": "school_fire.html", "relativePath": "FIre awanesss\\After\\school_fire.html", "publicUrl": "/awareness-animations/FIre awanesss\\After\\school_fire.html", "fileSizeBytes": 32136}, {"id": 24, "title": "School Fire Awareness &amp; Prevention", "category": "FIre awanesss\\Before\\School Fire Awareness & Prevention PSA (1).html", "phase": "General", "fileName": "School Fire Awareness & Prevention PSA (1).html", "relativePath": "FIre awanesss\\Before\\School Fire Awareness & Prevention PSA (1).html", "publicUrl": "/awareness-animations/FIre awanesss\\Before\\School Fire Awareness & Prevention PSA (1).html", "fileSizeBytes": 21452}, {"id": 25, "title": "School Fire Evacuation & Safety", "category": "FIre awanesss\\During\\school_fire_evacuation_safety.html", "phase": "General", "fileName": "school_fire_evacuation_safety.html", "relativePath": "FIre awanesss\\During\\school_fire_evacuation_safety.html", "publicUrl": "/awareness-animations/FIre awanesss\\During\\school_fire_evacuation_safety.html", "fileSizeBytes": 17682}, {"id": 26, "title": "Post-Flood & Sheltering Safety \u2022 Animated PSA", "category": "Flood\\does and donts\\After\\post_flood_sheltering_safety.html", "phase": "General", "fileName": "post_flood_sheltering_safety.html", "relativePath": "Flood\\does and donts\\After\\post_flood_sheltering_safety.html", "publicUrl": "/awareness-animations/Flood\\does and donts\\After\\post_flood_sheltering_safety.html", "fileSizeBytes": 26918}, {"id": 27, "title": "Before Flooding Occurs \u2022 Animated PSA", "category": "Flood\\does and donts\\Before\\before_flooding (1).html", "phase": "General", "fileName": "before_flooding (1).html", "relativePath": "Flood\\does and donts\\Before\\before_flooding (1).html", "publicUrl": "/awareness-animations/Flood\\does and donts\\Before\\before_flooding (1).html", "fileSizeBytes": 20972}, {"id": 28, "title": "Evacuation Protocols \u2022 Animated PSA", "category": "Flood\\does and donts\\During\\evacuation_protocols (1).html", "phase": "General", "fileName": "evacuation_protocols (1).html", "relativePath": "Flood\\does and donts\\During\\evacuation_protocols (1).html", "publicUrl": "/awareness-animations/Flood\\does and donts\\During\\evacuation_protocols (1).html", "fileSizeBytes": 28330}, {"id": 29, "title": "Flood Warning Actions \u2022 Animated PSA", "category": "Flood\\does and donts\\During\\flood_warning_actions.html", "phase": "General", "fileName": "flood_warning_actions.html", "relativePath": "Flood\\does and donts\\During\\flood_warning_actions.html", "publicUrl": "/awareness-animations/Flood\\does and donts\\During\\flood_warning_actions.html", "fileSizeBytes": 21669}, {"id": 30, "title": "Flood Night: Family Rescue", "category": "Flood\\does and donts\\During\\Flood_family\\index.html", "phase": "General", "fileName": "index.html", "relativePath": "Flood\\does and donts\\During\\Flood_family\\index.html", "publicUrl": "/awareness-animations/Flood\\does and donts\\During\\Flood_family\\index.html", "fileSizeBytes": 16435}, {"id": 31, "title": "Heat Stroke First Aid", "category": "Heat wave\\heat_stroke_first_aid.html", "phase": "General", "fileName": "heat_stroke_first_aid.html", "relativePath": "Heat wave\\heat_stroke_first_aid.html", "publicUrl": "/awareness-animations/Heat wave\\heat_stroke_first_aid.html", "fileSizeBytes": 17993}, {"id": 32, "title": "Outdoor Worker Safety", "category": "Heat wave\\outdoor_worker_safety.html", "phase": "General", "fileName": "outdoor_worker_safety.html", "relativePath": "Heat wave\\outdoor_worker_safety.html", "publicUrl": "/awareness-animations/Heat wave\\outdoor_worker_safety.html", "fileSizeBytes": 19477}, {"id": 33, "title": "Pet Heat Safety", "category": "Heat wave\\pet_heat_safety.html", "phase": "General", "fileName": "pet_heat_safety.html", "relativePath": "Heat wave\\pet_heat_safety.html", "publicUrl": "/awareness-animations/Heat wave\\pet_heat_safety.html", "fileSizeBytes": 22265}, {"id": 34, "title": "Protecting Children in the Heat", "category": "Heat wave\\protecting_children_in_heat (1).html", "phase": "General", "fileName": "protecting_children_in_heat (1).html", "relativePath": "Heat wave\\protecting_children_in_heat (1).html", "publicUrl": "/awareness-animations/Heat wave\\protecting_children_in_heat (1).html", "fileSizeBytes": 20054}, {"id": 35, "title": "After a Landslide: Survival PSA", "category": "landslide\\does  and donts\\After\\After a Landslide_ Survival PSA.html", "phase": "General", "fileName": "After a Landslide_ Survival PSA.html", "relativePath": "landslide\\does  and donts\\After\\After a Landslide_ Survival PSA.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\After\\After a Landslide_ Survival PSA.html", "fileSizeBytes": 24270}, {"id": 36, "title": "Actions Before Intense Rainfall", "category": "landslide\\does  and donts\\Before\\Before_intense_rainfall.html", "phase": "General", "fileName": "Before_intense_rainfall.html", "relativePath": "landslide\\does  and donts\\Before\\Before_intense_rainfall.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\Before\\Before_intense_rainfall.html", "fileSizeBytes": 33520}, {"id": 37, "title": "Keep it Clear: Drainage and Landslide Safety", "category": "landslide\\does  and donts\\Before\\Drainage_cleaning.html", "phase": "General", "fileName": "Drainage_cleaning.html", "relativePath": "landslide\\does  and donts\\Before\\Drainage_cleaning.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\Before\\Drainage_cleaning.html", "fileSizeBytes": 29393}, {"id": 38, "title": "Landslide Ready Reckoner", "category": "landslide\\does  and donts\\Before\\Landslide Ready Reckoner.html", "phase": "General", "fileName": "Landslide Ready Reckoner.html", "relativePath": "landslide\\does  and donts\\Before\\Landslide Ready Reckoner.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\Before\\Landslide Ready Reckoner.html", "fileSizeBytes": 24858}, {"id": 39, "title": "Landslide Safe Zones", "category": "landslide\\does  and donts\\Before\\Landslide Safe Zones.html", "phase": "General", "fileName": "Landslide Safe Zones.html", "relativePath": "landslide\\does  and donts\\Before\\Landslide Safe Zones.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\Before\\Landslide Safe Zones.html", "fileSizeBytes": 22878}, {"id": 40, "title": "Protecting the Slopes", "category": "landslide\\does  and donts\\Before\\Tree_cutting .html", "phase": "General", "fileName": "Tree_cutting .html", "relativePath": "landslide\\does  and donts\\Before\\Tree_cutting .html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\Before\\Tree_cutting .html", "fileSizeBytes": 17403}, {"id": 41, "title": "Landslide Safety \u2014 Before the Slide", "category": "landslide\\does  and donts\\Before\\landslide_before_the_slide (1).html", "phase": "General", "fileName": "landslide_before_the_slide (1).html", "relativePath": "landslide\\does  and donts\\Before\\landslide_before_the_slide (1).html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\Before\\landslide_before_the_slide (1).html", "fileSizeBytes": 33408}, {"id": 42, "title": "During a Landslide: Survival PSA", "category": "landslide\\does  and donts\\During\\During a Landslide_ Survival PSA.html", "phase": "General", "fileName": "During a Landslide_ Survival PSA.html", "relativePath": "landslide\\does  and donts\\During\\During a Landslide_ Survival PSA.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\During\\During a Landslide_ Survival PSA.html", "fileSizeBytes": 24696}, {"id": 43, "title": "Landslide Warning Signs", "category": "landslide\\does  and donts\\During\\During_indicaitons.html", "phase": "General", "fileName": "During_indicaitons.html", "relativePath": "landslide\\does  and donts\\During\\During_indicaitons.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\During\\During_indicaitons.html", "fileSizeBytes": 14864}, {"id": 44, "title": "Imminent Landslide Steps", "category": "landslide\\does  and donts\\During\\Imminent Landslide Steps.html", "phase": "General", "fileName": "Imminent Landslide Steps.html", "relativePath": "landslide\\does  and donts\\During\\Imminent Landslide Steps.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\During\\Imminent Landslide Steps.html", "fileSizeBytes": 35995}, {"id": 45, "title": "Landslide Warning Signs", "category": "landslide\\does  and donts\\During\\landslide_indications.html", "phase": "General", "fileName": "landslide_indications.html", "relativePath": "landslide\\does  and donts\\During\\landslide_indications.html", "publicUrl": "/awareness-animations/landslide\\does  and donts\\During\\landslide_indications.html", "fileSizeBytes": 38501}, {"id": 46, "title": "Landslide Community Education PSA", "category": "landslide\\For media\\After_Landslide Community Education PSA.html", "phase": "General", "fileName": "After_Landslide Community Education PSA.html", "relativePath": "landslide\\For media\\After_Landslide Community Education PSA.html", "publicUrl": "/awareness-animations/landslide\\For media\\After_Landslide Community Education PSA.html", "fileSizeBytes": 20415}, {"id": 47, "title": "Landslide Media & Community Education", "category": "landslide\\For media\\Landslide Media & Community Education.html", "phase": "General", "fileName": "Landslide Media & Community Education.html", "relativePath": "landslide\\For media\\Landslide Media & Community Education.html", "publicUrl": "/awareness-animations/landslide\\For media\\Landslide Media & Community Education.html", "fileSizeBytes": 23458}, {"id": 48, "title": "Snake Bite First Aid", "category": "snake bite\\does&donts\\Snake Bite First Aid PSA.html", "phase": "General", "fileName": "Snake Bite First Aid PSA.html", "relativePath": "snake bite\\does&donts\\Snake Bite First Aid PSA.html", "publicUrl": "/awareness-animations/snake bite\\does&donts\\Snake Bite First Aid PSA.html", "fileSizeBytes": 22003}, {"id": 49, "title": "Hazard Warning: Tree in a Storm", "category": "Storm hazard\\does and donts\\During\\under_tree.html", "phase": "General", "fileName": "under_tree.html", "relativePath": "Storm hazard\\does and donts\\During\\under_tree.html", "publicUrl": "/awareness-animations/Storm hazard\\does and donts\\During\\under_tree.html", "fileSizeBytes": 8241}];
+    let currentCat = 'all';
+    let currentPhase = 'all';
+    let currentSearch = '';
+
+    const grid = document.getElementById('cardGrid');
+
+    function render() {
+      grid.innerHTML = '';
+      const filtered = data.filter(item => {
+        const matchCat = currentCat === 'all' || item.category === currentCat;
+        const matchPhase = currentPhase === 'all' || item.phase.includes(currentPhase);
+        const q = currentSearch.toLowerCase();
+        const matchSearch = !q || item.title.toLowerCase().includes(q) || item.category.toLowerCase().includes(q) || item.fileName.toLowerCase().includes(q);
+        return matchCat && matchPhase && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No animations match your filters.</div>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const phaseClass = 'phase-' + (item.phase.includes('Before') ? 'Before' : item.phase.includes('During') ? 'During' : item.phase.includes('After') ? 'After' : 'General');
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="cat-badge">${item.category}</span>
+            <span class="phase-badge ${phaseClass}">${item.phase}</span>
+          </div>
+          <h3 class="card-title">${item.title}</h3>
+          <div class="card-path">${item.relativePath}</div>
+          <div class="card-actions">
+            <button class="btn btn-primary" onclick="openModal('${encodeURI(item.publicUrl)}', '${item.title.replace(/'/g, "\'")}')">▶ Preview</button>
+            <a class="btn btn-outline" href="${encodeURI(item.publicUrl)}" target="_blank">New Tab ↗</a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    document.querySelectorAll('[data-cat]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCat = btn.dataset.cat;
+        render();
+      });
+    });
+
+    document.querySelectorAll('[data-phase]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        document.querySelectorAll('[data-phase]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPhase = btn.dataset.phase;
+        render();
+      });
+    });
+
+    document.getElementById('search').addEventListener('input', e => {
+      currentSearch = e.target.value;
+      render();
+    });
+
+    function openModal(url, title) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalFrame').src = url;
+      document.getElementById('previewModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modalFrame').src = '';
+      document.getElementById('previewModal').style.display = 'none';
+    }
+
+    window.onclick = function(e) {
+      if (e.target === document.getElementById('previewModal')) closeModal();
+    };
+
+    render();
+  </script>
+</body>
+</html>

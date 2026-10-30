@@ -60,7 +60,8 @@
   --bg-hover: #222222;
   
   --text-main: #ffffff;
-  --text-muted: #888888;
+  --text-muted: #bbbbbb;
+  --text-sidebar: #ffffff;
   
   --border-color: #333333;
   
@@ -284,7 +285,15 @@ img, svg, .sidebar-link-icon, .sidebar-logo, .hero-stat-icon, .option-icon,
 }
 .sidebar-link.active {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--bg-main);
+}
+[data-theme='dark'] .sidebar-link.active {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+[data-theme='dark'] .sidebar-link.active .sidebar-link-text,
+[data-theme='dark'] .sidebar-link.active .sidebar-link-icon {
+  color: #ffffff !important;
 }
 .sidebar-link-icon {
   font-size: 1.25rem;
@@ -738,12 +747,48 @@ img, svg, .sidebar-link-icon, .sidebar-logo, .hero-stat-icon, .option-icon,
 .quiz-question-text { font-size: 1.5rem; font-weight: 600; margin-bottom: 2rem; line-height: 1.4; }
 
 .quiz-options-grid { display: flex; flex-direction: column; gap: 1rem; }
-.quiz-option-btn { padding: 1.25rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-main); color: var(--text-main); font-size: 1.1rem; text-align: left; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-weight: 500; position: relative; }
-.quiz-option-btn:hover:not(.disabled) { border-color: var(--color-primary); background: var(--bg-hover); transform: translateX(8px) scale(1.03); box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3); z-index: 2; }
-.quiz-option-btn.selected { border-color: var(--color-primary); transform: scale(1.02); }
+.quiz-option-btn { 
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem; 
+  border: 2px solid var(--border-color); 
+  border-radius: var(--radius-md); 
+  background: var(--bg-main); 
+  color: var(--text-main); 
+  font-size: 1.1rem; 
+  text-align: left; 
+  cursor: pointer; 
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+  font-weight: 500; 
+  position: relative; 
+}
+.option-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  min-width: 2.2rem;
+  border-radius: 50%;
+  background: var(--bg-hover);
+  border: 1.5px solid var(--border-color);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+.option-text {
+  flex: 1;
+}
+.quiz-option-btn:hover:not(.disabled) { border-color: var(--color-primary); background: var(--bg-hover); transform: translateX(8px) scale(1.02); box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3); z-index: 2; }
+.quiz-option-btn.selected { border-color: var(--color-primary); transform: scale(1.01); }
+.quiz-option-btn.selected .option-letter { background: var(--color-primary); color: #ffffff; border-color: var(--color-primary); }
 .quiz-option-btn.correct { background: rgba(16, 185, 129, 0.1); border-color: var(--color-success); color: var(--color-success); }
+.quiz-option-btn.correct .option-letter { background: var(--color-success); color: #ffffff; border-color: var(--color-success); }
 .quiz-option-btn.wrong { background: rgba(239, 68, 68, 0.1); border-color: var(--color-danger); color: var(--color-danger); }
-.quiz-option-btn.disabled { cursor: not-allowed; opacity: 0.7; }
+.quiz-option-btn.wrong .option-letter { background: var(--color-danger); color: #ffffff; border-color: var(--color-danger); }
+.quiz-option-btn.disabled { cursor: not-allowed; opacity: 0.85; }
 
 .quiz-explanation { margin-top: 1.5rem; padding: 1.5rem; border-radius: var(--radius-md); animation: slideInUp 0.3s ease-out; }
 .quiz-explanation.correct { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); }
@@ -803,9 +848,12 @@ img, svg, .sidebar-link-icon, .sidebar-logo, .hero-stat-icon, .option-icon,
 .game-hero h1 {
   font-size: 2.5rem;
   margin-bottom: 16px;
-  background: linear-gradient(135deg, var(--color-primary), rgba(128, 128, 128, 0.1));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
+}
+[data-theme='dark'] .game-hero h1 {
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .game-subtitle {

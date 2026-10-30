@@ -10,10 +10,10 @@ Suraksha is a comprehensive full-stack platform designed to enhance community re
 * **Status Updates:** "I am okay" resolution and "Still in danger!" escalation mechanisms for active victims.
 * **Explainable Priority Tooltips:** Transparent scoring helps coordinators understand *why* an alert is ranked critical.
 
-### 2. Gamified Preparedness & Awareness
+### 2. Gamified Preparedness & Awareness (Mebil's Module)
 * **Safety Tips & Micro-Challenges:** Users earn points and badges by completing bite-sized disaster readiness tasks.
-* **Interactive Awareness Animations:** Immersive HTML5 Canvas simulations to visually communicate disaster risks. 
-  * Integrates continuous looping animations for *Clogged Drain Flooding*, *Lake Overflow Flooding*, and *Deforestation Landslides*.
+* **49+ Interactive Community Awareness Simulations:** Full-featured HTML5 Canvas 2D & SVG disaster survival simulations covering 11 disaster domains (Landslides, Earthquakes, Floods, Cold Wave, Heat Wave, Fire, Cyclones, Storm Hazards, Snake Bite, Emergency Kits, and Resilient Building Guides) across Before, During, and After response phases.
+* **Drop-in React Integration:** Includes <AwarenessCatalog /> component and machine-readable manifest.json for effortless platform integration. *(See [docs/MEBILS_ANIMATIONS_INTEGRATION_GUIDE.md](docs/MEBILS_ANIMATIONS_INTEGRATION_GUIDE.md) for Aryan's integration manual).*
 * **Audio Accessibility:** Integrated Text-to-Speech (TTS) using native, natural-sounding browser voices to read safety guidelines and quiz questions.
 
 ### 3. Modern UI & Mobile Support (PWA)

@@ -40,7 +40,6 @@ export default function GamePage() {
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [backpack, setBackpack] = useState<Item[]>([]);
   const [availableItems, setAvailableItems] = useState<Item[]>([]);
-  const [score, setScore] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -51,7 +50,6 @@ export default function GamePage() {
     setAvailableItems(shuffled);
     setBackpack([]);
     setTimeLeft(GAME_TIME);
-    setScore(0);
     setPhase("playing");
   };
 
@@ -87,14 +85,6 @@ export default function GamePage() {
 
   const endGame = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    
-    // Calculate Score
-    let newScore = 0;
-    backpack.forEach(item => {
-      if (item.isEssential) newScore += 15;
-      else newScore -= 10;
-    });
-    setScore(newScore);
     setPhase("result");
   };
 
@@ -189,6 +179,7 @@ export default function GamePage() {
   }
 
   // Render Result Phase
+  const score = backpack.reduce((acc, item) => acc + (item.isEssential ? 15 : -10), 0);
   const maxPossibleScore = MAX_SLOTS * 15;
   const scorePct = Math.max(0, Math.round((score / maxPossibleScore) * 100));
   

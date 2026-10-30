@@ -1,0 +1,168 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>Earthquake Safety: Building Angles</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+       </style>
+</head>
+
+<body>
+       <canvas id="c" width="1280" height="720"></canvas>
+       <div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div>
+       <div class="bar">
+              <button id="pp" disabled>Play</button>
+              <!-- Extended slider max to 16.5 seconds -->
+              <input id="sk" type="range" min="0" max="20" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Language: English</button>
+       </div>
+       <script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),W=1280,H=720,D=20;
+const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),sm=v=>{v=cl(v);return v*v*(3-2*v)},hs=n=>{let v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v)};
+let t=0,playing=false,last=0,hi=false,ac,rum,spoken=-1;
+const EN=['Buildings bent in plan shake unevenly during strong earthquakes. This can cause extensive damage or collapse, especially near the bend.','Use smaller rectangular units, separated by a seismic joint with a flexible connection.','Stay alert. Stay safe.'];
+const HI=['मोड़ वाले भवन भूकंप में असमान रूप से हिलते हैं। मोड़ के पास भारी नुकसान हो सकता है, या इमारत गिर सकती है।','छोटी आयताकार इकाइयाँ बनाएँ। उनके बीच भूकंपीय अंतर और लचीला जोड़ रखें।','सावधान रहें। सुरक्षित रहें।'];
+function poly(p,c){ctx.fillStyle=c;ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function line(p,c,w=3){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()}
+function text(s,x,y,size=26,col='#f4ead2'){ctx.font=`700 ${size}px system-ui,sans-serif`;ctx.fillStyle=col;ctx.textAlign='center';ctx.fillText(s,x,y)}
+function boxLabel(s,y){ctx.font='700 32px system-ui';let w=ctx.measureText(s).width+50;ctx.fillStyle='#101e2cdd';ctx.beginPath();ctx.roundRect(640-w/2,y-37,w,58,12);ctx.fill();text(s,640,y,32)}
+function proj(x,z,h=0){return [620+(x-z)*1.05,410+(x+z)*.42-h]}
+function block(x,z,w,d,h,col,dx=0,dh=0){let P=(a,b,c)=>{let p=proj(a,b,c);return[p[0]+dx,p[1]+dh]};let a=P(x,z,0),b=P(x+w,z,0),c=P(x+w,z+d,0),e=P(x,z+d,0),A=P(x,z,h),B=P(x+w,z,h),C=P(x+w,z+d,h),E=P(x,z+d,h);poly([b,c,C,B],col[2]);poly([e,c,C,E],col[1]);poly([A,B,C,E],col[0]);let m=[(A[0]+C[0])/2,(A[1]+C[1])/2];poly([A,B,m],'#ffffff12');poly([E,C,m],'#18273612');for(let floor=0;floor<3;floor++){for(let q=15;q<w-8;q+=25){let p=P(x+q,z+d,h-25-floor*34);poly([p,[p[0]+13,p[1]+5],[p[0]+13,p[1]+22],[p[0],p[1]+17]],'#375264')}for(let q=14;q<d-8;q+=25){let p=P(x+w,z+q,h-25-floor*34);poly([p,[p[0]-13,p[1]+5],[p[0]-13,p[1]+22],[p[0],p[1]+17]],'#293d50')}}}
+function icon(good,x,y){ctx.save();ctx.shadowBlur=26;ctx.shadowColor=good?'#55ffad':'#ff4354';ctx.fillStyle=good?'#178d61':'#b72b3f';ctx.beginPath();ctx.arc(x,y,43,0,7);ctx.fill();ctx.shadowBlur=0;if(good)line([[x-22,y],[x-5,y+17],[x+24,y-20]],'#fff',10);else{line([[x-17,y-17],[x+17,y+17]],'#fff',9);line([[x+17,y-17],[x-17,y+17]],'#fff',9)}ctx.restore()}
+function terrain(t,safe){let dark=!safe?sm((t-1)/2):0;let g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,dark?'#536778':'#8fbcd2');g.addColorStop(1,'#f4e4b8');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);for(let i=0;i<5;i++){let x=i*340-100;poly([[x,390],[x+160,205+hs(i)*80],[x+340,390]],dark?'#637b7a':'#8fa786');poly([[x+160,205+hs(i)*80],[x+220,390],[x+340,390]],dark?'#526c6b':'#779475')}
+poly([[0,385],[1280,385],[1280,720],[0,720]],'#a79a77');for(let i=0;i<36;i++){let x=hs(i)*1400-60,y=390+hs(i+60)*330;poly([[x,y],[x+120,y+20],[x+30,y+100]],['#b1a27e','#a69872','#baa986'][i%3])}
+poly([proj(-310,-190),proj(310,-190),proj(310,235),proj(-310,235)],'#d4cbb2');for(let i=0;i<9;i++){let x=90+i*145,y=390+hs(i)*30;ctx.fillStyle='#665238';ctx.fillRect(x,y,6,36);poly([[x-20,y+10],[x+3,y-45],[x+26,y+10]],'#4c7952');poly([[x+3,y-45],[x+3,y+10],[x+26,y+10]],'#396748')}
+}
+function scene(t,safe){terrain(t,safe);const shaking=safe?cl((t-11)/.5)*(1-cl((t-15.5)/1)):sm((t-1.5)/1);let shake=Math.sin(t*47)*shaking;ctx.save();ctx.translate(shake*3,Math.cos(t*39)*shaking*1.5);
+const col=safe?['#e4cf9d','#c5ad7f','#a18a69']:['#d5ae82','#b58d69','#8e6a54'];
+if(!safe){let damage=sm((t-4)/3);for(let i=0;i<6;i++){let x=-220+i*55;let near=cl((i-2)/3);block(x,-100,55,90,132-near*damage*67,col,shake*(1+i*.55),near*damage*16)}for(let i=0;i<4;i++)block(55,-10+i*48,55,48,132-(1-i/4)*damage*65,col,-shake*(2+i*.4),damage*(4-i)*4);
+if(damage>0){let p=proj(55,-7,110);line([[p[0]-33,p[1]-19],[p[0]-10,p[1]+7],[p[0]-23,p[1]+30],[p[0]+10,p[1]+65],[p[0]+8,p[1]+103]],'#352b29',5*damage);for(let i=0;i<18;i++){let p=proj(40+hs(i)*130,-5+hs(i+2)*110,0);let a=damage*(10+hs(i)*25);poly([[p[0]-a,p[1]],[p[0],p[1]-a],[p[0]+a,p[1]+7]],i%2?'#a28d72':'#c4af8e')}for(let i=0;i<10;i++){ctx.fillStyle=`rgba(216,199,168,${damage*.12})`;ctx.beginPath();ctx.arc(670+hs(i)*180,410+hs(i+5)*80,15+damage*hs(i+8)*35,0,7);ctx.fill()}}
+if(t>3.5)icon(false,1030,245);
+}else{let d1=shake*6,d2=Math.sin(t*43+1)*shaking*6;block(-220,-100,330,90,132,col,d1);block(55,10,55,180,132,col,d2);let a=proj(65,-9,132),b=proj(65,11,132);a[0]+=d1;b[0]+=d2;let pts=[];for(let i=0;i<=10;i++){let u=i/10;pts.push([a[0]+(b[0]-a[0])*u+(i%2?7:-7),a[1]+(b[1]-a[1])*u])}line(pts,'#2b8d79',7);let anchor=proj(105,4,132);line([[955,420],[870,420],anchor],'#185c51',2);text(hi?'लचीला भूकंपीय जोड़':'Flexible seismic joint',1000,411,22,'#164d46');if(t>12)icon(true,1030,245)}ctx.restore();
+text('EARTHQUAKE SAFETY / BUILDING ANGLES',640,56,23,'#253c48');boxLabel(safe?(hi?'छोटी आयताकार इकाइयाँ बनाएँ':'Build in small rectangular units'):(hi?'मोड़ वाले भवनों से बचें':'Avoid buildings bent in plan'),116);text(safe?'02 / SEPARATE UNITS':'01 / CONTINUOUS BENT PLAN',640,564,19,'#34434a');}
+function frame(t){ctx.clearRect(0,0,W,H);scene(t,t>=10);if(t>9.6&&t<10.4){ctx.fillStyle=`rgba(244,241,234,${1-Math.abs(t-10)/.4})`;ctx.fillRect(0,0,W,H)}if(t>=17){ctx.globalAlpha=sm((t-17)/.5);let g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,'#c6e4ef');g.addColorStop(1,'#edf6ef');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(640,280);let s=.8+.2*sm((t-17)/.65);ctx.scale(s,s);poly([[0,-120],[98,-78],[90,34],[50,100],[0,132],[-50,100],[-90,34],[-98,-78]],'#299c68');poly([[0,-120],[0,132],[-50,100],[-90,34],[-98,-78]],'#238558');line([[-44,0],[-12,34],[49,-40]],'#fff',19);ctx.restore();text(hi?'सावधान रहें। सुरक्षित रहें।':'Stay Alert. Stay Safe.',640,490,46,'#203e45');ctx.globalAlpha=1;}
+let n=t<10?0:t<17?1:2;if(t<17){ctx.font='600 24px system-ui';let words=(hi?HI:EN)[n].split(' '),lines=[''];for(let word of words){let k=lines.length-1;if(ctx.measureText(lines[k]+word).width>1100)lines.push(word+' ');else lines[k]+=word+' '}ctx.fillStyle='#0c1925df';ctx.beginPath();ctx.roundRect(45,607,1190,90,16);ctx.fill();lines.forEach((s,i)=>text(s,640,641+i*31,24));}ctx.fillStyle=t<10?'#e86d61':'#319b73';ctx.fillRect(0,716,W*t/20,4);}
+function tone(f,d,v=.12,type='sine',delay=0){if(!ac)return;let o=ac.createOscillator(),g=ac.createGain(),a=ac.currentTime+delay;o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,a);g.gain.exponentialRampToValueAtTime(.001,a+d);o.connect(g).connect(ac.destination);o.start(a);o.stop(a+d)}
+function initAudio(){try{ac=new(window.AudioContext||window.webkitAudioContext)();let b=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;let s=ac.createBufferSource(),f=ac.createBiquadFilter();s.buffer=b;s.loop=true;f.type='lowpass';f.frequency.value=115;rum=ac.createGain();rum.gain.value=0;s.connect(f).connect(rum).connect(ac.destination);s.start()}catch(e){}}
+function stop(){if(window.speechSynthesis)speechSynthesis.cancel()}
+function speak(n){stop();if(!window.speechSynthesis)return;let u=new SpeechSynthesisUtterance((hi?HI:EN)[n]);u.lang=hi?'hi-IN':'en-US';let voices=speechSynthesis.getVoices();u.voice=voices.find(v=>v.lang.startsWith(hi?'hi':'en'))||null;u.rate=n===0?1.22:1.08;speechSynthesis.speak(u)}
+const pp=document.getElementById('pp'),sk=document.getElementById('sk'),tm=document.getElementById('tm');
+function play(){if(t>=20)t=0;playing=true;last=performance.now();spoken=-1;pp.textContent='Pause';if(ac)ac.resume()}
+document.getElementById('start-btn').onclick=()=>{document.getElementById('start-overlay').style.display='none';initAudio();pp.disabled=sk.disabled=false;play()};
+pp.onclick=()=>{if(playing){playing=false;stop();if(ac)ac.suspend();pp.textContent='Play'}else play()};
+sk.oninput=()=>{t=+sk.value;playing=false;stop();if(ac)ac.suspend();pp.textContent='Play';frame(t)};
+document.getElementById('lang').onclick=()=>{hi=!hi;document.getElementById('lang').textContent=hi?'Language: हिन्दी':'Language: English';spoken=-1;stop();frame(t)};
+function loop(now){let old=t;if(playing){t=Math.min(20,t+Math.min((now-last)/1000,.08));let n=t<10?0:t<17?1:2;if(n!==spoken){spoken=n;speak(n)}if(old<4&&t>=4){tone(125,.6,.1,'sawtooth');tone(170,.4,.08,'square',.18)}if(old<6&&t>=6)tone(70,.9,.15,'sawtooth');if(old<13&&t>=13){tone(880,.8);tone(1320,1,.07,'sine',.12)}if(old<17.3&&t>=17.3){tone(660,.8);tone(990,1,.08,'sine',.1)}if(rum)rum.gain.setTargetAtTime(t<10?.35*sm((t-1.5)/1):(t<16?.16:0),ac.currentTime,.15);if(t>=20){playing=false;pp.textContent='Replay';if(rum)rum.gain.value=0}}last=now;sk.value=t;tm.textContent=t.toFixed(1)+'s / 20s';frame(t);requestAnimationFrame(loop)}
+frame(0);requestAnimationFrame(loop);
+</script></body></html>

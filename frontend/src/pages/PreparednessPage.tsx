@@ -86,29 +86,77 @@ export default function PreparednessPage() {
         <div className="tab-content awareness-content">
           <div className="card text-center mb-4" style={{ padding: '0' }}>
             <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'बंद नाले से बाढ़ जागरूकता' : 'Clogged Drain Flood Awareness'}</h2>
-            <iframe 
-              src="/drain-flood.html" 
-              style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '0 0 10px 10px', backgroundColor: '#0f1a2e' }}
-              title="Clogged Drain Flood Animation"
-            />
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                src="/drain-flood.html" 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                title="Clogged Drain Flood Animation"
+              />
+            </div>
+            <div style={{ height: '100px', width: '100%', backgroundColor: '#0f1a2e', borderRadius: '0 0 10px 10px' }}>
+              {/* Animation character stage */}
+            </div>
           </div>
           
           <div className="card text-center mb-4" style={{ padding: '0' }}>
             <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'झील के ओवरफ्लो से बाढ़ जागरूकता' : 'Lake Overflow Flood Awareness'}</h2>
-            <iframe 
-              src="/lake-flood.html" 
-              style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '0 0 10px 10px', backgroundColor: '#0f1a2e' }}
-              title="Lake Overflow Flood Animation"
-            />
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                src="/lake-flood.html" 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                title="Lake Overflow Flood Animation"
+              />
+            </div>
+            <div style={{ height: '100px', width: '100%', backgroundColor: '#0f1a2e', borderRadius: '0 0 10px 10px' }}>
+              {/* Animation character stage */}
+            </div>
           </div>
+
+          <div className="card text-center mb-4" style={{ padding: '0' }}>
+            <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'अचानक बाढ़ प्रतिक्रिया: परिवार बचाव' : 'Sudden Flood Response: Family Rescue'}</h2>
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                src="/family-flood.html" 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                title="Sudden Flood Response Animation"
+              />
+            </div>
+            <div style={{ height: '100px', width: '100%', backgroundColor: '#0f1a2e', borderRadius: '0 0 10px 10px' }}>
+              {/* Animation character stage */}
+            </div>
+          </div>
+
+
+
+          <div className="card text-center mb-4" style={{ padding: '0' }}>
+            <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'खतरा: तूफान में पेड़ के नीचे न खड़े हों' : 'Danger: Never Stand Under a Tree in a Storm'}</h2>
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe
+                src="/tree-storm.html"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', backgroundColor: '#050510' }}
+                title="Tree Storm Hazard Warning Animation"
+              />
+            </div>
+            <div style={{ height: '100px', width: '100%', backgroundColor: '#050510', borderRadius: '0 0 10px 10px' }}>
+              {/* Animation character stage */}
+            </div>
+          </div>
+
           <div className="card text-center mb-4" style={{ padding: '0' }}>
             <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'वनों की कटाई से भूस्खलन जागरूकता' : 'Deforestation Landslide Awareness'}</h2>
-            <iframe 
-              src="/landslide.html" 
-              style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '0 0 10px 10px', backgroundColor: '#1a1f18' }}
-              title="Deforestation Landslide Animation"
-            />
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                src="/landslide.html" 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                title="Deforestation Landslide Animation"
+              />
+            </div>
+            <div style={{ height: '100px', width: '100%', backgroundColor: '#1a1f18', borderRadius: '0 0 10px 10px' }}>
+              {/* Animation character stage */}
+            </div>
           </div>
+
+
         </div>
       )}
 

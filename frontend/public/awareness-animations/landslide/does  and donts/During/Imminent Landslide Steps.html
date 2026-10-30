@@ -1,0 +1,453 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Imminent Landslide Steps</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --fg: #2a2f38;
+    --btn-bg: #f4ead2;
+    --btn-fg: #14181e;
+  }
+
+  @media(prefers-color-scheme:dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181e;
+      --fg: #e8e4d8;
+      color-scheme: dark
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14181e;
+    --fg: #e8e4d8;
+    color-scheme: dark
+  }
+
+  html,
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, sans-serif
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-block: 12px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    position: relative
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    max-width: 1280px
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    border-radius: 10px;
+    background: #000;
+    display: block
+  }
+
+  .bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    max-width: 1280px;
+    margin-top: 10px;
+    flex-wrap: wrap
+  }
+
+  .bar input {
+    flex: 1;
+    min-width: 120px
+  }
+
+  button {
+    font: inherit;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer
+  }
+
+  button:focus-visible,
+  input:focus-visible {
+    outline: 3px solid #ff2a38;
+    outline-offset: 2px
+  }
+
+  button:disabled {
+    opacity: .5;
+    cursor: default
+  }
+
+  #start-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .65);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10
+  }
+
+  #start-overlay button {
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    border: none;
+    padding: 16px 32px;
+    font-size: 22px;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: transform .2s
+  }
+
+  #start-overlay button:hover {
+    transform: scale(1.05)
+  }
+
+  @media(max-width:520px) {
+    #start-overlay button {
+      padding: 12px 20px;
+      font-size: 16px
+    }
+  }
+</style>
+
+<div class="stage">
+  <canvas id="c" width="1280" height="720"></canvas>
+  <div id="start-overlay"><button id="start-btn">▶ Play Animation &amp; Audio</button></div>
+</div>
+<div class="bar">
+  <button id="pp" disabled>Play</button>
+  <input id="sk" type="range" min="0" max="19.5" step="0.01" value="0" disabled aria-label="Timeline">
+  <span id="tm">0.0s</span>
+  <button id="lang">Hindi Subtitles: Off</button>
+</div>
+
+<script>
+  const W = 1280, H = 720, D = 19.5, TAU = Math.PI * 2, cv = document.getElementById('c'), ctx = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lp = (a, b, k) => a + (b - a) * k, sm = k => k * k * (3 - 2 * k), mod = (a, n) => ((a % n) + n) % n;
+  function hs(n) { n |= 0; n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296 }
+  const hx = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mx = (a, b, k) => a.map((v, i) => lp(v, b[i], k)), rg = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+  const sh = (c, f, k) => rg(mx(hx(c), [22, 32, 44], k * .45).map(v => Math.min(255, v * f)));
+  const tri = (a, b, c, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.fill() };
+  const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h) };
+  const fan = (P, c, col, f, k) => { for (let i = 0; i < P.length; i++)tri(c, P[i], P[(i + 1) % P.length], sh(col, f + (hs(i * 7 + P[0][0]) - .5) * .4, k)) };
+  const gy = x => 550 + 14 * Math.sin(x * .007);
+  const faceY = x => 320 + (x - 480) / 210 * 300;
+
+  // ---------- Script ----------
+  const VE = ['A landslide is about to happen. Act immediately!', 'First, contact your local fire, police or public works department.', 'Second, inform your affected neighbors.', 'Third, leave the area quickly.', 'Stay alert. Stay safe.'];
+  const VH = ['लैंडस्लाइड होने वाला है। तुरंत कदम उठाएँ!', 'पहले, अपने स्थानीय फायर, पुलिस या लोक निर्माण विभाग से संपर्क करें।', 'दूसरा, प्रभावित पड़ोसियों को सूचित करें।', 'तीसरा, क्षेत्र को जल्दी से छोड़ दें।', 'सावधान रहें। सुरक्षित रहें।'];
+  const CT = [[.3, 3.9], [4.2, 9.0], [9.2, 12.9], [13.1, 16.1], [16.6, 19.2]];
+  const STE = ['Contact fire, police or public works', 'Inform affected neighbors', 'Leave the area quickly'];
+  const STH = ['फायर, पुलिस या लोक निर्माण विभाग से संपर्क करें', 'प्रभावित पड़ोसियों को सूचित करें', 'क्षेत्र को जल्दी से छोड़ दें'];
+  const ST = [[4.6, 9.0], [9.4, 13.0], [13.2, 16.1]];
+  let showHindi = false;
+
+  // ---------- Scenery ----------
+  function peak(cx, top, w, base, c, k) {
+    const T = [cx, top], L = [cx - w / 2, base], R = [cx + w / 2, base], M = [cx + w * .05, top + (base - top) * .5], B = [cx - w * .12, base], N = [cx - w * .14, top + (base - top) * .42];
+    tri(T, L, N, sh(c, 1.15, k)); tri(T, N, M, sh(c, .95, k)); tri(T, M, R, sh(c, .7, k)); tri(L, N, B, sh(c, .9, k)); tri(N, M, B, sh(c, .8, k)); tri(M, R, B, sh(c, .6, k))
+  }
+  function tree(x, y, s, k) { ctx.fillStyle = sh('#5b4130', 1, k); ctx.fillRect(x - 3 * s, y - 22 * s, 6 * s, 22 * s); for (let j = 0; j < 3; j++) { const b = y - 12 * s - j * 18 * s, w = (36 - j * 8) * s; tri([x - w / 2, b], [x, b - 30 * s], [x + w / 2, b], sh('#3f8a4a', .8 + j * .18, k)) } }
+  function cloud(x, y, r, k) { for (let j = 0; j < 4; j++) { const cx = x + j * r * .9, cy = y + (j % 2 ? -r * .3 : 0), rad = r * (1 - .1 * j); ctx.fillStyle = rg(mx([245, 248, 250], [44, 52, 62], k), .92); ctx.beginPath(); for (let i = 0; i < 7; i++) { const a = i / 7 * TAU; ctx.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad * .7) } ctx.fill() } }
+  function rock(x, y, r, rot, c, k, seed) {
+    const P = []; for (let i = 0; i < 6; i++) { const a = rot + i / 6 * TAU, rad = r * (.75 + .35 * hs(seed + i)); P.push([x + Math.cos(a) * rad, y + Math.sin(a) * rad]) }
+    for (let i = 0; i < 6; i++)tri([x, y], P[i], P[(i + 1) % 6], sh(c, .65 + .5 * hs(seed * 3 + i), k))
+  }
+
+  const HOUSES = [
+    { x: 975, w: 150, h: 92, c: '#e8c9a0', r: '#b5533c', ap: 8.7 },
+    { x: 1220, w: 130, h: 86, c: '#cfe0c3', r: '#8c4a3a', ap: 10.05 },
+    { x: 1480, w: 140, h: 90, c: '#d9d2ea', r: '#a2483f', ap: 11.55 },
+    { x: 1740, w: 130, h: 86, c: '#f0d8c0', r: '#7d4a5a', ap: 13.0 }
+  ];
+  function house(o, t, k) {
+    const { x, w, h, c, r, ap } = o, y = gy(x), lit = t >= ap, L = x - w / 2, R = x + w / 2;
+    ctx.fillStyle = sh('#6b4f32', .9, k); ctx.fillRect(L - 4, y - 2, w + 8, 18);
+    tri([L, y], [R, y], [R, y - h], sh(c, 1, k)); tri([L, y], [R, y - h], [L, y - h], sh(c, .86, k));
+    tri([x, y - h - w * .36], [L - 12, y - h], [x, y - h], sh(r, 1.1, k)); tri([x, y - h - w * .36], [x, y - h], [R + 12, y - h], sh(r, .78, k));
+    ctx.fillStyle = lit ? '#ffd966' : sh('#7fa6c0', .9, k); ctx.fillRect(L + 16, y - h + 26, 26, 24); ctx.fillRect(R - 42, y - h + 26, 26, 24);
+    ctx.strokeStyle = sh('#4a3a2a', 1, k); ctx.lineWidth = 2.5; ctx.strokeRect(L + 16, y - h + 26, 26, 24); ctx.strokeRect(R - 42, y - h + 26, 26, 24);
+    ctx.fillStyle = lit ? '#f7c870' : sh('#5b4130', 1, k); ctx.fillRect(x - 12, y - 46, 24, 46);
+    if (lit) { const g = ctx.createRadialGradient(x, y - 20, 4, x, y - 20, 90); g.addColorStop(0, 'rgba(255,210,110,.28)'); g.addColorStop(1, 'rgba(255,210,110,0)'); ctx.fillStyle = g; ctx.fillRect(x - 90, y - 110, 180, 130) }
+  }
+
+  const CRACKS = [[[470, 352], [490, 360], [505, 356], [528, 372], [545, 368], [566, 384]], [[455, 372], [472, 384], [488, 382], [510, 400]], [[520, 395], [540, 410], [556, 408], [580, 430], [596, 448]]];
+  function cracks(t, k) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    CRACKS.forEach((P, ci) => {
+      const f = cl((t - 1 - ci * .4) / 2); if (f <= 0) return; const n = (P.length - 1) * f, full = Math.floor(n);
+      ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]); for (let i = 1; i <= full; i++)ctx.lineTo(P[i][0], P[i][1]);
+      if (full < P.length - 1) { const a = P[full], b = P[full + 1], u = n - full; ctx.lineTo(lp(a[0], b[0], u), lp(a[1], b[1], u)) }
+      ctx.strokeStyle = sh('#1e140c', 1, k); ctx.lineWidth = 4 + 2 * cl((t - 3) / 5); ctx.stroke()
+    });
+    ctx.lineCap = 'butt'
+  }
+  function pebbles(t, k) {
+    const I = cl((t - 1.2) / 2.2) * .35 + cl((t - 10) / 1.2) * .65, N = 34;
+    for (let i = 0; i < N; i++) {
+      if (hs(i + 50) > I) continue; const sp = .45 + .5 * hs(i + 1), p = mod(t * sp + hs(i + 2) * 4, 1.7); if (p > 1) continue;
+      const sx = 500 + hs(i) * 120, ex = sx + 30 + hs(i + 3) * 90, x = lp(sx, ex, p), y = lp(faceY(sx), gy(ex) - 4, p * p) - Math.abs(Math.sin(p * TAU * 2.5)) * 12 * p, s = 3 + hs(i + 4) * 6;
+      tri([x - s, y + s * .6], [x, y - s], [x + s, y + s * .6], sh(i % 2 ? '#7a5a38' : '#8f8b84', .9, k))
+    }
+  }
+  const FRONT = t => 560 + 70 * Math.pow(Math.max(0, t - 10.4), 1.4);
+  function slideH(x, xf, g, t) { const d = xf - x; return d < 0 ? 0 : Math.pow(cl(d / 180), .7) * (55 + 45 * hs((x / 36) | 0)) * g * (.92 + .08 * Math.sin(t * 6 + x)) }
+  function slideFx(t, k) {
+    if (t < 10.4) return; const g = cl((t - 10.4) / 1.5), xf = FRONT(t), xs = 470, pts = [];
+    for (let x = xs; x <= xf + 40; x += 36)pts.push([x, gy(x) - slideH(x, xf, g, t), gy(x) + 24]);
+    for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], c1 = i % 3 ? '#6b4a2b' : '#5a3d24'; tri([a[0], a[1]], [b[0], b[1]], [a[0], a[2]], sh(c1, .8 + .4 * hs(i), k)); tri([b[0], b[1]], [b[0], b[2]], [a[0], a[2]], sh('#4e3620', .8 + .4 * hs(i + 40), k)) }
+    for (let i = 0; i < 7; i++) { const x = xf - 30 - i * 48; if (x < xs) continue; rock(x, gy(x) - slideH(x, xf, g, t) - 4, 13 + hs(i) * 12, t * 2 + i, i % 2 ? '#8f8b84' : '#6f6a62', k, i * 11 + 3) }
+    for (let i = 0; i < 5; i++) { const rx = xf + 20 + i * 30, ry = gy(rx) - 8 - Math.abs(Math.sin(t * 5 + i * 2)) * 14; rock(rx, ry, 5 + hs(i + 9) * 4, t * 6 + i, '#8f8b84', k, i * 5 + 70) }
+    ctx.fillStyle = 'rgba(200,175,140,.2)'; for (let j = 0; j < 8; j++) { ctx.beginPath(); ctx.ellipse(xf - j * 55 + Math.sin(t * 2 + j) * 10, gy(xf) - 100 - j * 6, 62, 38, 0, 0, TAU); ctx.fill() }
+  }
+
+  function world(t, k) {
+    peak(700, 200, 760, 620, '#8aa6bd', k); peak(1500, 190, 860, 620, '#8aa6bd', k); peak(2700, 210, 900, 620, '#8aa6bd', k);
+    peak(220, 260, 560, 620, '#6f9560', k); peak(1250, 240, 620, 620, '#6a8f5c', k); peak(1950, 250, 1000, 620, '#6b8a5e', k); peak(3150, 250, 800, 620, '#6a8f5c', k);
+    peak(480, 320, 420, 620, '#5f8a40', k); peak(980, 140, 360, 620, '#7a8a78', k);
+    ctx.fillStyle = sh('#6b4f32', 1, k); ctx.beginPath(); ctx.moveTo(-200, 1300); for (let x = -200; x <= 3600; x += 50)ctx.lineTo(x, gy(x)); ctx.lineTo(3600, 1300); ctx.fill();
+    for (let x = -200; x < 3600; x += 100) { const g0 = gy(x), g1 = gy(x + 100), m = [x + 50 + (hs(x) - .5) * 30, Math.max(g0, g1) + 80 + hs(x + 3) * 30]; tri([x, g0], [x + 100, g1], m, sh('#5f8a40', .8 + .4 * hs(x), k)); tri([x, g0], m, [x - 20, g0 + 120], sh('#4a7a3a', .7 + .3 * hs(x + 1), k)); tri([x + 100, g1], m, [x + 120, g1 + 120], sh('#55803c', .6 + .3 * hs(x + 2), k)) }
+    ctx.globalAlpha = cl((t - 2.4) / 1.6); fan([[455, 345], [510, 350], [565, 470], [600, 506], [430, 506], [435, 430]], [500, 430], '#8b6a45', 1, k); ctx.globalAlpha = 1;
+    cracks(t, k);
+    for (let i = 0; i < 9; i++) { const x = 450 + hs(i) * 170, y = gy(x) - 4, s = 6 + hs(i + 3) * 8; tri([x - s, y], [x - s * .3, y - s * 1.2], [x + s, y], sh(i % 2 ? '#7a5a38' : '#8f8b84', .9, k)) }
+    pebbles(t, k);
+    // road
+    ctx.fillStyle = sh('#555c64', 1, k); ctx.beginPath(); ctx.moveTo(740, gy(740) + 3); for (let x = 740; x <= 3500; x += 50)ctx.lineTo(x, gy(x) + 3); for (let x = 3500; x >= 740; x -= 50)ctx.lineTo(x, gy(x) + 23); ctx.fill();
+    ctx.strokeStyle = 'rgba(240,230,190,.7)'; ctx.lineWidth = 2; ctx.setLineDash([18, 14]); ctx.beginPath(); for (let x = 740; x <= 3500; x += 50) { const y = gy(x) + 13; x === 740 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) } ctx.stroke(); ctx.setLineDash([]);
+    // trees (one near the slope leans as the ground loosens)
+    for (const x of [60, 140, 330, 720, 1080, 1340, 1600, 1860, 2050, 2200, 2650, 2850, 3050]) tree(x, gy(x), 1.3, k);
+    ctx.save(); ctx.translate(640, gy(640)); ctx.rotate(.4 * sm(cl((t - 3) / 6))); tree(0, 0, 1.3, k); ctx.restore();
+    for (const o of HOUSES) house(o, t, k);
+    safeZone(t, k);
+    slideFx(t, k)
+  }
+  function safeZone(t, k) {
+    const x = 2400, y = gy(x);
+    for (const [dx, s] of [[-60, 1], [60, .85]]) { tri([x + dx - 42 * s, y + 6], [x + dx, y - 54 * s], [x + dx + 42 * s, y + 6], sh('#e9edf0', .95, k)); tri([x + dx, y - 54 * s], [x + dx, y + 6], [x + dx + 42 * s, y + 6], sh('#c9d3da', .9, k)) }
+    ctx.fillStyle = sh('#4a3a2a', 1, k); ctx.fillRect(x - 3, y - 120, 6, 126); const wv = Math.sin(t * 4) * 5;
+    tri([x + 3, y - 120], [x + 60, y - 106 + wv], [x + 3, y - 90], sh('#2f9e5a', 1.05, k));
+    ctx.fillStyle = sh('#2f9e5a', 1, k); rr(x - 110, y - 90, 82, 28, 6); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 15px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(showHindi ? 'सुरक्षित स्थान' : 'SAFE ZONE', x - 69, y - 71);
+    ctx.fillStyle = sh('#4a3a2a', 1, k); ctx.fillRect(x - 71, y - 62, 4, 66)
+  }
+
+  // ---------- People ----------
+  function person(x, y, s, shirt, ph, mode, dir, k, t) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(dir * s, s); ctx.lineCap = 'round';
+    const pant = sh('#2b3a55', 1, k), sk = sh('#e0b08a', 1, k), run = mode === 'run', a = run ? Math.sin(ph) * .9 : 0;
+    ctx.strokeStyle = pant; ctx.lineWidth = 6;
+    for (const sg of [-1, 1]) { const an = a * sg, fx = Math.sin(an) * 26, fy = -28 + Math.cos(an) * 26 - (run && sg * Math.sin(ph) < 0 ? 5 : 0); ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(fx, fy); ctx.stroke() }
+    tri([-8, -52], [8, -52], [6, -28], sh(shirt, 1, k)); tri([-8, -52], [6, -28], [-6, -28], sh(shirt, .82, k));
+    ctx.strokeStyle = sh(shirt, .9, k); ctx.lineWidth = 5; let hand;
+    if (mode === 'phone') hand = [5, -64]; else if (mode === 'wave') { const an = 2.6 + Math.sin(t * 10) * .4; hand = [Math.sin(an) * 22, -50 + Math.cos(an) * 22] } else if (mode === 'knock') hand = [20, -46 + Math.sin(ph) * 5]; else { const an = -a * 1.0; hand = [Math.sin(an) * 22 + (run ? 6 : 0), -50 + Math.cos(an) * 22 * (run ? .8 : 1)] }
+    ctx.beginPath(); ctx.moveTo(0, -49); ctx.lineTo(hand[0], hand[1]); ctx.stroke();
+    ctx.fillStyle = sk; ctx.beginPath(); ctx.arc(hand[0], hand[1], 3.2, 0, TAU); ctx.fill();
+    if (mode === 'phone') { ctx.fillStyle = '#222'; ctx.fillRect(5, -72, 5, 11) }
+    ctx.fillStyle = sk; ctx.beginPath(); ctx.arc(0, -62, 8, 0, TAU); ctx.fill();
+    tri([-8.5, -63], [0, -74], [8.5, -63], sh('#3a2a20', 1, k));
+    ctx.restore()
+  }
+  function warnIcon(x, y, a) { ctx.save(); ctx.globalAlpha = a; tri([x - 14, y + 12], [x, y - 14], [x + 14, y + 12], '#ff2a38'); ctx.fillStyle = '#fff'; ctx.font = '800 17px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('!', x, y + 9); ctx.restore() }
+
+  const HK = [[0, 880], [9, 880], [9.9, 1150], [10.7, 1150], [11.4, 1410], [12.2, 1410], [12.9, 1670], [13.3, 1670]];
+  const runX = (x0, d) => x0 + 250 * (d < .4 ? d * d / .8 : d - .2);
+  function heroX(t) {
+    if (t >= 13.3) return runX(1670, t - 13.3);
+    for (let i = 0; i < HK.length - 1; i++) { const a = HK[i], b = HK[i + 1]; if (t >= a[0] && t < b[0]) return lp(a[1], b[1], sm((t - a[0]) / (b[0] - a[0]))) } return 880
+  }
+  const AC = [
+    { x: 995, c: '#8e5bd1', s: 1.3, ap: 8.7, lv: 13.0 }, { x: 1020, c: '#f2c230', s: .9, ap: 8.7, lv: 13.08 },
+    { x: 1220, c: '#2d9cdb', s: 1.3, ap: 10.05, lv: 13.15 },
+    { x: 1480, c: '#2f9e5a', s: 1.3, ap: 11.55, lv: 13.25 }, { x: 1505, c: '#e67e22', s: .9, ap: 11.6, lv: 13.33 },
+    { x: 1740, c: '#16a085', s: 1.3, ap: 13.0, lv: 13.35 }
+  ];
+  const SHOUT = [[9.9, 10.7], [11.4, 12.2], [12.9, 13.4]];
+  function actors(t, k) {
+    const gyo = x => gy(x) + 12;
+    AC.forEach((a, i) => {
+      if (t < a.ap) return; const al = cl((t - a.ap) / .25), d = Math.max(0, t - a.lv), X = runX(a.x, d), moving = d > 0, mode = moving ? 'run' : (t - a.ap < 1.0 ? 'wave' : 'stand');
+      ctx.save(); ctx.globalAlpha = al; person(X, gyo(X), a.s, a.c, t * 11 + i * 1.7, mode, 1, k, t); ctx.restore();
+      if (!moving && t - a.ap < 1.3 && a.s > 1) warnIcon(X, gyo(X) - 110, cl((1.3 - (t - a.ap)) / .3))
+    });
+    const X = heroX(t), v = (heroX(t + .03) - heroX(t - .03)) / .06, moving = Math.abs(v) > 20;
+    let mode = moving ? 'run' : (t > 4.4 && t < 8.7 ? 'phone' : 'stand'), dir = t < 8.8 ? -1 : 1;
+    const sh_ = SHOUT.some(([a, b]) => t >= a && t < b); if (sh_ && !moving) mode = (t > 9.9 && t < 13.4) ? 'knock' : mode;
+    if (t >= 8.7 && t < 9.0) mode = 'wave';
+    person(X, gyo(X), 1.3, '#e8483b', t * 11, mode, dir, k, t);
+    for (const [a, b] of SHOUT) if (t >= a + .15 && t < b) { const al = Math.min(cl((t - a - .15) / .15), cl((b - t) / .15)), s = showHindi ? 'भूस्खलन! निकलो!' : 'Landslide! Evacuate!'; ctx.save(); ctx.globalAlpha = al; ctx.font = '700 19px system-ui,sans-serif'; ctx.textAlign = 'center'; const w = ctx.measureText(s).width + 28, y = gyo(X) - 126; ctx.fillStyle = 'rgba(8,14,24,.85)'; rr(X - w / 2, y - 22, w, 34, 10); ctx.fill(); ctx.strokeStyle = '#ff2a38'; ctx.lineWidth = 2; ctx.stroke(); tri([X - 7, y + 12], [X + 7, y + 12], [X, y + 22], 'rgba(8,14,24,.85)'); ctx.fillStyle = '#f4ead2'; ctx.fillText(s, X, y + 2); ctx.restore() }
+  }
+
+  // ---------- Camera ----------
+  function cam(t) {
+    const z = sm(cl((t - 4) / 1.2)), p = sm(cl((t - 8.6) / 1)), q = sm(cl((t - 13.2) / 2.4));
+    let x = lp(1000, 900, z), y = lp(380, 450, z), s = lp(.64, 1.25, z);
+    const T2 = heroX(t) + 150; x = lp(x, T2, p); y = lp(y, 440, p); s = lp(s, 1.15, p);
+    x = lp(x, 1600, q); y = lp(y, 400, q); s = lp(s, .62, q);
+    return { x, y, s }
+  }
+
+  // ---------- Emergency HUD ----------
+  function wheel(x, y) { ctx.fillStyle = '#1b1f26'; ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill(); ctx.fillStyle = '#9aa3ad'; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, TAU); ctx.fill() }
+  function icoFire(t) {
+    ctx.fillStyle = '#d62828'; ctx.fillRect(-46, -14, 62, 30); ctx.fillStyle = '#b01e1e'; ctx.fillRect(16, -8, 28, 24); ctx.fillStyle = '#bfe3f5'; ctx.fillRect(28, -4, 12, 10); ctx.fillStyle = '#fff'; ctx.fillRect(-46, -3, 62, 4);
+    ctx.strokeStyle = '#e8e8e8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-42, -20); ctx.lineTo(10, -20); ctx.moveTo(-42, -26); ctx.lineTo(10, -26); for (let x = -38; x < 10; x += 8) { ctx.moveTo(x, -20); ctx.lineTo(x, -26) } ctx.stroke();
+    ctx.fillStyle = Math.sin(t * 14) > 0 ? '#ff3b3b' : '#4aa3ff'; ctx.fillRect(24, -14, 12, 5); wheel(-26, 18); wheel(28, 18)
+  }
+  function icoPolice(t) {
+    ctx.fillStyle = '#f2f4f7'; ctx.fillRect(-46, 0, 92, 18); ctx.beginPath(); ctx.moveTo(-26, 0); ctx.lineTo(-14, -18); ctx.lineTo(18, -18); ctx.lineTo(32, 0); ctx.fill();
+    ctx.fillStyle = '#2d6fd6'; ctx.fillRect(-46, 6, 92, 5); ctx.fillStyle = '#bfe3f5'; ctx.beginPath(); ctx.moveTo(-20, -1); ctx.lineTo(-11, -14); ctx.lineTo(0, -14); ctx.lineTo(0, -1); ctx.fill(); ctx.beginPath(); ctx.moveTo(5, -1); ctx.lineTo(5, -14); ctx.lineTo(16, -14); ctx.lineTo(25, -1); ctx.fill();
+    const f = Math.sin(t * 14) > 0; ctx.fillStyle = f ? '#ff3b3b' : '#4aa3ff'; ctx.fillRect(-9, -24, 9, 6); ctx.fillStyle = f ? '#4aa3ff' : '#ff3b3b'; ctx.fillRect(0, -24, 9, 6); wheel(-28, 18); wheel(28, 18)
+  }
+  function icoWorks(t) {
+    ctx.fillStyle = '#f2b705'; ctx.beginPath(); ctx.moveTo(-46, -20); ctx.lineTo(8, -20); ctx.lineTo(14, 8); ctx.lineTo(-46, 8); ctx.fill(); ctx.fillStyle = '#d99a00'; ctx.fillRect(-46, 2, 62, 6);
+    ctx.fillStyle = '#f07f1d'; ctx.fillRect(14, -8, 30, 24); ctx.fillStyle = '#bfe3f5'; ctx.fillRect(30, -4, 11, 10); ctx.fillRect(-46, 8, 90, 8);
+    ctx.fillStyle = '#f2b705'; ctx.fillRect(-46, 8, 90, 8); ctx.fillStyle = Math.sin(t * 10) > 0 ? '#ff9f1a' : '#7a4a00'; ctx.fillRect(22, -14, 10, 5); wheel(-26, 18); wheel(-4, 18); wheel(30, 18)
+  }
+  const ICO = [icoFire, icoPolice, icoWorks], CARD = [[5.0, 7.8], [5.6, 8.2], [6.2, 8.6]];
+  function emHud(t, c) {
+    const out = cl((9.0 - t) / .4); if (out <= 0) return;
+    const LB = showHindi ? ['फायर', 'पुलिस', 'लोक निर्माण'] : ['Fire', 'Police', 'Public Works'], CX = [885, 1035, 1185], cy = 130;
+    const px = 640 + (heroX(t) - c.x) * c.s, py = 360 + (gy(heroX(t)) + 12 - 80 * 1.3 - c.y) * c.s;
+    for (let i = 0; i < 3; i++) {
+      const [a, ok] = CARD[i], al = cl((t - a) / .35) * out; if (al <= 0) continue; const done = t >= ok, cx = CX[i];
+      ctx.save(); ctx.globalAlpha = al;
+      ctx.strokeStyle = done ? 'rgba(80,220,140,.8)' : 'rgba(255,90,100,.85)'; ctx.lineWidth = 2.5; ctx.setLineDash([10, 9]); ctx.lineDashOffset = -t * 60; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(cx, cy + 180); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(8,14,24,.82)'; rr(cx - 69, cy, 138, 178, 14); ctx.fill(); ctx.strokeStyle = done ? '#2f9e5a' : '#ff2a38'; ctx.lineWidth = 2; ctx.stroke();
+      if (!done) for (let r = 0; r < 2; r++) { const u = mod(t * .9 + r * .5, 1); ctx.strokeStyle = `rgba(255,70,80,${.6 * (1 - u)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy + 62, 34 + u * 34, 0, TAU); ctx.stroke() }
+      ctx.save(); ctx.translate(cx, cy + 64); ctx.scale(1.1, 1.1); ICO[i](t); ctx.restore();
+      ctx.fillStyle = '#f4ead2'; ctx.font = '700 19px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(LB[i], cx, cy + 128);
+      if (done) { ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(cx - 44, cy + 152); ctx.lineTo(cx - 38, cy + 158); ctx.lineTo(cx - 28, cy + 146); ctx.stroke(); ctx.fillStyle = '#4ade80'; ctx.font = '600 15px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText(showHindi ? 'सूचित किया' : 'Alerted', cx - 20, cy + 157) }
+      else { ctx.fillStyle = '#ff9aa2'; ctx.font = '600 15px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText((showHindi ? 'कॉल हो रहा है' : 'Calling') + '.'.repeat(1 + Math.floor(t * 3) % 3), cx, cy + 157) }
+      ctx.restore()
+    }
+  }
+  function stepHud(t) {
+    ctx.textAlign = 'left';
+    for (let i = 0; i < 3; i++) {
+      const [a, b] = ST[i], al = Math.min(cl((t - a) / .3), cl((b - t) / .3)); if (al <= 0) continue; const s = (showHindi ? STH : STE)[i]; ctx.font = '600 23px system-ui,sans-serif';
+      const w = ctx.measureText(s).width + 84, x = 36 - 30 * (1 - al), y = 96;
+      ctx.save(); ctx.globalAlpha = al; ctx.fillStyle = 'rgba(8,14,24,.8)'; rr(x, y, w, 52, 14); ctx.fill(); ctx.strokeStyle = '#ff2a38'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#ff2a38'; ctx.beginPath(); ctx.arc(x + 28, y + 26, 17, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '800 21px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(String(i + 1), x + 28, y + 34);
+      ctx.textAlign = 'left'; ctx.font = '600 23px system-ui,sans-serif'; ctx.fillStyle = '#f4ead2'; ctx.fillText(s, x + 56, y + 34); ctx.restore()
+    }
+    const tk = Math.min(cl((t - 4.3) / .4), cl((16.1 - t) / .4)); if (tk <= 0) return;
+    const L = showHindi ? ['संपर्क', 'सूचित', 'निकलें'] : ['Contact', 'Inform', 'Leave'], act = t < 9.2 ? 0 : t < 13.0 ? 1 : 2;
+    ctx.save(); ctx.globalAlpha = tk; ctx.font = '700 18px system-ui,sans-serif'; ctx.textAlign = 'center';
+    for (let i = 0; i < 3; i++) { const x = 790 + i * 160; ctx.fillStyle = i < act ? '#2f9e5a' : i === act ? '#ff2a38' : 'rgba(8,14,24,.7)'; rr(x, 24, 150, 38, 19); ctx.fill(); ctx.fillStyle = i <= act ? '#fff' : 'rgba(244,234,210,.65)'; ctx.fillText((i + 1) + '  ' + L[i], x + 75, 49) }
+    ctx.restore()
+  }
+
+  const bo = u => { const n = 7.5625, d = 2.75; if (u < 1 / d) return n * u * u; if (u < 2 / d) return n * (u -= 1.5 / d) * u + .75; if (u < 2.5 / d) return n * (u -= 2.25 / d) * u + .9375; return n * (u -= 2.625 / d) * u + .984375 };
+
+  function frame(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const k = t < 3.6 ? sm(t / 3.6) * .85 : .85, q = sm(cl((t - .3) / 3)), ri = cl((t - 1.4) / 1.6) * .85 * (1 - cl((t - 16) / .6));
+    const g = ctx.createLinearGradient(0, 0, 0, H * .7); g.addColorStop(0, rg(mx(hx('#6fa3c9'), hx('#232f3b'), k))); g.addColorStop(.6, rg(mx(hx('#a9d0e0'), hx('#46565f'), k))); g.addColorStop(1, rg(mx(hx('#f4e4b8'), hx('#79878a'), k))); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (k < 1) { const sg = ctx.createRadialGradient(1000, 110, 6, 1000, 110, 100); sg.addColorStop(0, `rgba(255,244,200,${.95 * (1 - k)})`); sg.addColorStop(1, 'rgba(255,244,200,0)'); ctx.fillStyle = sg; ctx.fillRect(800, 0, 400, 300) }
+    ctx.globalAlpha = .25 + .75 * q; for (let i = 0; i < 7; i++)cloud(mod(i * 230 + t * 16, 1700) - 250, lp(-60, 50 + hs(i) * 110, q), 30 + hs(i + 4) * 28 + q * 18, k); ctx.globalAlpha = 1;
+    const c = cam(t), sa = (t < 4.2 ? 2.5 * cl(t / 2) : 0) + (t > 10.4 && t < 16.5 ? 3.5 : 0), n = Math.floor(t * 30), shx = (hs(n) - .5) * sa, shy = (hs(n + 99) - .5) * sa;
+    ctx.save(); ctx.translate(640 + shx, 360 + shy); ctx.scale(c.s, c.s); ctx.translate(-c.x, -c.y); world(t, k); actors(t, k);
+    // danger zone on the cracking slope
+    const da = Math.min(cl((t - 1.6) / .4), cl((4.6 - t) / .4)); if (da > 0) { const x = 430, y = 335, w = 260, h = 230, pl = .5 + .5 * Math.sin(t * 12); ctx.globalAlpha = da; ctx.fillStyle = `rgba(255,40,50,${.16 + .14 * pl})`; ctx.fillRect(x, y, w, h); ctx.strokeStyle = `rgba(255,70,80,${.55 + .35 * pl})`; ctx.lineWidth = 1.5; ctx.beginPath(); for (let i = 0; i <= w; i += 20) { ctx.moveTo(x + i, y); ctx.lineTo(x + i, y + h) } for (let j = 0; j <= h; j += 20) { ctx.moveTo(x, y + j); ctx.lineTo(x + w, y + j) } ctx.stroke(); ctx.lineWidth = 4; ctx.strokeStyle = '#ff2a38'; ctx.strokeRect(x, y, w, h); ctx.globalAlpha = 1 }
+    ctx.restore();
+    ctx.fillStyle = `rgba(10,18,28,${.28 * k})`; ctx.fillRect(0, 0, W, H);
+    if (t > 2.6 && t < 3.2) { ctx.fillStyle = `rgba(225,236,255,${.35 * Math.pow(Math.max(0, Math.sin((t - 2.6) / .6 * Math.PI * 2)), 2)})`; ctx.fillRect(0, 0, W, H) }
+    ctx.strokeStyle = 'rgba(200,220,235,.45)'; ctx.lineWidth = 1.3; ctx.beginPath(); for (let i = 0; i < 380; i++) { if (hs(i) > ri) continue; const y = mod(hs(i + 3) * 900 + t * (850 + hs(i + 4) * 400), 820) - 50, x = mod(hs(i + 1) * 1500, 1500) - 100 + y * .18, len = 14 + hs(i + 5) * 14; ctx.moveTo(x - len * .18, y - len); ctx.lineTo(x, y) } ctx.stroke();
+    emHud(t, c); stepHud(t);
+    // title
+    if (t > 1.1 && t < 4.4) { const y = lp(-80, 230, bo(cl((t - 1.1) / .9))), s = showHindi ? 'लैंडस्लाइड का खतरा: तुरंत उठाएँ ये कदम' : 'IMMINENT LANDSLIDE: IMMEDIATE STEPS'; ctx.save(); ctx.globalAlpha = cl((4.4 - t) / .4); ctx.font = '800 46px system-ui,sans-serif'; ctx.textAlign = 'center'; const w = ctx.measureText(s).width + 80; ctx.fillStyle = 'rgba(8,14,24,.72)'; rr(640 - w / 2, y - 48, w, 80, 18); ctx.fill(); ctx.fillStyle = '#ff2a38'; ctx.fillRect(640 - w / 2 + 20, y + 20, w - 40, 5); ctx.fillStyle = '#f4ead2'; ctx.fillText(s, 640, y + 6); ctx.restore() }
+    // end card
+    if (t > 16.1) {
+      const a = sm(cl((t - 16.2) / .7));
+      if (t < 17.0) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.filter = `blur(${Math.round(a * 14 * dpr)}px)`; ctx.drawImage(cv, 0, 0); ctx.restore() }
+      const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#cdeedb'); bg.addColorStop(1, '#f4ead2'); ctx.globalAlpha = a; ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+      if (t > 16.6) {
+        const s = bo(cl((t - 16.6) / .6)) * (1 + .03 * Math.sin(t * 5)); ctx.save(); ctx.translate(640, 230); ctx.scale(s, s);
+        const P = [[0, -120], [95, -80], [95, 10], [60, 80], [0, 125], [-60, 80], [-95, 10], [-95, -80]]; fan(P, [0, -10], '#2f9e5a', 1, 0);
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 22; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(-42, -5); ctx.lineTo(-10, 32); ctx.lineTo(48, -38); ctx.stroke(); ctx.restore();
+        ctx.globalAlpha = cl((t - 16.9) / .4); ctx.font = '700 46px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#14181e'; ctx.fillText(showHindi ? 'सावधान रहें। सुरक्षित रहें।' : 'Stay Alert. Stay Safe.', 640, 450); ctx.globalAlpha = 1;
+        const rc = cl((t - 17.3) / .5); if (rc > 0) { const L = showHindi ? ['संपर्क करें', 'सूचित करें', 'जल्दी निकलें'] : ['Contact', 'Inform', 'Leave']; ctx.globalAlpha = rc; ctx.font = '700 22px system-ui,sans-serif'; for (let i = 0; i < 3; i++) { const x = 640 + (i - 1) * 230; ctx.fillStyle = '#2f9e5a'; rr(x - 100, 500, 200, 48, 24); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText((i + 1) + '  ' + L[i], x, 532) } ctx.globalAlpha = 1 }
+      }
+    }
+    // captions
+    const V = showHindi ? VH : VE; for (let i = 0; i < CT.length; i++) {
+      const [a, b] = CT[i], al = Math.min(cl((t - a) / .3), cl((b - t) / .3)); if (al <= 0) continue; const s = V[i]; let L = [s]; if (s.length > 45) { let m = s.length >> 1, j = s.lastIndexOf(' ', m); if (j < 0) j = s.indexOf(' '); L = [s.slice(0, j), s.slice(j + 1)] }
+      ctx.font = '600 26px system-ui,sans-serif'; ctx.textAlign = 'center'; const w = Math.max(...L.map(l => ctx.measureText(l).width)) + 56, h = L.length * 34 + 18, y = 704 - h; ctx.globalAlpha = al; ctx.fillStyle = 'rgba(8,14,24,.7)'; rr(640 - w / 2, y, w, h, 22); ctx.fill(); ctx.fillStyle = '#f4ead2'; L.forEach((l, n) => ctx.fillText(l, 640, y + 36 + n * 34)); ctx.globalAlpha = 1
+    }
+    const fd = Math.max(1 - t / .35, 1 - (D - t) / .35, 0); if (fd > 0) { ctx.fillStyle = `rgba(0,0,0,${cl(fd)})`; ctx.fillRect(0, 0, W, H) }
+  }
+
+  // ---------- Audio ----------
+  let ac, rumG, rainG, voices = [];
+  if (window.speechSynthesis) { const loadVoices = () => voices = speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = loadVoices; loadVoices() }
+  function initAudio() {
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)(); const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = Math.random() * 2 - 1;
+      const ns = (type, f) => { const s = ac.createBufferSource(); s.buffer = nb; s.loop = true; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; const g = ac.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); g.connect(ac.destination); s.start(); return g };
+      rumG = ns('lowpass', 110); rainG = ns('highpass', 3500)
+    } catch (e) { ac = null }
+  }
+  function tone(f, d, v, type, delay = 0) { if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), n = ac.currentTime + delay; o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, n); g.gain.exponentialRampToValueAtTime(.0001, n + d); o.connect(g); g.connect(ac.destination); o.start(n); o.stop(n + d + .05) }
+  function speak(i) {
+    if (!window.speechSynthesis) return; speechSynthesis.cancel();
+    setTimeout(() => {
+      const u = new SpeechSynthesisUtterance((showHindi ? VH : VE)[i]); u.lang = showHindi ? 'hi-IN' : 'en-US'; u.rate = 1.0; u.pitch = 1.0;
+      const tl = showHindi ? 'hi' : 'en'; let bv = voices.find(v => v.lang.toLowerCase().includes(tl) && v.localService && (v.name.includes('Google') || v.name.includes('Neural')));
+      if (!bv) bv = voices.find(v => v.lang.toLowerCase().includes(tl) && v.localService); if (!bv) bv = voices.find(v => v.lang.toLowerCase().includes(tl));
+      if (bv) u.voice = bv; speechSynthesis.speak(u)
+    }, 40)
+  }
+  const EV = [[.3, 'v', 0], [4.2, 'v', 1], [9.2, 'v', 2], [13.1, 'v', 3], [16.6, 'v', 4],
+  [4.6, 'b'], [9.4, 'b'], [13.2, 'b'], [5.0, 'r'], [5.6, 'r'], [6.2, 'r'], [7.8, 'p'], [8.2, 'p'], [8.6, 'p'],
+  [9.95, 'k'], [11.45, 'k'], [12.95, 'k'], [16.7, 'c']];
+  function fire(e) {
+    if (e[1] === 'v') speak(e[2]);
+    else if (e[1] === 'b') { tone(1500, .09, .08, 'square'); tone(1500, .09, .08, 'square', .14) }
+    else if (e[1] === 'r') { for (const d of [0, .55]) { tone(440, .4, .1, 'sine', d); tone(480, .4, .1, 'sine', d) } }
+    else if (e[1] === 'p') { tone(1000, .12, .1, 'sine'); tone(1400, .16, .1, 'sine', .1) }
+    else if (e[1] === 'k') { tone(130, .1, .45, 'triangle'); tone(130, .1, .45, 'triangle', .2); tone(130, .1, .45, 'triangle', .4) }
+    else { tone(880, 1.2, .18, 'sine'); tone(1320, 1.4, .12, 'sine', .12) }
+  }
+  function audioTick(t) {
+    if (!ac || !rumG) return;
+    const rv = t < 4 ? 1.4 * sm(cl(t / 3.5)) : t < 5 ? 1.4 * (5 - t) : (t > 10.4 && t < 16.8) ? 1.1 * sm(cl((t - 10.4) / 1)) * (1 - cl((t - 16) / .8)) : 0, rn = t > 1.4 && t < 16.2 ? .05 * cl((t - 1.4) / 1.6) : 0;
+    rumG.gain.setTargetAtTime(rv, ac.currentTime, .1); rainG.gain.setTargetAtTime(rn, ac.currentTime, .1)
+  }
+
+  // ---------- Player ----------
+  let t = 0, pt = 0, playing = false, last = performance.now();
+  const pp = document.getElementById('pp'), sk = document.getElementById('sk'), tm = document.getElementById('tm'), btnL = document.getElementById('lang'), overlay = document.getElementById('start-overlay');
+  const stopSpeech = () => { if (window.speechSynthesis) speechSynthesis.cancel() };
+  document.getElementById('start-btn').onclick = () => {
+    overlay.hidden = true; initAudio();
+    if (window.speechSynthesis) { let dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; speechSynthesis.speak(dummy) }
+    playing = true; last = performance.now(); pp.disabled = sk.disabled = false; pp.textContent = 'Pause'
+  };
+  function loop(n) {
+    const dt = Math.min((n - last) / 1000, .1); last = n;
+    if (playing) { t += dt; if (t >= D) { t = 0; pt = -.01; stopSpeech() } sk.value = t; for (const e of EV) if (pt < e[0] && e[0] <= t) fire(e) }
+    pt = t; audioTick(t); frame(t); tm.textContent = t.toFixed(1) + 's'; requestAnimationFrame(loop)
+  }
+  pp.onclick = () => { playing = !playing; pp.textContent = playing ? 'Pause' : 'Play'; last = performance.now(); if (playing) { if (ac) ac.resume() } else { stopSpeech(); if (ac) ac.suspend() } };
+  sk.oninput = () => { playing = false; pp.textContent = 'Play'; t = +sk.value; pt = t; stopSpeech(); if (ac) ac.suspend() };
+  btnL.onclick = () => { showHindi = !showHindi; btnL.textContent = 'Hindi Subtitles: ' + (showHindi ? 'On' : 'Off'); stopSpeech() };
+  requestAnimationFrame(loop);
+</script>
+
+</body></html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>Actions Before Intense Rainfall</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+       </style>
+</head>
+
+<body>
+       <canvas id="c" width="1280" height="720"></canvas>
+       <div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div>
+       <div class="bar">
+              <button id="pp" disabled>Play</button>
+              <input id="sk" type="range" min="0" max="16" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Hindi Subtitles: Off</button>
+       </div>
+       <script>
+              const W = 1280, H = 720, D = 16, TAU = Math.PI * 2, cv = document.getElementById('c'), ctx = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
+              cv.width = W * dpr; cv.height = H * dpr;
+              const cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lp = (a, b, k) => a + (b - a) * k, sm = k => k * k * (3 - 2 * k), mod = (a, n) => ((a % n) + n) % n;
+              function hs(n) { n |= 0; n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296 }
+              const hx = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mx = (a, b, k) => a.map((v, i) => lp(v, b[i], k)), rg = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+              const sh = (c, f, k) => rg(mx(hx(c), [22, 32, 44], k * .45).map(v => Math.min(255, v * f)));
+              const tri = (a, b, c, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.fill() };
+              const quad = (a, b, c, d, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.closePath(); ctx.fill() };
+              const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h) };
+              const fan = (P, c, col, f, k) => { for (let i = 0; i < P.length; i++) tri(c, P[i], P[(i + 1) % P.length], sh(col, f + (hs(i * 7 + P[0][0]) - .5) * .4, k)) };
+              const bo = u => { const n = 7.5625, d = 2.75; if (u < 1 / d) return n * u * u; if (u < 2 / d) return n * (u -= 1.5 / d) * u + .75; if (u < 2.5 / d) return n * (u -= 2.25 / d) * u + .9375; return n * (u -= 2.625 / d) * u + .984375 };
+
+              // ================= SCRIPT =================
+              // Voice start times. The timeline WAITS (holds) at each of these points until the previous line has fully finished,
+              // so a voice-over is never cut off or overlapped.
+              const VS = [.3, 5.0, 10.0, 13.4];
+              const VE = [
+                     'Before intense rainfall, know your land. Slopes with past landslides are likely to slide again.',
+                     'Locate buildings away from landslides, steep slopes, streams, rivers, and mountain channel mouths.',
+                     'Observe storm-water drainage, especially where runoff converges.',
+                     'Stay alert. Stay safe.'];
+              const VH = [
+                     'भारी बारिश से पहले अपने इलाके को जानें। जहाँ पहले लैंडस्लाइड हुआ है, वहाँ दोबारा होने की संभावना है।',
+                     'इमारतें लैंडस्लाइड, खड़ी ढलानों, नदी-नालों और पहाड़ी नालों के मुहाने से दूर बनाएँ।',
+                     'ढलानों पर बारिश के पानी के बहाव को देखें, खासकर जहाँ पानी एक जगह मिलता है।',
+                     'सावधान रहें। सुरक्षित रहें।'];
+              // captions overlap the next voice start slightly so they stay fully visible while the timeline is holding
+              const CT = [[.3, 5.17], [5.17, 10.17], [10.17, 13.57], [13.57, 15.7]];
+
+              const TTL_EN = 'Actions to be taken before Intense Rainfall', TTL_HI = 'भारी बारिश से पहले उठाए जाने वाले कदम';
+              const TX_EN = ['Past landslide zones', 'Locate buildings away from hazards', 'Observe storm-water drainage'];
+              const TX_HI = ['पहले के लैंडस्लाइड क्षेत्र', 'इमारतें खतरों से दूर बनाएँ', 'वर्षा जल निकासी पर नज़र रखें'];
+              // [start, end, slot, textIdx, anchorX, anchorY, drawLine, flash, colour]
+              const LB = [
+                     [2.6, 5.3, 0, 0, 520, 440, true, false, '#ffd23a'],
+                     [5.25, 10.3, 0, 1, 0, 0, false, false, '#ff4a52'],
+                     [10.3, 13.7, 0, 2, 2235, 575, true, true, '#3aa0ff']];
+
+              let showHindi = false, at = 0; // 'at' = ambient time (keeps pulsing / flowing even while the timeline holds for voice)
+
+              // ================= WORLD =================
+              const base = x => 560 + 8 * Math.sin(x * .007);
+              const bump = x => 90 * sm(cl((x - 950) / 80)) * (1 - sm(cl((x - 1130) / 90)));
+              const dip = x => 46 * sm(cl((x - 1360) / 30)) * (1 - sm(cl((x - 1540) / 30)));
+              const gul = x => Math.max(0, 60 * (1 - Math.abs(x - 1750) / 60));
+              const rise = x => 170 * sm(cl((x - 2180) / 280));
+              const gy = x => base(x) - bump(x) + dip(x) + gul(x) - rise(x);
+              let RX1 = 1388, RX2 = 1528; { let a = null, b = null; for (let x = 1360; x <= 1545; x += 2) if (gy(x) > 592) { if (a === null) a = x; b = x } if (a !== null) { RX1 = a; RX2 = b } }
+
+              function peak(cx, top, w, base, c, k) {
+                     const T = [cx, top], L = [cx - w / 2, base], R = [cx + w / 2, base], M = [cx + w * .05, top + (base - top) * .5], B = [cx - w * .12, base], N = [cx - w * .14, top + (base - top) * .42];
+                     tri(T, L, N, sh(c, 1.15, k)); tri(T, N, M, sh(c, .95, k)); tri(T, M, R, sh(c, .7, k)); tri(L, N, B, sh(c, .9, k)); tri(N, M, B, sh(c, .8, k)); tri(M, R, B, sh(c, .6, k))
+              }
+              function tree(x, y, s, k) { ctx.fillStyle = sh('#5b4130', 1, k); ctx.fillRect(x - 3 * s, y - 22 * s, 6 * s, 22 * s); for (let j = 0; j < 3; j++) { const b = y - 12 * s - j * 18 * s, w = (36 - j * 8) * s; tri([x - w / 2, b], [x, b - 30 * s], [x + w / 2, b], sh('#3f8a4a', .8 + j * .18, k)) } }
+              function cloud(x, y, r, k) { for (let j = 0; j < 4; j++) { const cx = x + j * r * .9, cy = y + (j % 2 ? -r * .3 : 0), rad = r * (1 - .1 * j); ctx.fillStyle = rg(mx([206, 214, 221], [44, 52, 62], k), .94); ctx.beginPath(); for (let i = 0; i < 7; i++) { const a = i / 7 * TAU; ctx.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad * .7) } ctx.fill() } }
+
+              function house(x, s, wall, roof, k) {
+                     const y = gy(x), w = 90 * s, h = 58 * s, x0 = x - w / 2;
+                     quad([x0, y], [x0 + w, y], [x0 + w, y - h], [x0, y - h], sh(wall, 1, k));
+                     tri([x0, y - h], [x0 + w * .4, y - h], [x0, y], sh(wall, 1.12, k));
+                     tri([x0 - 8 * s, y - h], [x, y - h - 44 * s], [x0 + w + 8 * s, y - h], sh(roof, 1, k));
+                     tri([x0 - 8 * s, y - h], [x, y - h - 44 * s], [x - w * .15, y - h], sh(roof, 1.2, k));
+                     tri([x + w * .12, y - h - 14 * s], [x0 + w + 8 * s, y - h], [x, y - h - 44 * s], sh(roof, .75, k));
+                     quad([x + 6 * s, y], [x + 28 * s, y], [x + 28 * s, y - 36 * s], [x + 6 * s, y - 36 * s], sh('#6b4a2a', 1, k));
+                     quad([x0 + 10 * s, y - 24 * s], [x0 + 32 * s, y - 24 * s], [x0 + 32 * s, y - 44 * s], [x0 + 10 * s, y - 44 * s], sh('#9cc6dc', 1, k));
+              }
+              function xmark(x, y, t, a) {
+                     const p = cl((t - a) / .5); if (p <= 0) return; const u = bo(p), pl = .5 + .5 * Math.sin(at * 10);
+                     ctx.save(); ctx.translate(x, y); ctx.scale(u, u);
+                     ctx.strokeStyle = `rgba(255,50,60,${.35 + .35 * pl})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 42 + 5 * pl, 0, TAU); ctx.stroke();
+                     ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.beginPath(); ctx.arc(0, 0, 34, 0, TAU); ctx.fill(); ctx.strokeStyle = '#e0202c'; ctx.lineWidth = 5; ctx.stroke();
+                     ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-15, -15); ctx.lineTo(15, 15); ctx.moveTo(15, -15); ctx.lineTo(-15, 15); ctx.stroke(); ctx.restore(); ctx.lineCap = 'butt'
+              }
+              function hazardPatch(x, y, rx, t, a) { const p = cl((t - a) / .5); if (p <= 0) return; const pl = .5 + .5 * Math.sin(at * 10); ctx.fillStyle = `rgba(255,40,50,${(.2 + .15 * pl) * p})`; ctx.beginPath(); ctx.ellipse(x, y, rx * p, 18, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = `rgba(255,60,70,${.7 * p})`; ctx.lineWidth = 2.5; ctx.stroke() }
+              function chk(x, y, t, a) {
+                     const p = cl((t - a) / .5); if (p <= 0) return; const u = bo(p); ctx.save(); ctx.translate(x, y); ctx.scale(u, u);
+                     ctx.fillStyle = '#2f9e5a'; ctx.beginPath(); ctx.arc(0, 0, 38, 0, TAU); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
+                     ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(-17, 0); ctx.lineTo(-5, 13); ctx.lineTo(18, -13); ctx.stroke(); ctx.restore(); ctx.lineCap = 'butt'
+              }
+
+              function slopePath(xs, xe, o0, o1) { const P = []; for (let i = 0; i <= 26; i++) { const u = i / 26, x = lp(xs, xe, u); P.push([x, gy(x) + lp(o0, o1, u * u)]) } return P }
+              const FLOW = [slopePath(2500, 2225, 14, 6), slopePath(2440, 2233, 52, 8), slopePath(2410, 2242, 92, 10)];
+
+              function world(t, k) {
+                     // far + mid mountains
+                     peak(0, 250, 600, 620, '#8aa6bd', k); peak(700, 200, 760, 620, '#8aa6bd', k); peak(1500, 190, 860, 620, '#8aa6bd', k); peak(2300, 210, 900, 620, '#8aa6bd', k);
+                     peak(220, 270, 560, 620, '#6f9560', k); peak(1250, 250, 620, 620, '#6a8f5c', k); peak(1950, 260, 800, 620, '#6b8a5e', k); peak(2450, 290, 700, 620, '#6b8a5e', k); peak(980, 300, 360, 620, '#7a8a78', k);
+                     // scarred hillside
+                     peak(500, 240, 640, 620, '#5f8a40', k);
+                     fan([[470, 325], [528, 330], [585, 440], [645, 545], [420, 545], [445, 430]], [525, 440], '#8b6a45', 1, k);
+                     // ground
+                     ctx.fillStyle = sh('#6b4f32', 1, k); ctx.beginPath(); ctx.moveTo(-400, 1300); for (let x = -400; x <= 2800; x += 20) ctx.lineTo(x, gy(x)); ctx.lineTo(2800, 1300); ctx.fill();
+                     for (let x = -400; x < 2800; x += 60) { const g0 = gy(x), g1 = gy(x + 60), m = [x + 30 + (hs(x) - .5) * 20, Math.max(g0, g1) + 70 + hs(x + 3) * 30]; tri([x, g0], [x + 60, g1], m, sh('#5f8a40', .8 + .4 * hs(x), k)); tri([x, g0], m, [x - 20, g0 + 120], sh('#4a7a3a', .7 + .3 * hs(x + 1), k)); tri([x + 60, g1], m, [x + 80, g1 + 120], sh('#55803c', .6 + .3 * hs(x + 2), k)) }
+                     // debris at scar base
+                     for (let i = 0; i < 9; i++) { const x = 450 + hs(i) * 190, y = gy(x) - 4, s = 6 + hs(i + 3) * 8; tri([x - s, y], [x - s * .3, y - s * 1.2], [x + s, y], sh(i % 2 ? '#7a5a38' : '#8f8b84', .9, k)) }
+                     // river (blue accent)
+                     ctx.fillStyle = 'rgba(52,140,215,.95)'; ctx.beginPath(); ctx.moveTo(RX1, 592); ctx.lineTo(RX2, 592); for (let x = RX2; x >= RX1; x -= 6) ctx.lineTo(x, gy(x) + 2); ctx.closePath(); ctx.fill();
+                     ctx.strokeStyle = 'rgba(225,242,255,.8)'; ctx.lineWidth = 3; ctx.setLineDash([14, 20]); ctx.lineDashOffset = -at * 70; ctx.beginPath(); ctx.moveTo(RX1 + 6, 600); ctx.lineTo(RX2 - 6, 600); ctx.stroke(); ctx.setLineDash([]);
+                     // buildings
+                     house(1070, 1, '#d8c7a0', '#a8523a', k);   // on the cliff plateau
+                     house(1640, 1, '#cdbb92', '#9a4a34', k);   // beside the stream
+                     house(2050, 1.15, '#e3d3b0', '#b5533c', k); // safe house on flat terrain
+                     // trees
+                     for (const x of [40, 160, 330, 720, 850, 1260, 1310, 1900, 1960, 2330, 2400]) tree(x, gy(x), 1.3, k);
+
+                     // ---- scene 1: yellow highlight on old landslide ----
+                     const ha = cl((t - 1.2) / .8) * (1 - cl((t - 5.2) / .8));
+                     if (ha > 0) { const pl = .5 + .5 * Math.sin(at * 6); ctx.save(); ctx.globalAlpha = ha; ctx.shadowColor = '#ffd23a'; ctx.shadowBlur = 18 + 14 * pl; ctx.strokeStyle = '#ffd23a'; ctx.lineWidth = 5; ctx.fillStyle = `rgba(255,214,60,${.12 + .1 * pl})`; ctx.beginPath(); const P = [[455, 310], [535, 316], [598, 425], [668, 550], [405, 552], [420, 412]]; P.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore() }
+
+                     // ---- scene 2: hazards & safe house ----
+                     hazardPatch(1175, gy(1180) - 6, 62, t, 6.2); xmark(1175, 410, t, 6.2);
+                     hazardPatch(1372, gy(1372) - 4, 52, t, 6.9); xmark(1372, 500, t, 6.9);
+                     hazardPatch(1750, gy(1750) - 8, 64, t, 7.6); xmark(1750, 520, t, 7.6);
+                     chk(2050, 440, t, 8.6);
+
+                     // ---- scene 3: drainage ----
+                     const dp = cl((t - 10.2) / .6);
+                     if (dp > 0) { ctx.fillStyle = `rgba(92,62,34,${.9 * dp})`; ctx.beginPath(); ctx.ellipse(2235, gy(2235) + 6, 78, 16, 0, 0, TAU); ctx.fill() }
+                     const rv = cl((t - 10.5) / 1.3);
+                     if (rv > 0) {
+                            FLOW.forEach((P, pi) => {
+                                   const n = Math.max(2, Math.floor(P.length * rv)), Q = P.slice(0, n);
+                                   ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(30,110,200,.9)'; ctx.lineWidth = 9; ctx.beginPath(); Q.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
+                                   ctx.strokeStyle = 'rgba(150,215,255,.95)'; ctx.lineWidth = 3.5; ctx.setLineDash([12, 18]); ctx.lineDashOffset = at * 70; ctx.beginPath(); Q.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.setLineDash([]); ctx.lineCap = 'butt';
+                                   for (let j = 0; j < 3; j++) {
+                                          const u = mod(at * .32 + j / 3 + pi * .17, 1), idx = u * (Q.length - 1); if (idx > Q.length - 1.01) continue;
+                                          const i0 = Math.floor(idx), f = idx - i0, a = Q[i0], b = Q[Math.min(i0 + 1, Q.length - 1)], px = lp(a[0], b[0], f), py = lp(a[1], b[1], f), ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+                                          ctx.save(); ctx.translate(px, py); ctx.rotate(ang); tri([13, 0], [-8, -10], [-8, 10], '#7fd0ff'); ctx.strokeStyle = '#1b6fd0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-8, -10); ctx.lineTo(-8, 10); ctx.closePath(); ctx.stroke(); ctx.restore()
+                                   }
+                            });
+                     }
+                     const pool = sm(cl((t - 11.4) / 1.8));
+                     if (pool > 0) { const pl = .5 + .5 * Math.sin(at * 5); ctx.fillStyle = 'rgba(52,140,215,.95)'; ctx.beginPath(); ctx.ellipse(2235, gy(2235) + 6, 66 * pool, 11 * pool, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = `rgba(200,235,255,${.6 * pl})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(2235, gy(2235) + 6, (40 + 22 * pl) * pool, (6 + 4 * pl) * pool, 0, 0, TAU); ctx.stroke() }
+              }
+
+              function cam(t) {
+                     const a = sm(cl((t - 5) / 1.6)), b = sm(cl((t - 10) / 1.2)), x0 = 560 + 220 * cl(t / 5);
+                     return { x: lp(lp(x0, 1650, a), 1960, b), y: lp(lp(400, 430, a), 420, b), s: lp(lp(.75, 1, a), 1.1, b) }
+              }
+
+              function labelsDraw(t, c) {
+                     if (t > 14) return;
+                     ctx.font = '600 24px system-ui,sans-serif'; ctx.textAlign = 'left'; const T = showHindi ? TX_HI : TX_EN;
+                     for (const [a, b, slot, ti, ax, ay, line, flash, col] of LB) {
+                            let al = Math.min(cl((t - a) / .3), cl((b - t) / .3)); if (al <= 0) continue; if (flash) al *= .7 + .3 * Math.sin(at * 14);
+                            const s = T[ti], w = ctx.measureText(s).width + 84, x = 36 - 30 * (1 - al), y = 130 + slot * 60, sx = 640 + (ax - c.x) * c.s, sy = 360 + (ay - c.y) * c.s;
+                            ctx.save(); ctx.globalAlpha = al;
+                            if (line) { ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x + w, y + 23); ctx.lineTo(sx, sy); ctx.stroke(); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(sx, sy, 6, 0, TAU); ctx.fill() }
+                            ctx.fillStyle = 'rgba(8,14,24,.8)'; rr(x, y, w, 46, 12); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+                            tri([x + 14, y + 36], [x + 31, y + 8], [x + 48, y + 36], col); ctx.fillStyle = '#1a1208'; ctx.font = '800 20px system-ui,sans-serif'; ctx.fillText('!', x + 27, y + 33);
+                            ctx.font = '600 24px system-ui,sans-serif'; ctx.fillStyle = '#f4ead2'; ctx.fillText(s, x + 60, y + 31); ctx.restore()
+                     }
+              }
+
+              function frame(t) {
+                     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                     const k = lp(.28, .6, sm(cl((t - 9.6) / 1.6))), ri = cl((t - 10) / 1.4) * .9 * (1 - cl((t - 13.4) / .6));
+                     const g = ctx.createLinearGradient(0, 0, 0, H * .75); g.addColorStop(0, rg(mx(hx('#7d9db5'), hx('#232f3b'), k))); g.addColorStop(.6, rg(mx(hx('#b4cbd6'), hx('#46565f'), k))); g.addColorStop(1, rg(mx(hx('#e6dcc0'), hx('#79878a'), k))); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+                     ctx.globalAlpha = .95; for (let i = 0; i < 8; i++) cloud(mod(i * 210 + at * 14, 1700) - 250, 40 + hs(i) * 110, 34 + hs(i + 4) * 26, k); ctx.globalAlpha = 1;
+
+                     const c = cam(t); let shx = 0, shy = 0;
+                     ctx.save(); ctx.translate(640 + shx, 360 + shy); ctx.scale(c.s, c.s); ctx.translate(-c.x, -c.y); world(t, k); ctx.restore();
+                     ctx.fillStyle = `rgba(10,18,28,${.2 * k})`; ctx.fillRect(0, 0, W, H);
+
+                     // rain
+                     ctx.strokeStyle = 'rgba(200,222,240,.55)'; ctx.lineWidth = 1.3; ctx.beginPath();
+                     for (let i = 0; i < 380; i++) { if (hs(i) > ri) continue; const y = mod(hs(i + 3) * 900 + at * (850 + hs(i + 4) * 400), 820) - 50, x = mod(hs(i + 1) * 1500, 1500) - 100 + y * .18, len = 14 + hs(i + 5) * 14; ctx.moveTo(x - len * .18, y - len); ctx.lineTo(x, y) } ctx.stroke();
+
+                     labelsDraw(t, c);
+
+                     // title
+                     if (t > .3 && t < 3.8) {
+                            const y = lp(-80, 70, bo(cl((t - .3) / .9))), s = showHindi ? TTL_HI : TTL_EN; ctx.save(); ctx.globalAlpha = cl((3.8 - t) / .4);
+                            ctx.font = '800 40px system-ui,sans-serif'; ctx.textAlign = 'center'; const w = ctx.measureText(s).width + 80; ctx.fillStyle = 'rgba(8,14,24,.74)'; rr(640 - w / 2, y - 44, w, 72, 18); ctx.fill();
+                            ctx.fillStyle = '#3aa0ff'; ctx.fillRect(640 - w / 2 + 20, y + 18, w - 40, 5); ctx.fillStyle = '#f4ead2'; ctx.fillText(s, 640, y + 4); ctx.restore()
+                     }
+
+                     // scene 4
+                     if (t > 13.4) {
+                            const a = sm(cl((t - 13.4) / .7));
+                            if (t < 14.2) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.filter = `blur(${Math.round(a * 14 * dpr)}px)`; ctx.drawImage(cv, 0, 0); ctx.restore() }
+                            const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#d4f1dc'); bg.addColorStop(1, '#eaf6df'); ctx.globalAlpha = a; ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+                            if (t > 13.8) {
+                                   const s = bo(cl((t - 13.8) / .6)) * (1 + .03 * Math.sin(at * 5)); ctx.save(); ctx.translate(640, 250); ctx.scale(s, s);
+                                   const P = [[0, -120], [95, -80], [95, 10], [60, 80], [0, 125], [-60, 80], [-95, 10], [-95, -80]]; fan(P, [0, -10], '#2f9e5a', 1, 0);
+                                   ctx.strokeStyle = '#fff'; ctx.lineWidth = 22; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(-42, -5); ctx.lineTo(-10, 32); ctx.lineTo(48, -38); ctx.stroke(); ctx.restore();
+                                   ctx.globalAlpha = cl((t - 14.1) / .4); ctx.font = '700 46px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#14181e'; ctx.fillText(showHindi ? 'सावधान रहें। सुरक्षित रहें।' : 'Stay Alert. Stay Safe.', 640, 490); ctx.globalAlpha = 1
+                            }
+                     }
+
+                     // captions
+                     const V = showHindi ? VH : VE;
+                     for (let i = 0; i < 4; i++) {
+                            const [a, b] = CT[i], al = Math.min(cl((t - a) / .25), cl((b - t) / .12)); if (al <= 0) continue;
+                            const s = V[i]; ctx.font = '600 24px system-ui,sans-serif'; ctx.textAlign = 'center';
+                            const maxW = 1000, words = s.split(' '), L = []; let cur = '';
+                            for (const wd of words) { const tst = cur ? cur + ' ' + wd : wd; if (ctx.measureText(tst).width > maxW && cur) { L.push(cur); cur = wd } else cur = tst } L.push(cur);
+                            const w = Math.max(...L.map(l => ctx.measureText(l).width)) + 56, h = L.length * 32 + 20, y = 708 - h;
+                            ctx.globalAlpha = al; ctx.fillStyle = i === 3 ? 'rgba(90,98,108,.9)' : 'rgba(8,14,24,.72)'; rr(640 - w / 2, y, w, h, 22); ctx.fill();
+                            ctx.fillStyle = '#f4ead2'; L.forEach((l, n) => ctx.fillText(l, 640, y + 34 + n * 32)); ctx.globalAlpha = 1
+                     }
+                     const fd = Math.max(1 - t / .35, 1 - (D - t) / .35, 0); if (fd > 0) { ctx.fillStyle = `rgba(0,0,0,${cl(fd)})`; ctx.fillRect(0, 0, W, H) }
+              }
+
+              // ================= AUDIO =================
+              let ac, windG, windF, droneG, rainG, rushG, voices = [], voiceBusy = false;
+              if (window.speechSynthesis) { const lv = () => voices = speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = lv; lv() }
+
+              function initAudio() {
+                     try {
+                            ac = new (window.AudioContext || window.webkitAudioContext)(); const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+                            const ns = (type, f, q = 1) => { const s = ac.createBufferSource(); s.buffer = nb; s.loop = true; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const g = ac.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); g.connect(ac.destination); s.start(); return [g, fl] };
+                            [windG, windF] = ns('bandpass', 300, 2);[rainG] = ns('highpass', 3500);[rushG] = ns('bandpass', 700, .8);
+                            droneG = ac.createGain(); droneG.gain.value = 0; droneG.connect(ac.destination);
+                            for (const f of [98, 147]) { const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.connect(droneG); o.start() }
+                     } catch (e) { ac = null }
+              }
+              function tone(f, d, v, type, delay = 0) { if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), n = ac.currentTime + delay; o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, n); g.gain.exponentialRampToValueAtTime(.0001, n + d); o.connect(g); g.connect(ac.destination); o.start(n); o.stop(n + d + .05) }
+
+              function speak(i) {
+                     if (!window.speechSynthesis) return;
+                     const u = new SpeechSynthesisUtterance((showHindi ? VH : VE)[i]); u.lang = showHindi ? 'hi-IN' : 'en-US'; u.rate = i === 3 ? 1.0 : 1.08; u.pitch = 1.0;
+                     const tl = showHindi ? 'hi' : 'en';
+                     let bv = voices.find(v => v.lang.toLowerCase().includes(tl) && v.localService && (v.name.includes('Google') || v.name.includes('Neural')));
+                     if (!bv) bv = voices.find(v => v.lang.toLowerCase().includes(tl) && v.localService); if (!bv) bv = voices.find(v => v.lang.toLowerCase().includes(tl));
+                     if (bv) u.voice = bv;
+                     voiceBusy = true; u.onend = u.onerror = () => { voiceBusy = false };
+                     speechSynthesis.speak(u) // never cancels a running line: lines are queued, and the timeline holds until each one is finished
+              }
+
+              const EV = [[.3, 'v', 0], [5.0, 'v', 1], [10.0, 'v', 2], [13.4, 'v', 3],
+              [2.6, 'b'], [5.25, 'b'], [10.3, 'b'],
+              [6.2, 'buz'], [6.9, 'buz'], [7.6, 'buz'], [8.6, 'c'], [13.8, 'c']];
+              function fire(e) {
+                     if (e[1] === 'v') speak(e[2]);
+                     else if (e[1] === 'b') { tone(1500, .09, .08, 'square'); tone(1500, .09, .08, 'square', .14) }
+                     else if (e[1] === 'buz') { tone(150, .22, .07, 'square'); tone(142, .22, .05, 'sawtooth') }
+                     else { tone(880, 1.2, .18, 'sine'); tone(1320, 1.4, .12, 'sine', .12) }
+              }
+              function audioTick(t) {
+                     if (!ac || !windG) return; const T = ac.currentTime;
+                     const wind = t < 5.2 ? .5 * sm(cl(t / 4)) : .5 * cl((6.2 - t) / 1), drone = t < 5.2 ? .07 * sm(cl((t - .8) / 3.2)) : .07 * cl((6.2 - t) / 1);
+                     const fade = 1 - cl((t - 13.4) / .6), rain = .06 * cl((t - 10) / 1.4) * fade, rush = .11 * cl((t - 10.8) / 1.2) * fade;
+                     windG.gain.setTargetAtTime(wind, T, .1); windF.frequency.setTargetAtTime(250 + 700 * sm(cl(t / 5)), T, .1);
+                     droneG.gain.setTargetAtTime(drone, T, .1); rainG.gain.setTargetAtTime(rain, T, .1); rushG.gain.setTargetAtTime(rush, T, .1)
+              }
+
+              // ================= PLAYER =================
+              let t = 0, pt = 0, playing = false, last = performance.now(), holdSince = null;
+              const pp = document.getElementById('pp'), sk = document.getElementById('sk'), tm = document.getElementById('tm'), btnL = document.getElementById('lang'), overlay = document.getElementById('start-overlay');
+              const stopSpeech = () => { voiceBusy = false; if (window.speechSynthesis) speechSynthesis.cancel() };
+
+              document.getElementById('start-btn').onclick = () => {
+                     overlay.style.display = 'none'; initAudio();
+                     if (window.speechSynthesis) { let dm = new SpeechSynthesisUtterance(''); dm.volume = 0; speechSynthesis.speak(dm) }
+                     playing = true; last = performance.now(); pp.disabled = sk.disabled = false; pp.textContent = 'Pause'
+              };
+
+              function loop(n) {
+                     const dt = Math.min((n - last) / 1000, .1); last = n;
+                     if (playing) {
+                            at += dt; let nt = t + dt;
+                            // HOLD: never move past the next voice-over start (or the end) while a voice line is still being spoken
+                            if (voiceBusy) {
+                                   const ns = VS.find(s => s > t + 1e-6), lim = ns !== undefined ? ns - .02 : D - .65;
+                                   if (nt >= lim) { nt = Math.max(t, lim); if (holdSince === null) holdSince = performance.now(); if (performance.now() - holdSince > 9000) { voiceBusy = false; holdSince = null } }
+                            } else holdSince = null;
+                            t = nt;
+                            if (t >= D) { t = 0; pt = -.01; stopSpeech() }
+                            sk.value = t; for (const e of EV) if (pt < e[0] && e[0] <= t) fire(e)
+                     }
+                     pt = t; audioTick(t); frame(t); tm.textContent = t.toFixed(1) + 's'; requestAnimationFrame(loop)
+              }
+
+              pp.onclick = () => {
+                     playing = !playing; pp.textContent = playing ? 'Pause' : 'Play'; last = performance.now();
+                     if (playing) { if (ac) ac.resume(); if (window.speechSynthesis) speechSynthesis.resume() }
+                     else { if (window.speechSynthesis) speechSynthesis.pause(); if (ac) ac.suspend() }
+              };
+              sk.oninput = () => { playing = false; pp.textContent = 'Play'; t = +sk.value; pt = t; stopSpeech(); if (ac) ac.suspend() };
+              btnL.onclick = () => { showHindi = !showHindi; btnL.textContent = 'Hindi Subtitles: ' + (showHindi ? 'On' : 'Off'); stopSpeech() };
+              requestAnimationFrame(loop);
+       </script>
+</body>
+
+</html>

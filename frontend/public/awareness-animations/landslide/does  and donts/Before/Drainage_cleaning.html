@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>Keep it Clear: Drainage and Landslide Safety</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media (prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              /* Added position:relative so the overlay sits correctly over the canvas */
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative;
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block;
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px
+              }
+
+              .bar input {
+                     flex: 1
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              /* --- NEW: Play Button Overlay Styles --- */
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, 0.65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10;
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     cursor: pointer;
+                     transition: transform 0.2s;
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05);
+              }
+       </style>
+</head>
+
+<body>
+
+       <canvas id="c" width="1280" height="720"></canvas>
+
+       <!-- --- NEW: Audio Element --- -->
+       <audio id="vo" src="voiceover.mp3" preload="auto"></audio>
+
+       <!-- --- NEW: Play Overlay Element --- -->
+       <div id="start-overlay">
+              <button id="start-btn">▶ Play Animation</button>
+       </div>
+
+       <div class="bar">
+              <!-- Controls disabled until user presses play -->
+              <button id="pp" disabled>Play</button>
+              <input id="sk" type="range" min="0" max="15" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Hindi Subtitles: Off</button>
+       </div>
+
+       <script>
+              const W = 1280, H = 720, D = 15, TAU = Math.PI * 2, cv = document.getElementById('c'), ctx = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
+              cv.width = W * dpr; cv.height = H * dpr;
+              const cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lp = (a, b, k) => a + (b - a) * k, sm = k => k * k * (3 - 2 * k), mod = (a, n) => ((a % n) + n) % n;
+              function hs(n) { n |= 0; n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296 }
+              const hx = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mx = (a, b, k) => a.map((v, i) => lp(v, b[i], k)), rg = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+              const SKY = { top: [hx('#6fa3c9'), hx('#232f3b')], mid: [hx('#a9d0e0'), hx('#46565f')], hor: [hx('#f4e4b8'), hx('#79878a')] };
+              const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h) };
+              const K = t => t < 5 ? sm(cl((t - 2) / 1.8)) : t < 10 ? .6 * (1 - sm(cl((t - 5) / 2))) : .85 * sm(cl((t - 10) / .9)) * (1 - sm(cl((t - 12) / 1.8)));
+              const RI = t => t < 5 ? sm(cl((t - 2.2) / 1.5)) : t < 10 ? 0 : sm(cl((t - 10) / .8)) * (1 - sm(cl((t - 12.4) / 1.4)));
+              const base = x => x < 80 ? 150 : x < 1000 ? lp(150, 520, sm((x - 80) / 920)) : 520, bl = (x, c, s) => Math.exp(-(((x - c) / s) ** 2));
+              const gb = x => lp(base(x), base(665), sm(cl((x - 580) / 40)) * (1 - sm(cl((x - 710) / 40))));
+              const Ef = t => t < 5 ? sm(cl((t - 3.9) / 1.1)) : 0;
+              const gs = (x, t) => { const E = Ef(t); return gb(x) + E * (52 * bl(x, 650, 100) + 20 * bl(x, 540, 120) - 48 * bl(x, 990, 100)) };
+              const NI = 28, IT = []; for (let i = 0; i < NI; i++)IT.push({ ty: i % 4, x: 380 + hs(i + 5) * 180, s: 7 + hs(i + 7) * 8, td: .6 + i * .085, tr: 5.5 + hs(i + 80) * 1.7, r: hs(i + 11) * 3 });
+              const pileH = x => 20 * Math.sin(Math.PI * cl((x - 380) / 180)), BIN = 300, AX = 345, BX = 590;
+              const FL = [[3.2, .6, 560], [10.6, .6, 300]];
+              const CAP_EN = [[.3, 2.8, 'Waste is dumped into the drainage channel'], [2.9, 4.9, 'Blocked water overflows and floods the slope'], [5.3, 7.1, 'Together, we clear the trench'], [7.3, 9.8, 'A clean lined channel guides water around the house'], [10.3, 12.9, 'Heavy rain runs off swiftly down the channel'], [13.1, 14.9, 'Firm soil, a safe house, a peaceful hillside']];
+              const CAP_HI = [[.3, 2.8, 'कचरा जल निकासी चैनल में फेंका जाता है'], [2.9, 4.9, 'अवरुद्ध पानी ओवरफ्लो होकर ढलान में भर जाता है'], [5.3, 7.1, 'मिलकर, हम खाई को साफ़ करते हैं'], [7.3, 9.8, 'एक साफ़ चैनल पानी को घर के चारों ओर निर्देशित करता है'], [10.3, 12.9, 'भारी बारिश का पानी चैनल से तेज़ी से बह जाता है'], [13.1, 14.9, 'मज़बूत मिट्टी, एक सुरक्षित घर, एक शांतिपूर्ण पहाड़ी']];
+              let showHindi = false;
+
+              function ridge(y, a, f, s, c, cs, k) { ctx.fillStyle = rg(mx(c, cs, k)); ctx.beginPath(); ctx.moveTo(-100, H); for (let x = -100; x <= W + 100; x += 24)ctx.lineTo(x, y - a * (.6 + .4 * Math.sin(x * f + s) + .3 * Math.sin(x * f * 2.3 + s * 2))); ctx.lineTo(W + 100, H); ctx.fill() }
+              function dTree(x, y, s, rot, k) {
+                     ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.fillStyle = '#5b4130'; ctx.fillRect(-3 * s, -26 * s, 6 * s, 26 * s); const c = mx(hx('#3f8a4a'), hx('#1f4029'), k);
+                     for (let j = 0; j < 3; j++) { ctx.fillStyle = rg(mx(c, hx('#8cc46a'), j * .14)); const b = -14 * s - j * 20 * s, w = (38 - j * 8) * s; ctx.beginPath(); ctx.moveTo(-w / 2, b); ctx.lineTo(0, b - 30 * s); ctx.lineTo(w / 2, b); ctx.fill() } ctx.restore()
+              }
+              function person(x, y, dir, tool, t, ph, walk) {
+                     ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1); ctx.strokeStyle = ctx.fillStyle = '#12161c'; ctx.lineCap = 'round';
+                     const sw = tool === 'run' ? Math.sin(t * 14 + ph) * 8 : walk ? Math.sin(t * 9 + ph) * 5 : 0; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(-6 + sw, 0); ctx.moveTo(0, -30); ctx.lineTo(6 - sw, 0); ctx.stroke();
+                     ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, -58); ctx.stroke(); ctx.beginPath(); ctx.arc(0, -68, 7, 0, TAU); ctx.fill(); ctx.lineWidth = 5;
+                     if (tool === 'throw') { const a = -1.9 + Math.sin(t * 10 + ph) * 1.2, hx_ = Math.cos(a) * 20, hy = -52 + Math.sin(a) * 20; ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(hx_, hy); ctx.stroke(); ctx.fillStyle = '#2a2f38'; ctx.beginPath(); ctx.arc(hx_, hy - 5, 8, 0, TAU); ctx.fill() }
+                     else if (tool === 'dig') { const a = .9 + Math.sin(t * 6 + ph) * .35, hx_ = Math.cos(a) * 18, hy = -50 + Math.sin(a) * 18, ex = hx_ + Math.cos(a) * 34, ey = hy + Math.sin(a) * 34; ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(hx_, hy); ctx.stroke(); ctx.strokeStyle = '#6a4a2c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hx_, hy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.fillStyle = '#aab3bd'; ctx.beginPath(); ctx.arc(ex, ey, 6, 0, TAU); ctx.fill() }
+                     else if (tool === 'look') { ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(18, -74); ctx.stroke() }
+                     else { const a = Math.sin(t * 14 + ph) * .8; ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(Math.sin(a) * 18, -52 + Math.cos(a) * 14); ctx.stroke() }
+                     ctx.restore()
+              }
+              function item(ty, x, y, s, r) {
+                     ctx.save(); ctx.translate(x, y); ctx.rotate(r); if (ty === 0) { ctx.fillStyle = '#262b33'; ctx.beginPath(); ctx.ellipse(0, 0, s, s * .8, 0, 0, TAU); ctx.fill(); ctx.fillRect(-2, -s - 3, 4, 5) }
+                     else if (ty === 1) { ctx.fillStyle = '#a07a4a'; ctx.fillRect(-s, -s * .7, s * 2, s * 1.4); ctx.fillStyle = '#7a5a34'; ctx.fillRect(-s, -1, s * 2, 2) }
+                     else if (ty === 2) { ctx.fillStyle = '#8f8b84'; ctx.beginPath(); ctx.moveTo(-s, s * .6); ctx.lineTo(-s * .6, -s * .7); ctx.lineTo(s * .5, -s * .8); ctx.lineTo(s, s * .5); ctx.fill() }
+                     else { ctx.fillStyle = '#8a6a45'; ctx.fillRect(-s * 1.6, -2, s * 3.2, 4) } ctx.restore()
+              }
+              function world(t, k, ri) {
+                     const E = Ef(t), G = x => gs(x, t), cy = x => G(x) + 9;
+                     const pg = () => { ctx.beginPath(); ctx.moveTo(-60, 1500); for (let x = -60; x <= 1340; x += 10)ctx.lineTo(x, G(x)); ctx.lineTo(1340, 1500); ctx.closePath() };
+                     const tg = ctx.createLinearGradient(0, 130, 0, 900); tg.addColorStop(0, '#7a6342'); tg.addColorStop(1, '#2e2216'); pg(); ctx.fillStyle = tg; ctx.fill();
+                     const soak = t < 5 ? sm(cl((t - 3.2) / 1)) : 0;
+                     ctx.save(); pg(); ctx.clip(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,12,4,.2)'; for (const off of [40, 100, 180, 270]) { ctx.beginPath(); for (let x = -60; x <= 1340; x += 10) { const y = G(x) + off; x <= -60 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) } ctx.stroke() }
+                     for (let i = 0; i < 170; i++) { const x = hs(i + 1000) * 1400 - 60, y = hs(i + 1100) * 800 + 130; if (y < G(x) + 6) continue; ctx.fillStyle = i % 3 ? 'rgba(30,20,10,.3)' : 'rgba(190,175,150,.3)'; ctx.beginPath(); ctx.ellipse(x, y, 2 + hs(i) * 5, 1.5 + hs(i + 5) * 3, 0, 0, TAU); ctx.fill() }
+                     if (soak > 0) { ctx.fillStyle = `rgba(20,14,8,${.4 * soak})`; ctx.beginPath(); for (let x = 470; x <= 860; x += 10)ctx.lineTo(x, G(x)); for (let x = 860; x >= 470; x -= 10)ctx.lineTo(x, G(x) + 55); ctx.fill() } ctx.restore();
+                     ctx.strokeStyle = rg(mx(hx('#5f8a40'), hx('#7a5a38'), soak * .6 + (t < 5 ? cl((t - 3.9) / 1.2) * .3 : 0))); ctx.lineWidth = 12; ctx.beginPath(); for (let x = -60; x <= 1340; x += 10) { const y = G(x) + 5; x <= -60 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) } ctx.stroke();
+                     for (const x0 of [130, 175, 220, 265, 310]) dTree(x0, G(x0), 1.3 + hs(x0) * .3, Math.sin(t * 2 + x0) * .01, k);
+                     for (const x0 of [800, 860, 925, 1180, 1235]) { const sl = x0 < 1000 ? E * (70 + hs(x0) * 90) : 0, x = x0 + sl; dTree(x, G(x), 1.2 + hs(x0) * .3, E * (x0 < 1000 ? .5 + hs(x0) : 0) + Math.sin(t * 2 + x0) * .01, k) }
+                     const xf = t < 7.2 ? 150 : t < 9.8 ? lp(150, 1150, sm((t - 7.2) / 2.6)) : 1150, strip = (a, b, off, lw, col) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'butt'; ctx.beginPath(); for (let x = a; x <= b; x += 10) { const y = G(x) + off; x <= a ? ctx.moveTo(x, y) : ctx.lineTo(x, y) } ctx.stroke() };
+                     if (t < 10.3 || xf < 1150) { strip(150, 1300, 9, 14, '#3a2a1a') }
+                     if (xf > 150 && t >= 5) { strip(150, xf, 9, 22, '#a8a8a2'); strip(150, xf, 9, 13, '#575e66'); ctx.strokeStyle = 'rgba(30,30,30,.35)'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = 150; x < xf; x += 26) { const y = G(x); ctx.moveTo(x, y - 1); ctx.lineTo(x, y + 19) } ctx.stroke() }
+                     if (t >= 5 && xf >= 1150) strip(1150, 1300, 9, 14, '#4a4036');
+                     if (t >= 5) { const by = G(BIN); ctx.save(); ctx.translate(BIN, by); ctx.fillStyle = '#e6a21a'; ctx.fillRect(-30, -34, 60, 34); ctx.fillStyle = '#7a5a14'; ctx.fillRect(-32, -38, 64, 6); ctx.restore() }
+                     {
+                            const xc = 665 + E * 260, y = G(xc), sl = (G(xc + 6) - G(xc - 6)) / 12, a = Math.atan(sl) * 1.1 + E * (.15 + .9 * E) + Math.sin(t * 30) * .01 * E * (1 - E), w = 84, ht = 62;
+                            ctx.save(); ctx.translate(xc, y + E * 14); ctx.rotate(a); ctx.fillStyle = '#e0d2b0'; ctx.fillRect(-w / 2, -ht, w, ht); ctx.fillStyle = '#8a3d33'; ctx.beginPath(); ctx.moveTo(-w / 2 - 8, -ht); ctx.lineTo(0, -ht - 32); ctx.lineTo(w / 2 + 8, -ht); ctx.fill();
+                            ctx.fillStyle = k > .3 ? '#ffd98a' : '#9ec0d0'; ctx.fillRect(-w * .36, -ht * .75, w * .22, ht * .3); ctx.fillRect(w * .14, -ht * .75, w * .22, ht * .3); ctx.fillStyle = '#4a3626'; ctx.fillRect(-w * .07, -ht * .5, w * .15, ht * .5); ctx.fillStyle = '#8f8b80'; ctx.fillRect(-w / 2 - 3, -3, w + 6, 6); ctx.restore()
+                     }
+                     if (t < 7.4) {
+                            for (let i = 0; i < NI; i++) {
+                                   const o = IT[i], yS = G(o.x) + 3 - hs(i + 9) * pileH(o.x); let x, y;
+                                   if (t < 5) { if (t < o.td) continue; const u = (t - o.td) / .55; if (u < 1) { const A = i % 2 === 0, sx = (A ? AX + 16 : BX - 16), sy = G(A ? AX : BX) - 62; x = lp(sx, o.x, u); y = lp(sy, yS, u) - 50 * 4 * u * (1 - u) } else { x = o.x; y = yS } }
+                                   else { if (t >= o.tr + .7) continue; if (t < o.tr) { x = o.x; y = yS } else { const u = (t - o.tr) / .7; x = lp(o.x, BIN, u); y = lp(yS, G(BIN) - 24, u) - 90 * 4 * u * (1 - u) } }
+                                   item(o.ty, x, y, o.s, o.r + (t > o.td && t < o.td + .55 ? t * 8 : 0))
+                            }
+                     }
+                     if (t < 5 && t > 2.4) {
+                            const xw = lp(150, 470, sm(cl((t - 2.4) / .8))), h = 2 + 14 * sm(cl((t - 2.6) / 1.2)); ctx.fillStyle = 'rgba(95,150,180,.9)'; ctx.beginPath(); for (let x = 150; x <= xw; x += 10)ctx.lineTo(x, cy(x) - h + Math.sin(x * .1 - t * 8) * 1.2); for (let x = xw; x >= 150; x -= 10)ctx.lineTo(x, cy(x) + 5); ctx.fill();
+                            if (t > 3.4) {
+                                   const xfr = lp(470, 860, sm(cl((t - 3.4) / 1.3))); ctx.fillStyle = 'rgba(110,160,185,.8)'; ctx.beginPath(); for (let x = 470; x <= xfr; x += 8)ctx.lineTo(x, G(x) - 4 - 6 * (1 - (x - 470) / (xfr - 470 + 1)) + Math.sin(x * .12 - t * 10) * 1.5); for (let x = xfr; x >= 470; x -= 8)ctx.lineTo(x, G(x) + 4); ctx.fill();
+                                   ctx.strokeStyle = 'rgba(235,245,250,.6)'; ctx.lineWidth = 1.5; for (let i = 0; i < 14; i++) { const x = 470 + mod(hs(i) * 390 + t * 120, xfr - 470 + 1); ctx.beginPath(); ctx.moveTo(x, G(x) - 3); ctx.lineTo(x + 12, G(x) - 3); ctx.stroke() }
+                            }
+                     }
+                     if (t >= 10.2) {
+                            const xw = lp(150, 1300, sm(cl((t - 10.1) / .9))), hw = 6 + 4 * RI(t); ctx.fillStyle = 'rgba(120,185,215,.92)'; ctx.beginPath(); for (let x = 150; x <= xw; x += 10)ctx.lineTo(x, cy(x) - hw / 2 + 2 + Math.sin(x * .1 - t * 14) * 1); for (let x = xw; x >= 150; x -= 10)ctx.lineTo(x, cy(x) + hw / 2 + 3); ctx.fill();
+                            ctx.strokeStyle = 'rgba(255,255,255,.65)'; ctx.lineWidth = 2; for (let i = 0; i < 46; i++) { const x = 150 + mod(hs(i) * 1150 + t * 420, 1150); if (x > xw) continue; ctx.beginPath(); ctx.moveTo(x, cy(x) - 1); ctx.lineTo(x + 16, cy(x + 16) - 1); ctx.stroke() }
+                            if (RI(t) > .2) for (let i = 0; i < 10; i++) { const u = mod(t * 2 + hs(i), 1); ctx.fillStyle = `rgba(220,238,248,${.6 * (1 - u)})`; ctx.beginPath(); ctx.arc(1290 + u * 10, cy(1290) - u * 18 - hs(i + 4) * 8, 2, 0, TAU); ctx.fill() }
+                     }
+                     if (E > 0) {
+                            const f = lp(560, 1250, sm(cl((t - 3.9) / 1.4))); ctx.fillStyle = 'rgba(104,76,46,.92)'; ctx.beginPath(); const Q = []; for (let x = 560; x <= 1300; x += 10) { const m = 22 * cl((f - x) / 80) * cl((x - 560) / 80) * (1 + .25 * Math.sin(x * .05 - t * 6)); Q.push([x, G(x) - m]) }
+                            Q.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); for (let i = Q.length - 1; i >= 0; i--)ctx.lineTo(Q[i][0], G(Q[i][0]) + 2); ctx.fill();
+                            for (let i = 0; i < 100; i++) {
+                                   const tt = t - 3.9 - hs(i + 400) * .9; if (tt < 0) continue; const xe = 980 + hs(i + 600) * 200, x = Math.min(560 + hs(i + 300) * 260 + .5 * (140 + hs(i + 500) * 180) * tt * tt, xe), r = 3 + hs(i + 700) * 7, y = G(x) - r - (x < xe ? Math.abs(Math.sin(tt * 5 + i)) * 10 : 0);
+                                   ctx.save(); ctx.translate(x, y); ctx.rotate(tt * 3 + i); ctx.fillStyle = i % 3 ? '#6b4a2c' : '#a69a86'; ctx.fillRect(-r, -r * .7, r * 2, r * 1.4); ctx.restore()
+                            }
+                            for (let i = 0; i < 24; i++) { const x = lp(650, f, hs(i)), y = G(x) - 30 - mod(t * 40 + i * 17, 60); ctx.fillStyle = 'rgba(170,150,120,.16)'; ctx.beginPath(); ctx.arc(x, y, 16 + hs(i + 3) * 14, 0, TAU); ctx.fill() }
+                     }
+                     if (t < 4.6) { const fa = t > 3.1, sa = (t - 3.1) * 140; person(fa ? AX - sa : AX, G(fa ? AX - sa : AX), fa ? -1 : 1, fa ? 'run' : 'throw', t, 0); person(fa ? BX + sa : BX, G(fa ? BX + sa : BX), fa ? 1 : -1, fa ? 'run' : 'throw', t, 2) }
+                     else if (t >= 5 && t < 7.2) { person(455, G(455), 1, 'dig', t, 0); person(525, G(525), -1, 'dig', t, 2) }
+                     else if (t >= 7.2 && t < 9.8) { const mv = t < 9.7; person(xf - 30, G(xf - 30), 1, 'dig', t, 0, mv); person(xf - 85, G(xf - 85), 1, 'dig', t, 2, mv) }
+                     else if (t >= 9.8) { person(1070, G(1070), -1, 'look', t, 0); person(1120, G(1120), -1, 'look', t, 2) }
+              }
+              function inset(t) {
+                     const a = Math.min(cl((t - 5.8) / .4), 1); if (a <= 0) return; const x0 = 24, y0 = 24, w = 360, h = 240, f = t < 7.2 ? 0 : t < 9.8 ? sm((t - 7.2) / 2.6) : 1; ctx.save(); ctx.globalAlpha = a; ctx.translate(x0, y0); rr(0, 0, w, h, 14); ctx.clip(); ctx.fillStyle = '#6f9552'; ctx.fillRect(0, 0, w, h);
+                     for (let i = 0; i < 7; i++) { ctx.fillStyle = i % 2 ? 'rgba(130,170,90,.25)' : 'rgba(40,90,50,.25)'; ctx.fillRect(hs(i) * 300, hs(i + 9) * 200, 60 + hs(i + 3) * 80, 40 + hs(i + 5) * 50) }
+                     const P = () => { ctx.beginPath(); ctx.moveTo(220, 0); ctx.lineTo(220, 30); ctx.bezierCurveTo(220, 70, 110, 70, 100, 125); ctx.bezierCurveTo(95, 175, 170, 200, 220, 205); ctx.lineTo(220, 240) };
+                     ctx.lineCap = 'butt'; ctx.setLineDash([]); P(); ctx.strokeStyle = '#5a4630'; ctx.lineWidth = 16; ctx.stroke();
+                     if (f > 0) { P(); ctx.strokeStyle = '#a8a8a2'; ctx.lineWidth = 14; ctx.setLineDash([f * 340, 600]); ctx.stroke(); ctx.setLineDash([]) }
+                     if (t >= 10.3) { P(); ctx.strokeStyle = 'rgba(130,195,225,.95)'; ctx.lineWidth = 7; ctx.setLineDash([14, 9]); ctx.lineDashOffset = -t * 90; ctx.stroke(); ctx.setLineDash([]) }
+                     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(190, 102, 76, 52); ctx.fillStyle = '#e0d2b0'; ctx.fillRect(184, 96, 76, 52); ctx.fillStyle = '#8a3d33'; ctx.fillRect(222, 96, 38, 52); ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fillRect(221, 96, 2, 52);
+                     ctx.restore(); ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = '#f4ead2'; ctx.lineWidth = 3; rr(x0, y0, w, h, 14); ctx.stroke(); ctx.font = '600 18px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(8,14,24,.6)'; rr(x0 + 10, y0 + 10, 150, 30, 15); ctx.fill(); ctx.fillStyle = '#f4ead2'; ctx.fillText(showHindi ? 'ऊपर का दृश्य' : 'Top view', x0 + 24, y0 + 31); ctx.restore()
+              }
+              function frame(t) {
+                     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const k = K(t), ri = RI(t);
+                     let g = ctx.createLinearGradient(0, 0, 0, H * .7); g.addColorStop(0, rg(mx(SKY.top[0], SKY.top[1], k))); g.addColorStop(.6, rg(mx(SKY.mid[0], SKY.mid[1], k))); g.addColorStop(1, rg(mx(SKY.hor[0], SKY.hor[1], k))); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+                     if (k < 1) { const sw = t > 12 ? 60 * sm(cl((t - 12) / 1.5)) : 0, sg = ctx.createRadialGradient(1000, 110, 6, 1000, 110, 90 + sw); sg.addColorStop(0, `rgba(255,244,200,${.95 * (1 - k)})`); sg.addColorStop(1, 'rgba(255,244,200,0)'); ctx.fillStyle = sg; ctx.fillRect(820, 0, 360, 300) }
+                     ctx.fillStyle = `rgba(40,52,64,${.45 * k})`; for (let i = 0; i < 14; i++) { ctx.beginPath(); ctx.arc(mod(i * 150 + t * 14, 1500) - 100, 50 + hs(i) * 130, 60 + hs(i + 9) * 50, 0, TAU); ctx.fill() }
+                     ridge(330, 90, .004, 1, hx('#8aa6bd'), hx('#56697a'), k); ridge(420, 70, .006, 3, hx('#5f8070'), hx('#31453d'), k);
+                     if ((t > 5.5 && t < 9.5) || t > 12.5) { ctx.strokeStyle = '#2a3440'; ctx.lineWidth = 2; for (let i = 0; i < 5; i++) { const x = mod(i * 260 + t * 60, 1500) - 100, y = 120 + i * 18 + Math.sin(t * 3 + i) * 6, f = Math.sin(t * 9 + i) * 5; ctx.beginPath(); ctx.moveTo(x - 9, y - f); ctx.lineTo(x, y); ctx.lineTo(x + 9, y - f); ctx.stroke() } }
+                     const sh = t > 3.9 && t < 5 ? 2 * Math.sin(t * 45) * Ef(t) * (1 - Ef(t)) * 4 : 0; ctx.save(); ctx.translate(sh, 0); world(t, k, ri); ctx.restore();
+                     let fl = 0; for (const [t0, d, bx] of FL) { const q = (t - t0) / d; if (q < 0 || q > 1) continue; const a = Math.pow(Math.max(0, Math.sin(q * Math.PI * 3)), 2) * (1 - q); fl = Math.max(fl, a); if (q < .4 && a > .1) { ctx.strokeStyle = '#eef6ff'; ctx.shadowColor = '#bcd8ff'; ctx.shadowBlur = 18; ctx.lineWidth = 3; ctx.beginPath(); let x = bx; ctx.moveTo(x, -10); for (let i = 1; i <= 9; i++) { x += (hs(i + bx) - .5) * 70; ctx.lineTo(x, i * 34) } ctx.stroke(); ctx.shadowBlur = 0 } }
+                     ctx.fillStyle = `rgba(10,18,28,${.3 * k})`; ctx.fillRect(0, 0, W, H); if (fl > 0) { ctx.fillStyle = `rgba(225,236,255,${fl * .5})`; ctx.fillRect(0, 0, W, H) }
+                     ctx.strokeStyle = 'rgba(200,220,235,.45)'; ctx.lineWidth = 1.3; ctx.beginPath();
+                     for (let i = 0; i < 380; i++) { if (hs(i) > ri) continue; const y = mod(hs(i + 3) * 900 + t * (850 + hs(i + 4) * 400), 820) - 50, x = mod(hs(i + 1) * 1500, 1500) - 100 + y * .18, len = 14 + hs(i + 5) * 14; ctx.moveTo(x - len * .18, y - len); ctx.lineTo(x, y) } ctx.stroke();
+                     const vg = ctx.createRadialGradient(640, 360, 300, 640, 360, 800); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.4)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+                     inset(t);
+                     if (t >= 4.1 && t < 5) { const a = cl((t - 4.1) / .15) * (Math.sin(t * 16) > -.2 ? 1 : .35); ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = '#e0303a'; ctx.shadowColor = '#ff3a44'; ctx.shadowBlur = 32; ctx.lineWidth = 36; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(540, 200); ctx.lineTo(740, 400); ctx.moveTo(740, 200); ctx.lineTo(540, 400); ctx.stroke(); ctx.restore() }
+                     if (t >= 13.4) { const a = cl((t - 13.4) / .3), s = 1 + .08 * Math.sin(t * 7); ctx.save(); ctx.globalAlpha = a; ctx.translate(640, 290); ctx.scale(s, s); ctx.strokeStyle = '#3fe07a'; ctx.shadowColor = '#3fe07a'; ctx.shadowBlur = 40 + 15 * Math.sin(t * 7); ctx.lineWidth = 36; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(-90, 10); ctx.lineTo(-25, 80); ctx.lineTo(100, -70); ctx.stroke(); ctx.restore() }
+                     const C = showHindi ? CAP_HI : CAP_EN;
+                     for (const [a, b, s] of C) { const al = Math.min(cl((t - a) / .3), cl((b - t) / .3)); if (al <= 0) continue; ctx.font = '600 28px system-ui,sans-serif'; ctx.textAlign = 'center'; const w = ctx.measureText(s).width + 56; ctx.globalAlpha = al; ctx.fillStyle = 'rgba(8,14,24,.6)'; rr(640 - w / 2, 640, w, 52, 26); ctx.fill(); ctx.fillStyle = '#f4ead2'; ctx.fillText(s, 640, 676); ctx.globalAlpha = 1 }
+                     const fd = Math.max(1 - t / .35, 1 - (D - t) / .35, 1 - Math.abs(t - 5) / .3, 1 - Math.abs(t - 10) / .3, 0); if (fd > 0) { ctx.fillStyle = `rgba(0,0,0,${cl(fd)})`; ctx.fillRect(0, 0, W, H) }
+              }
+
+              // --- NEW: Audio Control Logic ---
+              let t = 0, playing = false, last = performance.now(); // Starts paused
+              const pp = document.getElementById('pp'), sk = document.getElementById('sk'), tm = document.getElementById('tm'), btnL = document.getElementById('lang');
+              const vo = document.getElementById('vo');
+              const overlay = document.getElementById('start-overlay');
+              const startBtn = document.getElementById('start-btn');
+
+              // When the user clicks the giant start button
+              startBtn.onclick = () => {
+                     overlay.style.display = 'none'; // Hide overlay
+                     playing = true;
+                     last = performance.now();
+                     vo.play(); // Play audio safely!
+
+                     // Enable the lower controls
+                     pp.disabled = false;
+                     sk.disabled = false;
+                     pp.textContent = 'Pause';
+              };
+
+              function loop(n) {
+                     const dt = (n - last) / 1000;
+                     last = n;
+                     if (playing) {
+                            t += dt;
+                            // If it reaches the end, loop the animation AND the audio
+                            if (t >= D) {
+                                   t = 0;
+                                   vo.currentTime = 0;
+                                   vo.play();
+                            }
+                            sk.value = t;
+                     }
+                     frame(t);
+                     tm.textContent = t.toFixed(1) + 's';
+                     requestAnimationFrame(loop);
+              }
+
+              pp.onclick = () => {
+                     playing = !playing;
+                     pp.textContent = playing ? 'Pause' : 'Play';
+                     if (playing) vo.play();
+                     else vo.pause();
+              };
+              sk.oninput = () => {
+                     playing = false;
+                     pp.textContent = 'Play';
+                     t = +sk.value;
+                     vo.currentTime = t; // Jump audio to slider position
+                     vo.pause();
+              };
+              btnL.onclick = () => { showHindi = !showHindi; btnL.textContent = 'Hindi Subtitles: ' + (showHindi ? 'On' : 'Off') };
+
+              // Start the drawing loop immediately to draw the first "poster" frame (0.0s)
+              requestAnimationFrame(loop);
+       </script>
+</body>
+
+</html>

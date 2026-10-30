@@ -344,7 +344,7 @@ export default function QuizPage() {
                 return (
                   <button key={i} className={cls} onClick={() => handleAnswer(i)} disabled={answered}>
                     <span className="option-letter">{String.fromCharCode(65 + i)}</span>
-                    <span>{opt}</span>
+                    <span className="option-text">{opt}</span>
                   </button>
                 );
               })}
@@ -353,7 +353,13 @@ export default function QuizPage() {
             {/* Explanation */}
             {answered && (
               <div className={`quiz-explanation ${selectedAnswer === q.correctAnswer ? "correct" : "wrong"}`}>
-                <strong>{selectedAnswer === q.correctAnswer ? "✅ {t('quiz_page.correct')}" : timer === 0 && selectedAnswer === null ? "⏰ {t('quiz_page.times_up')}" : "❌ {t('quiz_page.incorrect')}"}</strong>
+                <strong>
+                  {selectedAnswer === q.correctAnswer
+                    ? `✅ ${t('quiz_page.correct')}`
+                    : timer === 0 && selectedAnswer === null
+                    ? `⏰ ${t('quiz_page.times_up')}`
+                    : `❌ ${t('quiz_page.incorrect')}`}
+                </strong>
                 <p>{q.explanation}</p>
               </div>
             )}
@@ -363,7 +369,9 @@ export default function QuizPage() {
           {answered && (
             <div className="quiz-nav">
               <button className="btn btn-primary" onClick={handleNext}>
-                {currentIndex + 1 >= questions.length ? "View Results 🏆" : "{t('quiz_page.next')}"}
+                {currentIndex + 1 >= questions.length
+                  ? (t('quiz_page.finish') || "View Results 🏆")
+                  : (t('quiz_page.next') || "Next Question →")}
               </button>
             </div>
           )}
@@ -422,7 +430,7 @@ export default function QuizPage() {
 
           {/* Category Breakdown */}
           <div className="quiz-category-breakdown">
-            <h3>Category Breakdown</h3>
+            <h3>{t('quiz_page.category_breakdown')}</h3>
             {Object.entries(byCategory).map(([cat, { correct: c, total: t }]) => {
               const catPct = t > 0 ? Math.round((c / t) * 100) : 0;
               const catInfo = CATEGORIES[cat] || { icon: "❓", name: cat, color: "#6b7280" };

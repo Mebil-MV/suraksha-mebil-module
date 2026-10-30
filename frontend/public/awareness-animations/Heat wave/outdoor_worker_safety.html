@@ -1,0 +1,273 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>Outdoor Worker Safety</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+       </style>
+</head>
+
+<body>
+       <canvas id="c" width="1280" height="720"></canvas>
+       <div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div>
+       <div class="bar">
+              <button id="pp" disabled>Play</button>
+              <!-- Extended slider max to 16.5 seconds -->
+              <input id="sk" type="range" min="0" max="20" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Language: English</button>
+       </div>
+       <p id="note" style="font-size:13px">Voice uses your browser’s installed English / Hindi voices.</p><script>const W = 1280, H = 720, D = 20, TAU = Math.PI * 2, cv = document.getElementById('c'), ctx = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
+              cv.width = W * dpr; cv.height = H * dpr;
+              const cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lp = (a, b, k) => a + (b - a) * k, sm = k => k * k * (3 - 2 * k), mod = (a, n) => ((a % n) + n) % n;
+              function hs(n) { n |= 0; n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296 }
+              const hx = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mx = (a, b, k) => a.map((v, i) => lp(v, b[i], k)), rg = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+              const sh = (c, f, k) => rg(mx(hx(c), [22, 32, 44], k * .45).map(v => Math.min(255, v * f)));
+              const tri = (a, b, c, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.fill() };
+              const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h) };
+              const fan = (P, c, col, f, k) => { for (let i = 0; i < P.length; i++)tri(c, P[i], P[(i + 1) % P.length], sh(col, f + (hs(i * 7 + P[0][0]) - .5) * .4, k)) };
+              const gy = x => 550 + 14 * Math.sin(x * .007) + 50 * Math.exp(-(((x - 1400) / 85) ** 2));
+
+              
+let showHindi=false;
+const VE=['Confusion, weakness, or a body temperature of 104 degrees mean danger.','Call emergency help. Move to shade and cool the worker immediately.','Prevent heat illness with ventilation, frequent rest breaks, and drinking water.','Plan fifteen-minute breaks. Adjust breaks to heat and workload.','Stay alert. Stay safe.'];
+const VH=['भ्रम, कमजोरी या 104 डिग्री तापमान खतरे के संकेत हैं।','तुरंत आपात सहायता बुलाएँ। छाया में ले जाएँ और शरीर ठंडा करें।','बचाव के लिए हवा, बार-बार आराम और पीने का पानी दें।','पंद्रह मिनट के विराम रखें। गर्मी और काम के अनुसार आराम बढ़ाएँ।','सतर्क रहें। सुरक्षित रहें।'];
+const CT=[[.3,4],[4.1,8],[8.2,12.2],[12.3,16],[16.4,19.8]];
+function poly(p,c){ctx.fillStyle=c;ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function text(s,x,y,size=28,c='#f4ead2'){ctx.font=`700 ${size}px system-ui,sans-serif`;ctx.fillStyle=c;ctx.textAlign='center';ctx.fillText(s,x,y)}
+function block(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);poly([[x+w,y],[x+w+20,y-16],[x+w+20,y+h-16],[x+w,y+h]],sh(c,.65,0));poly([[x,y],[x+20,y-16],[x+w+20,y-16],[x+w,y]],sh(c,1.2,0))}
+function limb(a,b,w,c){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke()}
+function person(x,y,t,sick=false,manager=false,seated=false){ctx.save();ctx.translate(x,y);ctx.rotate(sick?Math.sin(t*3)*.035:0);const shirt=manager?'#4697b1':'#f59a36';ctx.fillStyle='rgba(25,30,35,.18)';ctx.beginPath();ctx.ellipse(0,4,65,16,0,0,TAU);ctx.fill();
+if(seated){limb([-18,-90],[20,-63],25,'#324c67');limb([20,-63],[38,-8],23,'#263f59');limb([12,-90],[60,-62],23,'#3b5874');limb([60,-62],[73,-8],22,'#30475f');limb([32,-4],[55,-4],15,'#25303b');limb([68,-4],[91,-4],15,'#25303b')}
+else{limb([-19,-92],[-24,-10],25,'#324c67');limb([20,-92],[27,-10],25,'#263f59');limb([-26,-4],[-7,-4],16,'#25303b');limb([25,-4],[46,-4],16,'#25303b')}
+poly([[-35,-178],[30,-178],[39,-90],[-35,-90]],shirt);poly([[12,-178],[30,-178],[39,-90],[12,-90]],sh(shirt,.8,0));ctx.fillStyle='#e9ef9d';ctx.fillRect(-26,-172,9,77);ctx.fillRect(17,-172,9,77);ctx.fillRect(-30,-116,65,8);
+limb([0,-177],[0,-196],18,'#c58a61');poly([[-26,-238],[14,-243],[29,-224],[22,-194],[-18,-190],[-29,-211]],'#dca275');poly([[4,-241],[29,-224],[22,-194],[4,-198]],'#bd8058');ctx.fillStyle='#343342';ctx.fillRect(-17,-216,5,5);ctx.fillRect(11,-216,5,5);
+poly([[-35,-235],[-25,-257],[12,-264],[32,-244],[37,-231],[-35,-231]],manager?'#f3eee0':'#f8cc49');block(-39,-235,79,7,manager?'#e6e4da':'#dca72e');
+limb([-31,-167],[-49,-126],20,shirt);limb([-49,-126],sick?[-38,-204]:[-47,-87],16,'#dca275');limb([31,-167],[52,-130],20,shirt);limb([52,-130],seated?[50,-108]:[68,-97],16,'#dca275');
+if(sick){for(let i=0;i<5;i++){const q=(t*.9+i*.2)%1;poly([[34+i%2*9,-218+q*80],[29+i%2*9,-205+q*80],[39+i%2*9,-205+q*80]],'#b2edff')}ctx.strokeStyle='#ffcf5d';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,-277,47,12,t,0,TAU);ctx.stroke()}
+ctx.restore()}
+function badge(x,y,good,t){ctx.save();ctx.translate(x,y);ctx.shadowColor=good?'#52ff9a':'#ff493e';ctx.shadowBlur=25;ctx.strokeStyle=good?'#40eb8a':'#ff4a46';ctx.lineWidth=14;ctx.lineCap='round';ctx.scale(1+.04*Math.sin(t*7),1+.04*Math.sin(t*7));ctx.beginPath();if(good){ctx.moveTo(-30,0);ctx.lineTo(-5,25);ctx.lineTo(39,-30)}else{ctx.moveTo(-27,-27);ctx.lineTo(27,27);ctx.moveTo(27,-27);ctx.lineTo(-27,27)}ctx.stroke();ctx.restore()}
+function frame(t){ctx.setTransform(dpr,0,0,dpr,0,0);let cool=sm(cl((t-7.5)/1.5));let g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,rg(mx(hx('#b85e39'),hx('#85c5d7'),cool)));g.addColorStop(1,rg(mx(hx('#f8d18a'),hx('#e4eedc'),cool)));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+if(t<16){ctx.save();const pan=sm(cl((t-7.5)/1.5))*660;ctx.translate(-pan,0);ctx.fillStyle='#e6a361';ctx.beginPath();ctx.arc(1070,110,65,0,TAU);ctx.fill();poly([[-100,480],[2000,440],[2200,720],[-100,720]],cool>.5?'#9eb7ab':'#bd8c61');for(let i=0;i<35;i++){let x=i*67;tri([x,500],[x+100,700],[x+180,520],sh('#c39a70',.8+(i%4)*.12,0))}
+block(110,240,230,300,'#b18a69');for(let j=0;j<7;j++){ctx.strokeStyle='#8b6f58';ctx.beginPath();ctx.moveTo(110,260+j*40);ctx.lineTo(340,260+j*40);ctx.stroke()}
+for(let i=0;i<4;i++)block(650+i*65,420-i*18,60,100+i*18,'#937861');limb([540,120],[540,450],10,'#7b6c56');limb([420,140],[840,140],9,'#7b6c56');limb([700,140],[700,300],3,'#7b6c56');
+// Rest tent, with visible open sides and a cool shaded floor.
+poly([[1000,291],[1290,180],[1620,290]],'#6cbed0');poly([[1290,180],[1620,290],[1530,305],[1290,223]],'#4592b0');poly([[1000,291],[1620,290],[1530,310],[1030,310]],'#ddf0dd');poly([[1030,310],[1530,310],[1530,580],[1030,580]],'rgba(38,101,123,.18)');for(const x of [1040,1530])limb([x,303],[x,580],9,'#e5e9de');block(1120,504,180,15,'#628e92');limb([1140,520],[1140,580],8,'#486a78');limb([1270,520],[1270,580],8,'#486a78');text('COOL REST AREA',1300,279,22,'#183c54');
+limb([1460,430],[1460,554],9,'#3a6579');block(1420,551,80,10,'#456e81');ctx.save();ctx.translate(1460,390);ctx.strokeStyle='#d1edee';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,50,0,TAU);ctx.stroke();ctx.rotate(t*12);for(let i=0;i<3;i++){ctx.rotate(TAU/3);poly([[0,0],[10,-38],[31,-29],[18,-5]],'#ddf8f4')}ctx.restore();for(let i=0;i<4;i++){ctx.strokeStyle='rgba(225,255,255,.65)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(1400,360+i*24);ctx.quadraticCurveTo(1330,345+i*24,1280,365+i*24);ctx.stroke()}
+if(t<8){person(445,565,t,true);badge(590,220,false,t);ctx.fillStyle='#f4ead2';rr(695,220,45,160,22);ctx.fill();ctx.fillStyle='#ff423f';ctx.fillRect(709,360-cl(t/3)*120,17,cl(t/3)*120+10);ctx.beginPath();ctx.arc(718,384,28,0,TAU);ctx.fill();text('104°F / 40°C',735,445,26);if(t>4){block(530,409,28,47,'#263b52');text('SOS',544,435,12);text('CALL HELP + COOL NOW',470,120,32)}}else{person(1200,577,t,false,false,true);person(1350,576,t,false,true);ctx.fillStyle='#b6e9ee';rr(1240,453,22,36,5);ctx.fill();ctx.fillStyle='#6dabbc';ctx.fillRect(1244,447,14,7);poly([[1177,391],[1225,391],[1225,423],[1177,423]],'#b8f1ed');badge(1560,220,true,t);ctx.fillStyle='rgba(13,43,63,.9)';rr(1030,90,440,75,18);ctx.fill();text('15 MIN • REST BREAK',1250,139,30);text('Prevention • adjust to heat & workload',1290,627,22,'#244453')}
+ctx.restore();text(showHindi?'बाहरी कामगारों की सुरक्षा':'OUTDOOR WORKER SAFETY',640,57,34);if(t<8){text(showHindi?'खतरा: शरीर का तापमान 104°F':'Danger: Body temp of 104°F',640,620,30);}
+}else{let bg=ctx.createLinearGradient(0,0,0,720);bg.addColorStop(0,'#b9deee');bg.addColorStop(1,'#eff5e4');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(640,252);const z=sm(cl((t-16)/.65));ctx.scale(z,z);fan([[0,-115],[98,-75],[90,25],[54,91],[0,126],[-54,91],[-90,25],[-98,-75]],[0,0],'#2f9e5a',1,0);badge(0,0,true,t);ctx.restore();text(showHindi?'सतर्क रहें। सुरक्षित रहें।':'Stay Alert. Stay Safe.',640,450,40,'#183d51');}
+const i=CT.findIndex(([a,b])=>t>=a&&t<b);if(i>=0){let words=(showHindi?VH:VE)[i].split(' '),lines=[''];ctx.font='600 24px system-ui';for(const w of words){let n=lines.length-1;if(ctx.measureText(lines[n]+w).width>1120)lines.push(w+' ');else lines[n]+=w+' '}ctx.fillStyle='rgba(8,20,32,.85)';rr(40,714-lines.length*32-20,1200,lines.length*32+15,16);ctx.fill();lines.forEach((l,j)=>text(l,640,704-(lines.length-1-j)*32,24))}
+ctx.fillStyle=t<8?'#f29c63':'#63c9bd';ctx.fillRect(0,715,1280*cl(t/20),5)}
+let ac, rumG, rainG, voices = [];
+              if (window.speechSynthesis) {
+                     const loadVoices = () => voices = speechSynthesis.getVoices();
+                     speechSynthesis.onvoiceschanged = loadVoices;
+                     loadVoices();
+              }
+
+              function initAudio() {
+                     try {
+                            ac = new (window.AudioContext || window.webkitAudioContext)(); const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = Math.random() * 2 - 1;
+                            const ns = (type, f) => { const s = ac.createBufferSource(); s.buffer = nb; s.loop = true; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; const g = ac.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); g.connect(ac.destination); s.start(); return g };
+                            rumG = ns('lowpass', 110); rainG = ns('highpass', 3500)
+                     } catch (e) { ac = null }
+              }
+
+              function tone(f, d, v, type, delay = 0) { if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), n = ac.currentTime + delay; o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, n); g.gain.exponentialRampToValueAtTime(.0001, n + d); o.connect(g); g.connect(ac.destination); o.start(n); o.stop(n + d + .05) }
+
+              function speak(i) {
+                     if (!window.speechSynthesis) return;
+
+                     speechSynthesis.cancel();
+
+                     setTimeout(() => {
+                            const u = new SpeechSynthesisUtterance((showHindi ? VH : VE)[i]);
+                            u.lang = showHindi ? 'hi-IN' : 'en-US';
+                            u.rate = 1.0;
+                            u.pitch = 1.0;
+
+                            const targetLang = showHindi ? 'hi' : 'en';
+
+                            let bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang) && v.localService && (v.name.includes('Google') || v.name.includes('Neural')));
+                            if (!bestVoice) bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang) && v.localService);
+                            if (!bestVoice) bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang));
+
+                            if (bestVoice) u.voice = bestVoice;
+                            speechSynthesis.speak(u);
+                     }, 40);
+              }
+
+              const EV = [[.3,'v',0],[4.1,'v',1],[8.2,'v',2],[12.3,'v',3],[16.4,'v',4],[1,'b'],[8.1,'c'],[16.1,'c']];
+              function fire(e) { if (e[1] === 'v') speak(e[2]); else if (e[1] === 'b') { tone(1500, .09, .08, 'square'); tone(1500, .09, .08, 'square', .14) } else { tone(880, 1.2, .18, 'sine'); tone(1320, 1.4, .12, 'sine', .12) } }
+              function audioTick(t) { if (!ac || !rumG) return; const rv = playing && t < 8 ? .12 : 0, rn = playing && t >= 8 && t < 16 ? .07 : 0; rumG.gain.setTargetAtTime(rv, ac.currentTime, .1); rainG.gain.setTargetAtTime(rn, ac.currentTime, .1) }
+
+              let t = 0, pt = 0, playing = false, last = performance.now();
+              const pp = document.getElementById('pp'), sk = document.getElementById('sk'), tm = document.getElementById('tm'), btnL = document.getElementById('lang'), overlay = document.getElementById('start-overlay');
+              const stopSpeech = () => { if (window.speechSynthesis) speechSynthesis.cancel() };
+
+              document.getElementById('start-btn').onclick = () => {
+                     overlay.style.display = 'none';
+                     initAudio();
+
+                     if (window.speechSynthesis) {
+                            let dummy = new SpeechSynthesisUtterance('');
+                            dummy.volume = 0;
+                            speechSynthesis.speak(dummy);
+                     }
+
+                     playing = true;
+                     last = performance.now();
+                     pp.disabled = sk.disabled = false;
+                     pp.textContent = 'Pause';
+              };
+
+              function loop(n) {
+                     const dt = Math.min((n - last) / 1000, .1); last = n;
+                     if (playing) { t += dt; if (t >= D) { t = D; playing = false; pp.textContent = 'Replay'; } sk.value = t; for (const e of EV) if (pt < e[0] && e[0] <= t) fire(e) }
+                     pt = t; audioTick(t); frame(t); tm.textContent = t.toFixed(1) + 's'; requestAnimationFrame(loop)
+              }
+
+              pp.onclick = () => {
+                     if(t>=D){t=0;pt=-.01} playing = !playing;
+                     pp.textContent = playing ? 'Pause' : 'Play';
+                     last = performance.now();
+                     if (playing) {
+                            if (ac) ac.resume();
+                     } else {
+                            stopSpeech();
+                            if (ac) ac.suspend();
+                     }
+              };
+
+              sk.oninput = () => {
+                     playing = false;
+                     pp.textContent = 'Play';
+                     t = +sk.value;
+                     pt = t;
+                     stopSpeech();
+                     if (ac) ac.suspend();
+              };
+
+              btnL.onclick = () => {
+                     showHindi = !showHindi;
+                     btnL.textContent = showHindi ? 'Language: हिन्दी' : 'Language: English'; if(showHindi && !voices.some(v=>v.lang.startsWith('hi'))) document.getElementById('note').textContent='Hindi voice unavailable on this device. Hindi captions remain available.'; else document.getElementById('note').textContent='Voice uses your browser’s installed English / Hindi voices.';
+                     stopSpeech();
+              };
+
+              requestAnimationFrame(loop);
+       </script>
+</body>
+
+</html>

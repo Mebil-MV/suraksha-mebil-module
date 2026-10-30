@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>Health Risks, Diet & Care</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+       </style>
+</head>
+
+<body>
+       <canvas id="c" width="1280" height="720"></canvas>
+       <div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div>
+       <div class="bar">
+              <button id="pp" disabled>Play</button>
+              <!-- Twenty-second timeline -->
+              <input id="sk" type="range" min="0" max="20" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Hindi Subtitles: Off</button>
+       </div>
+       <script>
+              const cv = document.getElementById('c'), ctx = cv.getContext('2d'), W = 1280, H = 720, D = 20, dpr = Math.min(devicePixelRatio || 1, 2); cv.width = W * dpr; cv.height = H * dpr;
+              const cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)), sm = v => { v = cl(v); return v * v * (3 - 2 * v) }, lp = (a, b, k) => a + (b - a) * k;
+              let showHindi = false;
+              function poly(p, c) { ctx.fillStyle = c; ctx.beginPath(); p.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill() }
+              function rect(x, y, w, h, c, r = 0) { ctx.fillStyle = c; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill() }
+              function line(p, c, w = 3) { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); p.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke() }
+              function txt(s, x, y, size = 24, c = '#f4ead2', align = 'center') { ctx.font = `600 ${size}px system-ui,sans-serif`; ctx.textAlign = align; ctx.fillStyle = c; ctx.fillText(s, x, y) }
+              function facet(p, c1, c2) { poly(p, c1); poly([p[0], p[1], [(p[1][0] + p[2][0]) / 2, (p[1][1] + p[2][1]) / 2], p[p.length - 1]], c2) }
+              function box(x, y, w, h, d, c = '#608d86') { rect(x, y, w, h, c); poly([[x, y], [x + d, y - d * .55], [x + w + d, y - d * .55], [x + w, y]], '#b3c6b1'); poly([[x + w, y], [x + w + d, y - d * .55], [x + w + d, y + h - d * .55], [x + w, y + h]], '#3a625c') }
+              function shadow(x, y, w) { ctx.fillStyle = 'rgba(14,28,36,.16)'; ctx.beginPath(); ctx.ellipse(x, y, w, w * .19, 0, 0, Math.PI * 2); ctx.fill() }
+              function person(x, y, s, coat, t, mode = 'normal', old = false) {
+                     ctx.save(); ctx.translate(x, y); ctx.scale(s, s); let shiv = mode === 'cold' ? Math.sin(t * 55) * 3 : 0; ctx.translate(shiv, 0); shadow(0, 4, 48);
+                     line([[-16, -67], [-22, -4]], '#273f53', 19); line([[16, -67], [24, -4]], '#314c60', 19); line([[-23, -3], [-35, 0]], '#1d2d3c', 14); line([[24, -3], [36, 0]], '#1d2d3c', 14);
+                     facet([[-35, -159], [27, -159], [39, -67], [-38, -67]], coat, mode === 'cold' ? '#375a78' : '#568b70'); poly([[3, -157], [27, -159], [39, -67], [3, -77]], mode === 'cold' ? '#24465f' : '#346851');
+                     let arms = mode === 'cold' ? [[-35, -145], [-48, -108], [-4, -125]] : [[-35, -145], [-49, -98], [-47, -83]]; line(arms, coat, 17); if (mode !== 'frostbite') line([[30, -145], [49, -111], [mode === 'knock' ? 65 : 48, mode === 'knock' ? -138 : -84]], coat, 17); rect(-53, -90, 13, 18, '#e1b89a', 5); if (mode !== 'frostbite') rect(mode === 'knock' ? 58 : 42, mode === 'knock' ? -146 : -90, 14, 18, '#e1b89a', 5);
+                     rect(-12, -174, 25, 24, '#d5aa8b', 4);
+                     ctx.save(); if (mode === 'sleep') { ctx.translate(0, -162); ctx.rotate(.10 + Math.sin(t * 2) * .025); ctx.translate(0, 162) } facet([[-25, -211], [14, -220], [30, -198], [21, -168], [-16, -165], [-31, -187]], '#ddb393', '#f1c8a4'); poly([[-29, -192], [-29, -213], [0, -230], [24, -215], [29, -201], [13, -208], [-14, -204]], old ? '#c9d0ca' : '#3f3935'); line([[-13, -190], [-7, -190]], '#37414a', 3); line([[9, -190], [15, -190]], '#37414a', 3); line([[-5, -175], [7, -175]], '#996f5d', 2); if (old) { line([[-24, -190], [-2, -190]], '#63706b', 2); line([[3, -190], [24, -190]], '#63706b', 2) } ctx.restore();
+                     if (mode === 'cold') { for (let i = 0; i < 6; i++) { let a = (t * 35 + i * 31) % 90; line([[-25 + i * 9, -145 + a * .7], [-28 + i * 9, -137 + a * .7]], '#8ecde6', 2) } line([[-59, -180], [-65, -171], [-59, -162]], '#afd7e8', 3); line([[54, -180], [60, -171], [54, -162]], '#afd7e8', 3) } ctx.restore()
+              }
+              function badge(s, x, y, good = true) { ctx.save(); ctx.shadowBlur = 16; ctx.shadowColor = good ? '#64edaa' : '#ff7b69'; rect(x - 22, y - 25, 44, 44, good ? '#2b9c65' : '#c6534f', 10); ctx.shadowBlur = 0; txt(good ? '✓' : '!', x, y + 7, 30); ctx.restore(); if (s) txt(s, x + 34, y + 5, 23, '#f4ead2', 'left') }
+              function label(en, hi, x, y, good = true) { let s = showHindi ? hi : en; ctx.font = '600 25px system-ui'; let w = ctx.measureText(s).width + 85; rect(x, y, w, 48, 'rgba(8,20,30,.85)', 12); badge('', x + 26, y + 26, good); txt(s, x + 58, y + 33, 25, '#f4ead2', 'left') }
+              function room(warm, t) {
+                     let g = ctx.createLinearGradient(0, 0, 0, 720); g.addColorStop(0, warm ? '#b6d0bb' : '#597b94'); g.addColorStop(1, warm ? '#f3dfb9' : '#adc6cf'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); poly([[0, 480], [1280, 480], [1280, 720], [0, 720]], warm ? '#bdaf8e' : '#6f8998'); for (let i = 0; i < 12; i++)poly([[i * 140, 480], [i * 140 + 140, 480], [i * 150 + 45, 720]], warm ? 'rgba(244,226,187,.18)' : 'rgba(195,224,236,.12)'); box(80, 155, 265, 225, 15, '#385e74'); rect(94, 169, 237, 195, warm ? '#b2c9c5' : '#80aac5'); line([[212, 170], [212, 365]], '#e5e3d4', 9); line([[94, 264], [330, 264]], '#e5e3d4', 9); for (let i = 0; i < 30; i++) { let x = 100 + (i * 43) % 220, y = 175 + (i * 31 + t * 22) % 183; rect(x, y, 3, 3, '#dcecf0') }
+                     if (warm) { let g = ctx.createRadialGradient(1000, 180, 5, 1000, 180, 470); g.addColorStop(0, 'rgba(255,207,116,.48)'); g.addColorStop(1, 'rgba(255,207,116,0)'); ctx.fillStyle = g; ctx.fillRect(500, 0, 780, 650); line([[1100, 255], [1100, 483]], '#6e6853', 8); poly([[1040, 260], [1068, 190], [1130, 190], [1161, 260]], '#f6cc82') }
+              }
+              function steam(x, y, t) { for (let j = 0; j < 3; j++) { ctx.globalAlpha = .22 + .18 * Math.sin(t * 3 + j); let p = []; for (let k = 0; k < 20; k++)p.push([x + j * 11 + Math.sin(k * .4 + t * 3 + j) * 6, y - k * 3]); line(p, '#fff5dc', 3) } ctx.globalAlpha = 1 }
+              function mug(x, y, t) { ctx.strokeStyle = '#eadac1'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(x + 35, y + 15, 14, -1.6, 1.6); ctx.stroke(); box(x, y, 36, 40, 7, '#d99251'); rect(x + 3, y - 3, 30, 6, '#674a35', 5); steam(x + 3, y - 10, t) }
+              const cues = [
+                     [0, 3.5, 'Keep your body dry. Change wet clothes immediately.', 'शरीर सूखा रखें। गीले कपड़े तुरंत बदलें।'],
+                     [3.5, 9.8, 'Eat healthy food and have regular hot drinks. Avoid alcohol.', 'पौष्टिक भोजन और गर्म पेय लें। शराब से बचें।'],
+                     [10, 13.7, 'Pale fingers or nose may signal frostbite.', 'पीली उंगलियाँ या नाक शीतदंश का संकेत हो सकती हैं।'],
+                     [13.7, 17.4, 'Severe shivering or drowsiness? Get urgent medical help.', 'तेज़ कंपकंपी या उनींदापन? तुरंत चिकित्सा सहायता लें।'],
+                     [17.4, 20, 'Check on elderly neighbours living alone.', 'अकेले रहने वाले बुज़ुर्ग पड़ोसियों की खबर लें।']];
+              function caption(s) { ctx.font = '600 25px system-ui'; let words = s.split(' '), rows = ['']; for (let w of words) { let i = rows.length - 1; if (ctx.measureText(rows[i] + w).width > 1080) rows.push(''); rows[rows.length - 1] += w + ' ' } let h = rows.length * 33 + 22; rect(55, 700 - h, 1170, h, 'rgba(8,18,28,.83)', 15); rows.forEach((r, i) => txt(r.trim(), 640, 700 - h + 34 + i * 33, 25)) }
+              function frame(t) {
+                     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+                     if (t < 3.5) {
+                            room(false, t); let dry = sm((t - 1.5) / 1.4); person(640, 535, 1.65, dry > .5 ? '#c0834b' : '#477692', t, dry > .5 ? 'normal' : 'cold'); if (dry > 0 && dry < 1) { ctx.globalAlpha = Math.sin(dry * Math.PI); rect(533, 170, 210, 380, '#e6efe4', 20); ctx.globalAlpha = 1 } box(880, 418, 150, 95, 20, '#6d888d'); poly([[900, 390], [930, 378], [945, 394], [975, 390], [990, 418], [890, 418]], '#d89553'); if (t > 2.9) badge('', 777, 300); label('Change Wet Clothes', 'गीले कपड़े बदलें', 420, 110, t > 2.8); txt(showHindi ? 'सूखे कपड़ों से गर्माहट' : 'DRY CLOTHES • WARM BODY', 640, 596, 25);
+                            // Intro indication: Do's and Don'ts fade-out banner
+                            if (t < 2.5) { let a = t < 1.5 ? 1 : Math.max(0, 1 - (t - 1.5) * 1); ctx.globalAlpha = a; rect(290, 250, 700, 54, 'rgba(8,20,30,.9)', 12); txt(showHindi ? "शीत लहर के दौरान क्या करें और क्या न करें पर आधारित" : "Based on Do's & Don'ts during Cold Wave", 640, 285, 25, '#f4ead2'); ctx.globalAlpha = 1; }
+                     }
+                     else if (t < 10) {
+                            room(true, t); person(510, 515, 1.32, '#73966c', t); box(365, 435, 485, 31, 26, '#9e704e'); line([[397, 467], [397, 565]], '#74583f', 16); line([[816, 467], [816, 565]], '#74583f', 16); ctx.fillStyle = '#eee5ce'; ctx.beginPath(); ctx.ellipse(580, 429, 78, 22, 0, 0, 7); ctx.fill(); for (let i = 0; i < 9; i++)poly([[535 + i * 9, 425], [543 + i * 8, 407 - (i % 3) * 7], [555 + i * 8, 427]], i % 2 ? '#6a9d58' : '#dd9145'); mug(730, 390, t); if (t < 5.5) { line([[750, 335], [750, 373]], '#efc48a', 5); box(748, 310, 45, 35, 8, '#79a29a') }
+                            label('Drink Hot Fluids', 'गर्म पेय पिएँ', 460, 110); label('Healthy Food', 'पौष्टिक भोजन', 80, 540); rect(945, 360, 50, 92, '#738b80', 7); rect(958, 334, 24, 28, '#738b80'); ctx.strokeStyle = '#d66759'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(970, 398, 65, 0, 7); ctx.stroke(); line([[924, 444], [1015, 352]], '#d66759', 7); txt(showHindi ? 'शराब से बचें' : 'AVOID ALCOHOL', 970, 502, 23, '#5f5048'); badge('', 845, 319)
+                     }
+                     else if (t < 13.7) {
+                            room(false, t);
+                            const px = 620, py = 598, scale = 1.7;
+                            person(px, py, scale, '#477692', t, 'frostbite');
+                            ctx.save(); ctx.translate(px, py); ctx.scale(scale, scale);
+                            poly([[-1, -188], [8, -182], [-2, -179]], '#eef0e4');
+                            line([[30, -145], [67, -121], [83, -158]], '#477692', 19);
+                            line([[83, -158], [85, -169]], '#d4ad94', 12);
+                            poly([[77, -164], [96, -163], [101, -185], [78, -187]], '#d4ad94');
+                            for (let i = 0; i < 4; i++) { let x = 78 + i * 6; line([[x, -183], [x - 1, -202 - (i % 2) * 5]], '#ecede1', 5) }
+                            ctx.restore();
+                            label('Watch for Frostbite & Hypothermia', 'शीतदंश और हाइपोथर्मिया के संकेत पहचानें', 270, 110, false);
+                            line([[620, 287], [424, 265], [360, 265]], '#f0d8b2', 2); txt(showHindi ? 'पीली नाक' : 'PALE NOSE', 325, 245, 22);
+                            line([[px + 85 * scale, py - 199 * scale], [990, 260]], '#f0d8b2', 2); txt(showHindi ? 'पीली उंगलियाँ' : 'PALE FINGERS', 1035, 240, 22);
+                     }
+                     else if (t < 17.4) { room(true, t); person(460, 553, 1.65, '#63858b', t, t < 15 ? 'cold' : 'sleep'); person(905, 553, 1.65, '#d5dfd0', t); rect(882, 322, 19, 48, '#398b68'); rect(866, 337, 50, 18, '#398b68'); ctx.save(); ctx.shadowBlur = 22; ctx.shadowColor = '#6affad'; rect(660, 210, 35, 105, '#409768', 5); rect(625, 245, 105, 35, '#409768', 5); ctx.restore(); label('Visit Doctor', 'तुरंत डॉक्टर की मदद लें', 570, 125); txt(showHindi ? 'तेज़ कंपकंपी • उनींदापन' : 'SEVERE SHIVERING • DROWSINESS', 450, 590, 23, '#344b50') }
+                     else {
+                            room(true, t); box(765, 150, 270, 420, 22, '#a5b694'); rect(790, 177, 217, 385, '#a77b53'); poly([[805, 190], [990, 190], [990, 340], [805, 340]], '#b48c62'); rect(975, 360, 11, 11, '#edce8a', 5); let open = sm((t - 18.35) / .7); if (open > 0) { rect(790, 177, 217 * open, 385, '#3e5c53'); person(865, 552, 1.13, '#a69b74', t, 'normal', true); poly([[790 + 217 * open, 177], [1007, 177], [1007, 562], [790 + 217 * open, 562]], '#b08a5f') }
+                            person(630 - lp(70, 0, sm((t - 17.4) / .7)), 555, 1.5, '#59886c', t, 'knock'); if (t < 18.6) { let q = .5 + .5 * Math.sin(t * 25); ctx.globalAlpha = q; line([[736, 323], [748, 316]], '#f6e1a9', 4); line([[736, 345], [752, 345]], '#f6e1a9', 4); ctx.globalAlpha = 1 } label('Check on Elderly', 'बुज़ुर्गों की खबर लें', 390, 105); if (t > 18.8) badge('', 1110, 310); txt(showHindi ? 'एक-दूसरे का ख्याल रखें' : 'WARMTH STARTS WITH CARE', 640, 600, 27, '#344e45')
+                     }
+                     rect(25, 24, 1230, 48, 'rgba(8,18,28,.72)', 10); txt('HEALTH RISKS, DIET & CARE', 47, 57, 23, '#f4ead2', 'left'); txt(t < 10 ? '01 / KEEP WARM' : '02 / NOTICE & CARE', 1235, 55, 19, '#cfdfd6', 'right'); let cue = cues.find(c => t >= c[0] && t < c[1]); if (cue) caption(cue[showHindi ? 3 : 2]); rect(0, 715, W, 5, '#36586a'); rect(0, 715, W * t / D, 5, '#6ac497');
+              }
+              let t = 0, playing = false, last = 0, ac, master, utterance, spoken = -1, fx = new Set(), muted = false; const pp = document.getElementById('pp'), sk = document.getElementById('sk'), tm = document.getElementById('tm');
+              function audioInit() { if (!ac) { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = .25; master.connect(ac.destination);[130.81, 196, 261.63].forEach(f => { let o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; g.gain.value = .025; o.connect(g).connect(master); o.start() }) } ac.resume() }
+              function tone(f, d = .2, v = .2) { if (!ac || muted) return; let o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; o.connect(g).connect(master); g.gain.setValueAtTime(v, ac.currentTime); g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + d); o.start(); o.stop(ac.currentTime + d) }
+              function noise(d = .3) { if (!ac || muted) return; let b = ac.createBuffer(1, ac.sampleRate * d, ac.sampleRate), a = b.getChannelData(0); for (let i = 0; i < a.length; i++)a[i] = (Math.random() * 2 - 1) * .12 * (1 - i / a.length); let s = ac.createBufferSource(); s.buffer = b; s.connect(master); s.start() }
+              function speak() { if (!window.speechSynthesis || muted) return; let i = cues.findIndex(c => t >= c[0] && t < c[1]); if (i === spoken || i < 0) return; spoken = i; speechSynthesis.cancel(); utterance = new SpeechSynthesisUtterance(cues[i][2]); utterance.lang = 'en-IN'; utterance.rate = i === 1 ? 1.36 : 1.22; speechSynthesis.speak(utterance) }
+              function stopVoice() { if (window.speechSynthesis) speechSynthesis.cancel() }
+              const events = [[.2, 'chatter'], [1.6, 'cloth'], [3.8, 'pour'], [14, 'chatter'], [15.3, 'chime'], [17.95, 'knock'], [18.16, 'knock'], [18.37, 'knock']];
+              function tick(n) { let dt = last ? Math.min((n - last) / 1000, .1) : 0; last = n; if (playing) { t = Math.min(D, t + dt); speak(); events.forEach(([at, type], i) => { if (t >= at && !fx.has(i)) { fx.add(i); if (type === 'cloth' || type === 'pour') noise(type === 'pour' ? .8 : .35); else if (type === 'knock') tone(160, .09, .7); else if (type === 'chime') { tone(660, .4); setTimeout(() => tone(880, .4), 120) } else for (let k = 0; k < 5; k++)setTimeout(() => tone(900, .025, .1), k * 70) } }); if (t >= D) { playing = false; pp.textContent = 'Replay'; stopVoice(); if (ac) ac.suspend() } } sk.value = t; tm.textContent = t.toFixed(1) + 's / 20s'; frame(t); requestAnimationFrame(tick) }
+              function play() { if (t >= D) { t = 0; fx.clear(); spoken = -1 } audioInit(); playing = true; last = performance.now(); pp.textContent = 'Pause' }
+              document.getElementById('start-btn').onclick = () => { document.getElementById('start-overlay').style.display = 'none'; pp.disabled = sk.disabled = false; play() }; pp.onclick = () => { if (playing) { playing = false; pp.textContent = 'Play'; if (window.speechSynthesis) speechSynthesis.pause(); if (ac) ac.suspend() } else { if (window.speechSynthesis) speechSynthesis.resume(); play() } }; sk.oninput = () => { t = +sk.value; playing = false; pp.textContent = t >= D ? 'Replay' : 'Play'; stopVoice(); spoken = -1; fx = new Set(events.map((e, i) => e[0] <= t ? i : -1).filter(i => i >= 0)); if (ac) ac.suspend() }; document.getElementById('lang').onclick = () => { showHindi = !showHindi; document.getElementById('lang').textContent = 'Hindi Subtitles: ' + (showHindi ? 'On' : 'Off') }; let mute = document.createElement('button'); mute.textContent = 'Sound: On'; mute.onclick = () => { muted = !muted; mute.textContent = 'Sound: ' + (muted ? 'Off' : 'On'); if (master) master.gain.value = muted ? 0 : .25; if (muted) stopVoice(); else spoken = -1 }; document.querySelector('.bar').append(mute); requestAnimationFrame(tick);
+       </script>
+</body>
+
+</html>

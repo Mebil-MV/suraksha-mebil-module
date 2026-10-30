@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Post-Flood & Sheltering Safety • Animated PSA</title>
+<style>
+:root{color-scheme:light;--bg:#171f29;--fg:#e2e8e5}*{box-sizing:border-box}body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font-family:Arial,sans-serif}.player,.bar,.note{max-width:1280px;margin:auto}.player{position:relative}canvas{width:100%;aspect-ratio:16/9;display:block;border-radius:10px;background:#d6eadd}.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:12px}button{font:inherit;padding:8px 15px;background:transparent;color:inherit;border:1px solid #9aaa9f;border-radius:8px;cursor:pointer}button:disabled{opacity:.4;cursor:default}input{flex:1;min-width:120px;accent-color:#30995d}#overlay{position:absolute;inset:0;display:grid;place-items:center;background:#102e2470;border-radius:10px}#start{background:#f4ead2;border:0;border-radius:40px;padding:18px 32px;font-size:22px;font-weight:700}.note a{color:#a9d9bf}.note{font-size:13px;opacity:.7;padding-top:12px}button:focus-visible,input:focus-visible{outline:3px solid #238f63;outline-offset:4px}
+</style></head>
+<body><div class="player"><canvas id="c" width="1280" height="720" role="img" aria-label="Animated flood preparedness PSA: keeping children away from floodwater, checking indoor contamination, treating drinking water and following local radio advice."></canvas><div id="overlay"><button id="start">▶ Play Animation & Audio</button></div></div><div class="bar"><button id="pp" disabled>Play</button><button id="replay" disabled>↻ Replay</button><input id="sk" aria-label="Animation timeline" type="range" min="0" max="20" step=".01" value="0" disabled><span id="tm">0.0 / 20.0s</span><button id="lang">Hindi Subtitles: Off</button><button id="mute">Sound: On</button></div><p class="note">20 seconds • Headphones recommended • English / Hindi captions and browser narration</p><details class="note"><summary>Safety guidance sources</summary><p><a href="https://www.cdc.gov/floods/safety/floodwater-after-a-disaster-or-emergency-safety.html" target="_blank" rel="noopener">Floodwater hazards</a> · <a href="https://www.cdc.gov/floods/safety/reentering-your-flooded-home-safety.html" target="_blank" rel="noopener">Returning home</a> · <a href="https://www.cdc.gov/water-emergency/about/" target="_blank" rel="noopener">Emergency drinking water</a></p></details>
+<script>
+'use strict';
+// Same self-contained Canvas approach as the supplied example: faceted scenery,
+// deterministic animation, browser narration, Web Audio SFX, and bilingual captions.
+const W=1280,H=720,D=20,TAU=Math.PI*2,cv=document.getElementById('c'),ctx=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);
+cv.width=W*dpr;cv.height=H*dpr;
+const $=id=>document.getElementById(id),cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),lp=(a,b,u)=>a+(b-a)*u,sm=u=>(u=cl(u))*u*(3-2*u),ease=u=>1-Math.pow(1-cl(u),3),hash=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
+let hindi=false,muted=false;
+function poly(p,c){ctx.fillStyle=c;ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function rect(x,y,w,h,c,r=0){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function line(p,c,w=3){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()}
+function text(s,x,y,size=24,c='#263d34',weight=600,align='center'){ctx.fillStyle=c;ctx.font=`${weight} ${size}px Arial,sans-serif`;ctx.textAlign=align;ctx.fillText(s,x,y)}
+function circle(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill()}
+function shadow(x,y,rx,ry){ctx.fillStyle='#284f2920';ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,TAU);ctx.fill()}
+function fan(p,m,colors){p.forEach((v,i)=>poly([m,v,p[(i+1)%p.length]],colors[i%colors.length]))}
+function gradient(a,b){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,a);g.addColorStop(1,b);rect(0,0,W,H,g)}
+function pill(s,x,y,c='#263f35',bg='#fff9ea',size=22){ctx.font=`600 ${size}px Arial`;const w=ctx.measureText(s).width+36;rect(x-w/2,y-28,w,44,bg,15);text(s,x,y+2,size,c)}
+function tree(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);shadow(0,0,30,9);rect(-4,-35,8,36,'#7b593d');for(let i=0;i<3;i++)fan([[-31+i*5,-20-i*23],[0,-76-i*16],[31-i*5,-20-i*23]],[0,-45-i*18],['#62965a','#39784d','#79aa66']);ctx.restore()}
+function clouds(t){for(let i=0;i<5;i++){let x=((i*310+t*8)%1550)-160;poly([[x,100+i%2*35],[x+25,70+i%2*35],[x+60,75+i%2*35],[x+80,55+i%2*35],[x+125,80+i%2*35],[x+140,105+i%2*35]],'#ffffff85')}}
+function ground(){fan([[-260,440],[420,282],[1540,380],[1540,800],[805,850],[-260,800]],[635,440],['#a0bc72','#b6cc85','#8eb06a','#83a460','#a8bd77','#b9cb8c']);}
+function house(x,y,s=1,brick=false,shelter=false,damage=0){ctx.save();ctx.translate(x,y);ctx.scale(s,s);shadow(0,3,115,27);const drop=damage*56;ctx.translate(0,drop);ctx.rotate(damage*-.1);poly([[-85,-8],[-85,-120],[40,-120],[40,-8]],brick?'#cf8661':'#c8a16f');poly([[40,-8],[40,-120],[100,-151],[100,-40]],brick?'#ad6246':'#a57a50');poly([[-104,-120],[-21,-186],[118,-151],[40,-109]],'#b55f49');poly([[-104,-120],[-21,-186],[40,-120]],'#de8b61');poly([[40,-109],[118,-151],[118,-139],[40,-97]],'#8d4e3d');rect(-35,-73,35,65,'#624d3d');rect(-70,-98,25,28,'#bce3e5',3);rect(6,-98,25,28,'#bce3e5',3);if(brick){ctx.save();ctx.beginPath();ctx.rect(-85,-119,125,110);ctx.clip();for(let j=0;j<7;j++){let yy=-115+j*17;line([[-85,yy],[40,yy]],'#edc7aa',2);for(let xx=-85+(j%2)*20;xx<40;xx+=40)line([[xx,yy],[xx,yy+17]],'#edc7aa',2)}ctx.restore()}if(shelter){rect(-69,-121,99,28,'#f8f1dc',4);text(hindi?'आश्रय':'SHELTER',-19,-101,16,'#276b49',800);rect(-88,-8,140,16,'#d8d5c0');rect(-98,8,160,12,'#b0b4a2')}if(damage){line([[-65,-119],[-47,-82],[-60,-57],[-26,-20]],'#72543b',4);for(let i=0;i<12;i++){const xx=-90+hash(i)*190;const yy=5+hash(i+30)*30;poly([[xx,yy],[xx+13,yy-12],[xx+26,yy+5]],i%2?'#ad875b':'#c29b6e')}}ctx.restore()}
+function badge(x,y,good,a=1){ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);ctx.scale(ease(a),ease(a));circle(0,0,29,good?'#2f9e5a':'#dc6051');if(good)line([[-13,0],[-3,11],[16,-12]],'#fff',7);else{line([[-10,-10],[10,10]],'#fff',6);line([[10,-10],[-10,10]],'#fff',6)}ctx.restore()}
+function person(x,y,s,c){ctx.save();ctx.translate(x,y);ctx.scale(s,s);circle(0,-39,9,'#dca777');rect(-10,-28,20,25,c,6);line([[-5,-5],[-8,10]],'#405349',6);line([[5,-5],[8,10]],'#405349',6);ctx.restore()}
+function rain(t,x=0,y=0,w=W,h=H){ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();for(let i=0;i<160;i++){let xx=x+hash(i)*w,yy=y+((hash(i+3)*h+t*(330+hash(i+4)*220))%h);line([[xx,yy],[xx-9,yy+27]],'#b9d6ed55',1.4)}ctx.restore()}
+
+const C={ink:'#263e39',green:'#358862',cream:'#f7ecd8',navy:'#172d3e'};
+function glow(x,y,r,col){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col);g.addColorStop(1,'#ffffff00');rect(x-r,y-r,r*2,r*2,g)}
+function heading(k,title,sub,dark=false){text(k,52,55,14,dark?'#a6d5c2':'#5c7f6c',700,'left');text(title,52,106,40,dark?'#edf4ed':C.ink,800,'left');text(sub,52,141,19,dark?'#b9cbd0':'#687c6d',500,'left')}
+function tag(s,x,y,done=false,dark=false){ctx.font='600 19px Arial';let w=ctx.measureText(s).width+58;rect(x-w/2,y-25,w,40,dark?'#203f49':'#fff9eb',12);circle(x-w/2+20,y-5,7,done?'#56ba83':'#b5c7b4');text(s,x-w/2+36,y+1,19,dark?'#d8f2e4':'#355b47',600,'left')}
+
+// All scene geometry is deterministic, so scrubbing shows the same action each time.
+function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,TAU);ctx.fill()}
+function warning(x,y,t){ctx.save();ctx.globalAlpha=.75+.25*Math.sin(t*7);poly([[x,y-33],[x+34,y+26],[x-34,y+26]],'#e4af5f');text('!',x,y+15,35,'#4d4435',800);ctx.restore()}
+function muddyStreet(t){gradient('#b8b8a6','#e4d3b5');fan([[-100,380],[430,335],[1360,386],[1360,820],[-100,820]],[620,510],['#a49477','#b5a17e','#8e896f','#ac9677','#b6a181']);house(140,332,.64,false);house(1120,330,.7,true);line([[0,411],[1280,377]],'#c4b697',24);poly([[0,451],[350,418],[650,436],[960,414],[1280,456],[1280,800],[0,800]],'#8a9a8b');const y=lp(425,459,sm(t/7));poly([[-80,y+17],[403,y-5],[780,y+22],[1360,y-3],[1360,800],[-80,800]],'#667f7c99');for(let i=0;i<28;i++){const x=(i*83+t*14)%1330-25,yy=y+28+(i%5)*29;line([[x,yy],[x+26,yy-2],[x+49,yy+1]],i%2?'#d9d6b565':'#b7c8b24f',2)}for(let i=0;i<10;i++){let x=60+hash(i)*1140,yy=518+hash(i+12)*68;poly([[x,yy],[x+24,yy-5],[x+39,yy+2]],'#6f6b5480')}}
+function child(t){ctx.save();ctx.translate(268,420);circle(0,-64,13,'#d3a579');rect(-15,-49,30,36,'#c69e55',7);line([[-8,-14],[-10,8]],'#5f6f65',8);line([[8,-14],[12,8]],'#5f6f65',8);const reach=sm(t/.45);line([[12,-43],[lp(28,47,reach),lp(-26,-14,reach)]],'#d3a579',7);line([[-13,-42],[-24,-21]],'#d3a579',7);ctx.restore();badge(352,401,false,cl(t/.35))}
+function protectedAdult(t){const x=625+sm((t-1)/4)*37,y=449;ctx.save();ctx.translate(x,y);shadow(0,7,43,10);circle(0,-125,16,'#c9a17e');poly([[-20,-103],[18,-103],[29,-52],[-21,-52]],'#768a7b');line([[-9,-51],[-12,-14]],'#6b7462',13);line([[12,-51],[16,-14]],'#65705f',13);rect(-23,-36,20,43,'#344f4b',4);rect(7,-36,20,43,'#344f4b',4);rect(-26,-1,30,10,'#344f4b',4);rect(8,-1,33,10,'#344f4b',4);line([[-15,-94],[-32,-60]],'#c9a17e',9);line([[18,-91],[49,-66]],'#c9a17e',9);line([[35,-152+Math.abs(Math.sin(t*4))*7],[65,-2-Math.abs(Math.sin(t*4))*9]],'#a78252',6);circle(50,-67,7,'#c9a17e');if(t>1.2){ctx.strokeStyle='#e9d7a077';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(65,7,12+(t*16)%23,4+(t*5)%7,0,0,TAU);ctx.stroke()}ctx.restore()}
+function snake(t){const x=lp(1130,1012,sm((t-3.2)/3.4)),y=541;let p=[];for(let i=0;i<19;i++){let xx=x-i*6;p.push([xx,y+Math.sin(i*.55-t*5)*8])}line(p,'#4d573b',10);line(p,'#9b9b61',3);const head=p[0];ellipse(head[0]+3,head[1],10,7,'#68734b');circle(head[0]+7,head[1]-2,1.6,'#1e3329')}
+function scene1(t){muddyStreet(t);child(t);protectedAdult(t);poly([[810,466],[887,466],[908,487],[832,487]],'#536d6b');for(let i=0;i<6;i++)line([[820+i*12,469],[839+i*12,483]],'#293e41',4);ellipse(858,477,61,18,'#78978c33');if(t>2.4){warning(865,390,t);text(hindi?'नालियों से बचें':'AVOID DRAINS',865,441,15,'#613f32',800)}snake(t);heading('01 / WATER HAZARDS',hindi?'बाढ़ के बाद भी सावधान रहें':'Post-flood & sheltering safety',hindi?'यदि आप वहीं रहें या वापस लौटें':'If you stay or on your return');tag(hindi?'बच्चों को बाढ़ के पानी से दूर रखें':'No playing in floodwater',258,593);tag(hindi?'मजबूरी में: जूते और छड़ी':'If unavoidable: boots & stick',644,593);tag(hindi?'साँपों से सावधान रहें':'Beware of snakes',1035,593);text(hindi?'बाढ़ के पानी से दूर रहें':'Keep out of floodwater whenever possible.',640,216,21,'#4c6355',600)}
+function kitchen(dirty){gradient(dirty?'#c9c0a9':'#d6e8dd',dirty?'#eee0c6':'#f4f1da');rect(94,175,1186,323,dirty?'#d8d1b9':'#d7e5d5');for(let x=94;x<1280;x+=86)line([[x,175],[x,498]],dirty?'#b8b9a455':'#b2cbbb55',2);for(let y=175;y<498;y+=70)line([[94,y],[1280,y]],dirty?'#b8b9a455':'#b2cbbb55',2);poly([[0,0],[94,175],[94,498],[0,570]],dirty?'#a59b82':'#b4ccbb');if(dirty){poly([[94,423],[150,433],[280,412],[380,426],[510,408],[650,428],[810,413],[970,428],[1110,415],[1280,421],[1280,720],[0,720],[0,491]],'#9a8869');for(let i=0;i<38;i++)ellipse(120+hash(i)*1140,432+hash(i+44)*60,2+hash(i+66)*13,2+hash(i+7)*9,'#7f745557')}else{poly([[0,553],[94,498],[1280,498],[1280,720],[0,720]],'#c6cdb5');poly([[75,455],[1210,455],[1280,526],[0,526]],'#fbf6df');rect(0,526,1280,20,'#c3d0bc');rect(82,546,1120,70,'#9fb9a2');for(let x=82;x<1200;x+=224)line([[x,546],[x,616]],'#799e8a',2)}}
+function toaster(x,y){ctx.save();ctx.translate(x,y);shadow(0,80,126,21);poly([[-97,-38],[-69,-60],[92,-60],[112,-34]],'#a4ada3');rect(-97,-38,209,108,'#929f98',13);poly([[112,-34],[134,-55],[134,50],[112,70]],'#687e79');ellipse(-33,-47,38,7,'#354c4b');ellipse(50,-47,38,7,'#354c4b');rect(103,-15,14,39,'#596d65',3);rect(-88,51,187,17,'#786d53');circle(67,29,11,'#547069');for(let i=0;i<9;i++)ellipse(-65+hash(i)*150,43+hash(i+3)*24,8,5,'#8b795b');ctx.restore()}
+function foodbox(x,y){ctx.save();ctx.translate(x,y);shadow(0,78,90,17);poly([[-65,-67],[50,-67],[74,-86],[-41,-86]],'#cfb576');rect(-65,-67,115,137,'#bfa364');poly([[50,-67],[74,-86],[74,47],[50,70]],'#907e4d');rect(-51,-39,87,55,'#ddcba1',5);text('FOOD',-7,-3,23,'#74603d',800);poly([[-65,40],[-28,31],[9,45],[50,33],[50,70],[-65,70]],'#897652');ctx.restore()}
+function scene2(t){kitchen(true);rect(215,288,43,62,'#d9d4be',6);circle(229,308,3,'#687269');circle(243,308,3,'#687269');line([[235,320],[235,407],[283,449],[309,456]],'#42554e',5);toaster(411,449);foodbox(897,453);if(t>.35)badge(432,300,false,cl((t-.35)/.25)*(.87+.13*Math.sin(t*6)));if(t>1.3)badge(898,300,false,cl((t-1.3)/.25)*(.87+.13*Math.sin(t*6)));heading('02 / INDOOR CONTAMINATION',hindi?'भीगा हुआ सामान इस्तेमाल न करें':'Flooded does not mean safe.',hindi?'पानी उतरने के बाद भी घर के अंदर खतरे रहते हैं।':'Contamination remains after the water has gone.');tag(hindi?'भीगे उपकरण इस्तेमाल न करें':"Don't use flooded appliances",411,586);tag(hindi?'बाढ़ में भीगा भोजन फेंकें':'Discard flooded food',897,586);pill(hindi?'बिजलीकर्मी से जाँच करवाएँ':'Have appliances professionally checked',411,219,'#665a47','#f7ead4',17);pill(hindi?'खाने की कोशिश न करें':'Do not taste to check safety',897,219,'#665a47','#f7ead4',17)}
+function pot(t){const x=280,y=440;shadow(x,y+59,104,18);rect(x-104,y+39,208,31,'#648476',8);ellipse(x,y+45,78,16,'#ae7851');rect(x-85,y-19,170,63,'#8fa79e',12);poly([[x+50,y-18],[x+85,y-19],[x+85,y+34],[x+50,y+44]],'#718d85');line([[x-84,y-4],[x-111,y-4],[x-111,y+14],[x-85,y+14]],'#78968b',8);line([[x+84,y-4],[x+111,y-4],[x+111,y+14],[x+85,y+14]],'#78968b',8);ellipse(x,y-19,85,23,'#b2c7b7');ellipse(x,y-20,74,16,'#6dafa8');for(let i=0;i<11;i++){let xx=x-58+hash(i)*113,yy=y-25+hash(i+20)*12,r=2+((t*8+i)%6);ctx.strokeStyle='#e5f4d6';ctx.lineWidth=1.7;ctx.beginPath();ctx.ellipse(xx,yy,r,r*.55,0,0,TAU);ctx.stroke()}for(let i=0;i<4;i++){let u=(t*.38+i*.24)%1;ctx.save();ctx.globalAlpha=(1-u)*.5;line([[x-42+i*27,y-43-u*63],[x-48+i*27+Math.sin(t*3+i)*10,y-60-u*63],[x-39+i*27,y-76-u*63]],'#f8f8e7',5+u*4);ctx.restore()}}
+function tabletJar(t){const x=641,y=434;shadow(x,y+59,81,14);rect(x-58,y-106,116,158,'#b4d8cb99',15);ellipse(x,y-106,58,12,'#eef2d4');rect(x-54,y-64,108,104,'#78bdbb77',9);ellipse(x,y-64,54,10,'#a6d6c5');line([[x-44,y-88],[x-44,y+19]],'#e5f3dc',5);rect(x-31,y-9,62,30,'#e7edd5',5);text('WATER',x,y+11,12,'#568677',800);const u=sm((t-.5)/.7);if(t>.2&&t<1.4){ctx.save();ctx.translate(x+20,lp(237,258,sm(t/.55)));rect(5,-10,94,28,'#cfa680',12);rect(-18,-17,35,14,'#dfb68e',7);rect(76,-10,47,30,'#83a699',5);ctx.restore()}if(t>.5&&u<1)ellipse(x,lp(259,408,u),7*(1-u*.6),5,'#f5f5df');if(t>1.15){for(let i=0;i<10;i++){const v=(t*.45+i*.16)%1;circle(x-27+hash(i)*53,y+26-v*98,1.5+v*2,'#e2f5d8aa')}}pill(hindi?'निर्देशानुसार मात्रा और प्रतीक्षा':'Follow dose & waiting time',x,548,'#4f7864','#f7f4df',16)}
+function radio(x,y,t){shadow(x,y+55,98,18);rect(x-83,y-47,166,99,'#62877d',12);poly([[x+83,y-47],[x+103,y-62],[x+103,y+33],[x+83,y+52]],'#456d66');rect(x-67,y-32,134,28,'#cae8b1',4);for(let i=0;i<13;i++)line([[x-57+i*9,y-26],[x-57+i*9,y-12]],'#739b7c',1.4);for(let i=0;i<6;i++)line([[x-65,y+9+i*6],[x+1,y+9+i*6]],'#315f57',3);circle(x+43,y+24,19,'#2f625a');circle(x+43,y+24,12,'#b3c6a5');line([[x+48,y-48],[x+72,y-112]],'#66877b',4);for(let i=0;i<3;i++){let u=(t*.45+i*.3)%1;ctx.save();ctx.globalAlpha=(1-u)*.7;ctx.strokeStyle='#60a57b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x+120,y-5,15+u*56,-.65,.65);ctx.stroke();ctx.restore()}}
+function scene3(t){kitchen(false);pot(t);tabletJar(t);radio(1010,432,t);heading('03 / SAFE WATER & INFORMATION',hindi?'साफ पानी। भरोसेमंद जानकारी।':'Safe water. Trusted updates.',hindi?'पानी के लिए स्वास्थ्य विभाग की सलाह और टैबलेट के निर्देश मानें।':'Follow local health advice and water-treatment tablet instructions.');tag(hindi?'पानी उबालें':'Boil drinking water',280,240,true);tag(hindi?'जल शोधन टैबलेट':'Water-purification tablets',641,240,true);tag(hindi?'स्थानीय रेडियो सुनें':'Stay tuned to local radio',1010,240,true);text(hindi?'या':'OR',460,410,18,'#6c8c73',800);tag(hindi?'सुरक्षित पेयजल':'Use safe drinking water',280,587,true);tag(hindi?'रेडियो पर ताज़ा सलाह सुनें':'Listen for updated advice',1008,587,true)}
+function scene4(t){gradient('#cdeedb','#f4ead2');const u=ease(t/.6);ctx.save();ctx.translate(640,260);ctx.scale(u*(1+.015*Math.sin(t*4)),u*(1+.015*Math.sin(t*4)));shadow(0,150,100,15);fan([[0,-120],[95,-80],[95,10],[60,80],[0,125],[-60,80],[-95,10],[-95,-80]],[0,-10],['#48b16d','#2f9e5a','#2c9152','#268348','#3aa55d']);line([[-42,-5],[-10,32],[48,-38]],'#fff',22);ctx.restore();ctx.save();ctx.globalAlpha=sm((t-.2)/.5);text(hindi?'सावधान रहें। सुरक्षित रहें।':'Stay Alert. Stay Safe.',640,491,47,'#283e33',700);ctx.restore()}
+
+const CAP=[
+ ['Keep children out of floodwater. If entry is unavoidable, protect your feet and probe with a stick. Avoid drains and watch for snakes.','बच्चों को बाढ़ के पानी से दूर रखें। मजबूरी में जूते पहनें और छड़ी से जाँचें। नालियों और साँपों से सावधान रहें।'],
+ ['Do not use flooded electrical appliances until professionally checked. Discard food that has touched floodwater.','बाढ़ में भीगे बिजली के उपकरण जाँच से पहले इस्तेमाल न करें। बाढ़ के पानी से भीगा भोजन फेंक दें।'],
+ ['Boil drinking water or use approved tablets as directed by local health advice. Follow tablet dose and waiting time. Stay tuned to local radio.','पीने का पानी उबालें या स्थानीय स्वास्थ्य सलाह और निर्देशानुसार जल शोधन टैबलेट लें। मात्रा और प्रतीक्षा समय का पालन करें। स्थानीय रेडियो सुनें।'],
+ ['Stay alert. Stay safe.','सावधान रहें। सुरक्षित रहें।']
+];
+function caption(s){ctx.font='600 20px Arial';let lines=[],l='';for(const w of s.split(' ')){let test=l?l+' '+w:w;if(ctx.measureText(test).width>1090&&l){lines.push(l);l=w}else l=test}if(l)lines.push(l);let width=Math.max(...lines.map(x=>ctx.measureText(x).width))+48,h=lines.length*31+22,y=700-h;rect(640-width/2,y,width,h,'#42534cd9',22);lines.forEach((s,i)=>text(s,640,y+29+i*31,20,'#fff9e9'))}
+
+const SHOTS=[{start:0,draw:scene1},{start:7,draw:scene2},{start:12,draw:scene3},{start:17,draw:scene4}];
+function shotIndex(time){let index=0;for(let i=1;i<SHOTS.length;i++)if(time>=SHOTS[i].start)index=i;return index}
+// Dissolve complete scene images, keeping each frame independent of playback history.
+const previousCanvas=document.createElement('canvas'),nextCanvas=document.createElement('canvas');
+previousCanvas.width=nextCanvas.width=W;previousCanvas.height=nextCanvas.height=H;
+function frame(t){
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;
+ const index=shotIndex(t),shot=SHOTS[index],local=t-shot.start;
+ shot.draw(local);
+ if(index>0&&local<.42){
+  nextCanvas.getContext('2d').drawImage(cv,0,0,W,H);
+  ctx.globalAlpha=1;SHOTS[index-1].draw(shot.start-SHOTS[index-1].start-.01);
+  previousCanvas.getContext('2d').drawImage(cv,0,0,W,H);
+  ctx.globalAlpha=1;ctx.drawImage(previousCanvas,0,0,W,H);
+  ctx.globalAlpha=sm(local/.42);ctx.drawImage(nextCanvas,0,0,W,H);ctx.globalAlpha=1;
+ }
+ caption(CAP[index][hindi?1:0]);rect(0,716,W*t/D,4,'#63b383');
+}
+// Narration is edited for the 20-second format; captions carry the fuller guidance.
+const VO=[
+ ['Keep children out of floodwater. If entry is unavoidable, use boots and a stick. Avoid drains. Watch for snakes.','बच्चों को बाढ़ के पानी से दूर रखें। मजबूरी में जूते और छड़ी लें। नालियों और साँपों से सावधान रहें।'],
+ ['Have flooded appliances checked before use. Discard food touched by floodwater.','भीगे बिजली के उपकरण इस्तेमाल से पहले जाँच करवाएँ। बाढ़ में भीगा भोजन फेंक दें।'],
+ ['Boil drinking water, or use purification tablets as directed. Keep listening to local radio.','पानी उबालें या निर्देशानुसार जल शोधन टैबलेट लें। स्थानीय रेडियो सुनते रहें।'],
+ ['Stay alert. Stay safe.','सावधान रहें। सुरक्षित रहें।']
+];
+let floodGain,floodFilter;
+let ac,master,noise,voices=[],speechToken=0;
+if('speechSynthesis'in window){const load=()=>voices=speechSynthesis.getVoices();load();speechSynthesis.addEventListener('voiceschanged',load)}
+function initAudio(){if(ac)return;try{ac=new(window.AudioContext||window.webkitAudioContext)();master=ac.createGain();master.gain.value=muted?0:.65;master.connect(ac.destination);noise=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const stream=ac.createBufferSource();stream.buffer=noise;stream.loop=true;floodFilter=ac.createBiquadFilter();floodFilter.type="lowpass";floodFilter.frequency.value=450;floodGain=ac.createGain();floodGain.gain.value=0;stream.connect(floodFilter);floodFilter.connect(floodGain);floodGain.connect(master);stream.start()}catch(e){ac=null}}
+function tone(f,d=.2,v=.1,type='sine',delay=0){if(!ac||muted)return;let o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,n);g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(v,n+.015);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(master);o.start(n);o.stop(n+d+.02)}
+function hiss(f,d,v){if(!ac||muted)return;let n=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain(),now=ac.currentTime;n.buffer=noise;fl.type='lowpass';fl.frequency.value=f;g.gain.setValueAtTime(v,now);g.gain.exponentialRampToValueAtTime(.0001,now+d);n.connect(fl);fl.connect(g);g.connect(master);n.start();n.stop(now+d)}
+function stopSpeech(){speechToken++;if(window.speechSynthesis)speechSynthesis.cancel()}
+function speak(i){stopSpeech();if(muted||!window.speechSynthesis)return;let u=new SpeechSynthesisUtterance(VO[i][hindi?1:0]);u.lang=hindi?'hi-IN':'en-US';u.rate=i===3?1:1.28;u.pitch=1;u.volume=.95;u.voice=voices.find(v=>v.lang.startsWith(hindi?'hi':'en')&&v.localService)||voices.find(v=>v.lang.startsWith(hindi?'hi':'en'))||null;speechSynthesis.speak(u)}
+
+const EV=[[.12,'v',0],[1.4,'tap'],[2.2,'tap'],[3,'tap'],[3.8,'snake'],[4.6,'tap'],[5.4,'tap'],[6.2,'tap'],[7.12,'v',1],[7.4,'buzz'],[8.35,'buzz'],[12.12,'v',2],[13.18,'fizz'],[14.4,'radio'],[17.12,'v',3],[17.22,'chime']];
+function fire(e){
+ if(e[1]==='v')speak(e[2]);
+ else if(e[1]==='tap'){tone(420,.08,.09,'triangle');tone(160,.07,.04,'sine',.02)}
+ else if(e[1]==='snake')hiss(5200,.38,.045);
+ else if(e[1]==='buzz'){tone(155,.16,.07,'sawtooth');tone(165,.12,.045,'square',.12)}
+ else if(e[1]==='fizz')hiss(3600,.65,.065);
+ else if(e[1]==='radio'){tone(740,.2,.065);tone(988,.4,.05,'sine',.12)}
+ else [523,659,784,1046].forEach((n,i)=>tone(n,1.3,.08,'sine',i*.07));
+}
+let t=0,playing=false,started=false,last=performance.now(),lastBeat=-1;
+function pause(){playing=false;if(floodGain)floodGain.gain.setValueAtTime(0,ac.currentTime);stopSpeech();if(ac)ac.suspend();$('pp').textContent=t>=D?'Replay':'Play'}
+function play(){if(t>=D)t=0;initAudio();if(ac)ac.resume();playing=true;last=performance.now();$('pp').textContent='Pause';}
+$('start').onclick=()=>{started=true;$('overlay').style.display='none';$('pp').disabled=$('sk').disabled=$('replay').disabled=false;play()};
+$('pp').onclick=()=>playing?pause():play();$('replay').onclick=()=>{pause();t=0;lastBeat=-1;play()};
+$('sk').oninput=()=>{pause();t=+$('sk').value;lastBeat=Math.floor(t/.6)};
+$('lang').onclick=()=>{hindi=!hindi;$('lang').textContent='Hindi Subtitles: '+(hindi?'On':'Off');stopSpeech()};
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent='Sound: '+(muted?'Off':'On');if(master)master.gain.setTargetAtTime(muted?0:.65,ac.currentTime,.03);if(muted)stopSpeech()};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)pause()});
+
+let lastBubble=-1;
+function floodAudio(time){
+ if(!ac||!floodGain)return;
+ const outdoors=time<7,boiling=time>=12&&time<17,active=playing&&(outdoors||boiling);
+ const fade=outdoors?cl((7-time)/.35):cl((17-time)/.35);
+ floodGain.gain.setTargetAtTime(active?(outdoors?.11:.025)*fade*(.87+.13*Math.sin(time*4)):0,ac.currentTime,.06);
+ floodFilter.frequency.setTargetAtTime(outdoors?720:1300,ac.currentTime,.1);
+ const bubble=Math.floor(time*7);
+ if(playing&&boiling&&bubble!==lastBubble){lastBubble=bubble;tone(140+hash(bubble)*220,.065,.018,'sine')}
+}
+function loop(n){
+ let dt=Math.min((n-last)/1000,.1);last=n;
+ if(playing){const prev=t;t=Math.min(D,t+dt);for(const e of EV)if(prev<e[0]&&e[0]<=t)fire(e);
+  const beat=Math.floor(t/.6);if(beat!==lastBeat){lastBeat=beat;const notes=[261.63,329.63,392,329.63,220,329.63,392,329.63];tone(notes[beat%8],.8,.018,'sine');if(beat%4===0)tone(130.81,1.5,.02,'triangle')}
+  if(t>=D)pause();
+ }
+ floodAudio(t);frame(t);$('sk').value=t;$('tm').textContent=t.toFixed(1)+' / 20.0s';requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script></body></html>

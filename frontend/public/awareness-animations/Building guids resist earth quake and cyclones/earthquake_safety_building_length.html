@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+       <title>Earthquake Safety — Building Length</title>
+       <style>
+              :root {
+                     --bg: #f4f1ea;
+                     --fg: #2a2f38;
+                     box-sizing: border-box;
+                     padding-top: env(safe-area-inset-top, 0px);
+                     padding-bottom: env(safe-area-inset-bottom, 0px)
+              }
+
+              @media(prefers-color-scheme:dark) {
+                     :root:not([data-theme="light"]) {
+                            --bg: #14181e;
+                            --fg: #e8e4d8
+                     }
+              }
+
+              :root[data-theme="dark"] {
+                     --bg: #14181e;
+                     --fg: #e8e4d8
+              }
+
+              html,
+              body {
+                     margin: 0;
+                     background: var(--bg);
+                     color: var(--fg);
+                     font-family: system-ui, sans-serif
+              }
+
+              body {
+                     display: flex;
+                     flex-direction: column;
+                     align-items: center;
+                     padding: 12px;
+                     position: relative
+              }
+
+              canvas {
+                     width: 100%;
+                     max-width: 1280px;
+                     height: auto;
+                     aspect-ratio: 16/9;
+                     border-radius: 10px;
+                     background: #000;
+                     display: block
+              }
+
+              .bar {
+                     display: flex;
+                     gap: 12px;
+                     align-items: center;
+                     width: 100%;
+                     max-width: 1280px;
+                     margin-top: 10px;
+                     flex-wrap: wrap
+              }
+
+              .bar input {
+                     flex: 1;
+                     min-width: 120px
+              }
+
+              button {
+                     font: inherit;
+                     padding: 6px 16px;
+                     border-radius: 8px;
+                     border: 1px solid currentColor;
+                     background: transparent;
+                     color: inherit;
+                     cursor: pointer
+              }
+
+              button:disabled {
+                     opacity: .5;
+                     cursor: default
+              }
+
+              #start-overlay {
+                     position: absolute;
+                     top: 12px;
+                     left: 12px;
+                     right: 12px;
+                     max-width: 1280px;
+                     aspect-ratio: 16/9;
+                     margin: 0 auto;
+                     background: rgba(0, 0, 0, .65);
+                     border-radius: 10px;
+                     display: flex;
+                     justify-content: center;
+                     align-items: center;
+                     z-index: 10
+              }
+
+              #start-overlay button {
+                     background: #f4ead2;
+                     color: #14181e;
+                     border: none;
+                     padding: 16px 32px;
+                     font-size: 22px;
+                     font-weight: 600;
+                     border-radius: 50px;
+                     transition: transform .2s
+              }
+
+              #start-overlay button:hover {
+                     transform: scale(1.05)
+              }
+       </style>
+</head>
+
+<body>
+       <canvas id="c" width="1280" height="720"></canvas>
+       <div id="start-overlay"><button id="start-btn">▶ Play Animation & Audio</button></div>
+       <div class="bar">
+              <button id="pp" disabled>Play</button>
+              <!-- Extended slider max to 16.5 seconds -->
+              <input id="sk" type="range" min="0" max="20" step="0.01" value="0" disabled>
+              <span id="tm">0.0s</span>
+              <button id="lang">Voice & captions: English</button>
+       </div>
+<p id="note" style="max-width:1280px;font-size:13px;opacity:.75"></p><script>
+const W=1280,H=720,D=20,TAU=Math.PI*2,cv=document.getElementById('c'),ctx=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);cv.width=W*dpr;cv.height=H*dpr;
+              const cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lp = (a, b, k) => a + (b - a) * k, sm = k => k * k * (3 - 2 * k), mod = (a, n) => ((a % n) + n) % n;
+              function hs(n) { n |= 0; n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296 }
+              const hx = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mx = (a, b, k) => a.map((v, i) => lp(v, b[i], k)), rg = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+              const sh = (c, f, k) => rg(mx(hx(c), [22, 32, 44], k * .45).map(v => Math.min(255, v * f)));
+              const tri = (a, b, c, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.fill() };
+              const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h) };
+              const fan = (P, c, col, f, k) => { for (let i = 0; i < P.length; i++)tri(c, P[i], P[(i + 1) % P.length], sh(col, f + (hs(i * 7 + P[0][0]) - .5) * .4, k)) };
+
+let showHindi=false;
+const VE=['Extremely long buildings undergo different amounts of horizontal movement during an earthquake and perform poorly.','It is best to construct short-length buildings and build them in smaller, well-separated units.','Stay alert. Stay safe.'];
+const VH=['बहुत लंबी इमारतों के अलग-अलग हिस्से भूकंप में असमान रूप से हिल सकते हैं। इससे इमारत पर तनाव और नुकसान का खतरा बढ़ता है।','कम लंबाई की इमारतें बनाएँ। उन्हें छोटी और पर्याप्त दूरी पर अलग-अलग इकाइयों में बनाएँ।','सतर्क रहें। सुरक्षित रहें।'];
+function poly(p,c){ctx.fillStyle=c;ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function line(p,c,w=4){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()}
+function text(s,x,y,size=26,c='#f4ead2'){ctx.font=`700 ${size}px system-ui,sans-serif`;ctx.textAlign='center';ctx.fillStyle=c;ctx.fillText(s,x,y)}
+function badge(s,x,y,color='#ff4b55',size=27){ctx.font=`700 ${size}px system-ui,sans-serif`;let w=ctx.measureText(s).width+42;ctx.fillStyle='rgba(8,14,24,.87)';rr(x-w/2,y-32,w,49,12);ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();text(s,x,y,size)}
+function cloud(x,y){for(let j=0;j<4;j++){let p=[];for(let i=0;i<7;i++){let a=i/7*TAU;p.push([x+j*41+Math.cos(a)*(47-j*4),y+(j%2?-12:0)+Math.sin(a)*26])}poly(p,j%2?'#667781':'#536671')}}
+const ground=[[ -250,390],[90,450],[320,556],[530,556],[730,465],[940,310],[1240,310],[1500,350]];
+function terrain(){poly([...ground,[1500,950],[-250,950]],'#71573c');for(let i=0;i<ground.length-1;i++){let a=ground[i],b=ground[i+1],m=[(a[0]+b[0])/2,a[1]+150];tri(a,b,m,sh('#826244',.8+hs(i)*.6,0));tri(a,m,[a[0],900],sh('#6b4f32',.8+hs(i+9)*.5,0));line([a,b],'#688b50',13)}for(let i=0;i<26;i++){let x=-150+hs(i+12)*1550,y=650+hs(i+66)*240;poly([[x,y],[x+17,y-9],[x+32,y+12],[x+8,y+18]],'#8a7254')}}
+function house(x,y,s,safe){ctx.save();ctx.translate(x,y);ctx.scale(s,s);poly([[-77,-5],[58,-5],[92,-26],[-41,-26]],'#4b514c');poly([[-70,0],[50,0],[50,-104],[-70,-104]],safe?'#e6d6af':'#d8b586');poly([[50,0],[88,-24],[88,-125],[50,-104]],'#aa956f');poly([[-90,-100],[-10,-164],[65,-100]],safe?'#407479':'#aa5141');poly([[-10,-164],[28,-182],[104,-122],[65,-100]],safe?'#315960':'#7d3e36');poly([[-90,-100],[65,-100],[65,-91],[-90,-91]],'#533e34');ctx.fillStyle='#5e4533';ctx.fillRect(-8,-66,32,66);for(let a of [-52,29]){ctx.fillStyle='#294f65';ctx.fillRect(a,-84,23,26);line([[a+11,-83],[a+11,-59]],'#b4d7da',2)}ctx.restore()}
+function person(x,y,t){ctx.save();ctx.translate(x,y);line([[-10,0],[-8,-29],[0,-42],[9,-28],[13,0]],'#263f53',8);poly([[-13,-31],[12,-31],[15,-64],[-12,-64]],'#edb848');line([[-10,-59],[-26,-72],[-32,-94]],'#dfaf88',7);let w=Math.sin(t*11)*13;line([[11,-59],[28,-78],[35+w,-103]],'#dfaf88',7);poly([[-10,-75],[-12,-88],[-2,-97],[10,-89],[10,-76],[0,-70]],'#e6b58f');poly([[-12,-87],[-9,-96],[3,-99],[12,-91],[10,-85]],'#49392e');ctx.restore()}
+function symbol(x,y,ok,t){ctx.save();ctx.translate(x,y);let s=1+.035*Math.sin(t*9);ctx.scale(s,s);ctx.shadowColor=ok?'#4dff99':'#ff394b';ctx.shadowBlur=26;ctx.fillStyle=ok?'#148448':'#a92839';ctx.beginPath();ctx.arc(0,0,44,0,TAU);ctx.fill();ctx.shadowBlur=0;if(ok)line([[-22,0],[-5,18],[25,-20]],'#fff',9);else{line([[-17,-17],[17,17]],'#fff',9);line([[17,-17],[-17,17]],'#fff',9)}ctx.restore()}
+
+
+function block(x,y,w,depth,height,t,distort=false,phase=0){
+const active=distort?cl((t-1.7)/1.8):cl((t-10.5)/.5)*(1-cl((t-14.5)/1.5));
+// Shared edge vertices keep the long building connected as its bays flex.
+const n=Math.max(2,Math.round(w/75)),verts=[];for(let i=0;i<=n;i++){let u=i/n;let dx=distort?Math.sin(t*15+u*5.7)*11*active:Math.sin(t*14+phase)*2*active;let dy=distort?Math.sin(t*13+u*6.5)*4*active:0;verts.push([x+w*u+dx,y+dy])}
+poly([[x-15,y+16],[x+w+18,y+16],[x+w+depth*.65+18,y-depth*.5+16],[x+depth*.65-15,y-depth*.5+16]],'rgba(38,35,30,.22)');
+for(let i=0;i<n;i++){let A=verts[i],B=verts[i+1],a=[A[0],A[1]-height],b=[B[0],B[1]-height];poly([A,B,b,a],i%2?'#d4c09c':'#dfcda9');poly([a,b,[b[0]+depth*.65,b[1]-depth*.5],[a[0]+depth*.65,a[1]-depth*.5]],distort?(i%2?'#ad775e':'#bb8968'):(i%2?'#5b8178':'#6c9586'));line([a,b],'#ead5ac',2);let cx=(A[0]+B[0])/2,cy=(A[1]+B[1])/2;for(let j=0;j<2;j++){let yy=cy-height+28+j*37;poly([[cx-13,yy],[cx+13,yy],[cx+13,yy+20],[cx-13,yy+20]],'#365568');line([[cx,yy],[cx,yy+20]],'#bad7d9',2)}if(distort&&t>3.6){ctx.save();ctx.globalAlpha=cl((t-3.6)/1.6);let c=verts[i+1];line([[c[0]-4,c[1]-height],[c[0]-12,c[1]-height+24],[c[0]+1,c[1]-height+40],[c[0]-9,c[1]-height+57],[c[0]-4,c[1]-15]],'#674a39',3);ctx.restore()}}
+let B=verts[n];poly([B,[B[0]+depth*.65,B[1]-depth*.5],[B[0]+depth*.65,B[1]-depth*.5-height],[B[0],B[1]-height]],'#a58c68');line([[x,y+2],[x+w,y+2]],'#6c604e',3)
+}
+function dimension(x1,y1,x2,y2,label){line([[x1,y1],[x2,y2]],'#eaf3ed',2);line([[x1,y1-7],[x1,y1+7]],'#eaf3ed',2);line([[x2,y2-7],[x2,y2+7]],'#eaf3ed',2);badge(label,(x1+x2)/2,(y1+y2)/2+10,'#b7d9d5',19)}
+function world(t){let safe=t>=10;let g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,safe?'#a0c4c5':'#b5a88d');g.addColorStop(1,'#f0dfb5');ctx.fillStyle=g;ctx.fillRect(0,0,1280,720);poly([[0,370],[190,260],[390,365],[640,250],[870,370]],'#96a08a');poly([[720,380],[1060,265],[1280,340],[1280,540]],'#a7b29a');
+let amp=t>1.7&&t<10?4*cl((t-1.7)/1.5):t>10.5&&t<15?1.5:0;ctx.save();ctx.translate(Math.sin(t*43)*amp,Math.sin(t*57)*amp*.4);poly([[0,435],[1280,380],[1280,720],[0,720]],'#967f59');poly([[0,435],[360,420],[615,720],[0,720]],'#af976e');poly([[360,420],[850,400],[615,720]],'#baa47c');poly([[850,400],[1280,380],[1280,720],[615,720]],'#8e7b59');for(let i=0;i<18;i++){let x=hs(i+42)*1280,y=500+hs(i+11)*200;tri([x,y],[x+28,y-7],[x+46,y+10],i%2?'#a58e66':'#83714e')}
+if(!safe){block(160,490,900,100,130,t,true);dimension(160,550,1060,550,showHindi?'लंबाई लगभग 9 × चौड़ाई':'LENGTH ≈ 9 × WIDTH');if(t>4){ctx.globalAlpha=cl((t-4)/2);line([[0,596],[150,583],[275,613],[430,595],[565,626],[740,601],[910,618],[1090,599],[1280,620]],'#655039',4);ctx.globalAlpha=1}}
+else{for(let i=0;i<3;i++)block(200+i*325,490,220,100,130,t,false,0);for(let i=0;i<2;i++){let x=440+i*325;line([[x+5,508],[x+85,508]],'#bfe9d2',3);line([[x+5,501],[x+5,515]],'#bfe9d2',3);line([[x+85,501],[x+85,515]],'#bfe9d2',3)}badge(showHindi?'अलग-अलग छोटी इकाइयाँ':'SMALLER, WELL-SEPARATED UNITS',640,568,'#65dfaa',23)}ctx.restore();if(t>4.2&&!safe)symbol(1140,290,false,t);if(t>11.5&&safe)symbol(1100,278,true,t);
+text(showHindi?'सुरक्षित डिजाइन और दूरी के लिए इंजीनियर की सलाह लें':'Engineered design and adequate separation are essential',640,612,21,'#33433a')}
+function caption(s){ctx.font='600 25px system-ui,sans-serif';let lines=[''];for(let word of s.split(' ')){let i=lines.length-1,v=lines[i]+(lines[i]?' ':'')+word;if(ctx.measureText(v).width>1120)lines.push(word);else lines[i]=v}let h=lines.length*33+22;ctx.fillStyle='rgba(8,14,24,.85)';rr(42,705-h,1196,h,14);ctx.fill();lines.forEach((v,i)=>text(v,640,705-h+34+i*33,25))}
+function frame(t){ctx.setTransform(dpr,0,0,dpr,0,0);world(t);text('EARTHQUAKE SAFETY / BUILDING LENGTH',640,40,20,'#263b3b');if(t<10){badge(showHindi?'अत्यधिक लंबी इमारतें न बनाएँ':'Do not make unduly long buildings',640,137,'#ff5962',31);text(showHindi?'असमान हलचल → अधिक संरचनात्मक तनाव':'Uneven movement → greater structural stress',640,193,24,'#46483f')}else{badge(showHindi?'कम लंबाई की इमारतें बनाएँ':'Construct short length buildings',640,129,'#54e296',31);badge(showHindi?'छोटी, अलग-अलग इकाइयों में निर्माण करें':'Build them in smaller units',640,192,'#54e296',25)}
+if(t>=17){let a=sm(cl((t-17)/.5));ctx.save();ctx.globalAlpha=a;let bg=ctx.createLinearGradient(0,0,0,720);bg.addColorStop(0,'#cbe9f2');bg.addColorStop(1,'#edf5ed');ctx.fillStyle=bg;ctx.fillRect(0,0,1280,720);ctx.translate(640,263);let s=sm(cl((t-17)/.65));ctx.scale(s,s);fan([[0,-125],[103,-83],[94,32],[60,95],[0,136],[-60,95],[-94,32],[-103,-83]],[0,0],'#279e5d',1,0);line([[-43,0],[-10,36],[52,-42]],'#fff',19);ctx.restore();ctx.save();ctx.globalAlpha=a;text(showHindi?'सतर्क रहें। सुरक्षित रहें।':'Stay Alert. Stay Safe.',640,495,52,'#1f443e');ctx.restore()}if(t<17)caption((showHindi?VH:VE)[t<10?0:1]);}
+
+              // ---- Audio: synthesized SFX + browser speech voiceover ----
+              let ac, rumG, rainG, voices = [];
+              if (window.speechSynthesis) {
+                     const loadVoices = () => voices = speechSynthesis.getVoices();
+                     speechSynthesis.onvoiceschanged = loadVoices;
+                     loadVoices();
+              }
+
+              function initAudio() {
+                     try {
+                            ac = new (window.AudioContext || window.webkitAudioContext)(); const nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = Math.random() * 2 - 1;
+                            const ns = (type, f) => { const s = ac.createBufferSource(); s.buffer = nb; s.loop = true; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; const g = ac.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); g.connect(ac.destination); s.start(); return g };
+                            rumG = ns('lowpass', 110); rainG = ns('highpass', 3500)
+                     } catch (e) { ac = null }
+              }
+
+              function tone(f, d, v, type, delay = 0) { if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), n = ac.currentTime + delay; o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, n); g.gain.exponentialRampToValueAtTime(.0001, n + d); o.connect(g); g.connect(ac.destination); o.start(n); o.stop(n + d + .05) }
+
+              function speak(i) {
+                     if (!window.speechSynthesis) return;
+
+                     speechSynthesis.cancel();
+
+                     setTimeout(() => {
+                            const u = new SpeechSynthesisUtterance((showHindi ? VH : VE)[i]);
+                            u.lang = showHindi ? 'hi-IN' : 'en-US';
+                            u.rate = 1.0;
+                            u.pitch = 1.0;
+
+                            const targetLang = showHindi ? 'hi' : 'en';
+
+                            let bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang) && v.localService && (v.name.includes('Google') || v.name.includes('Neural')));
+                            if (!bestVoice) bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang) && v.localService);
+                            if (!bestVoice) bestVoice = voices.find(v => v.lang.toLowerCase().includes(targetLang));
+
+                            if (bestVoice) u.voice = bestVoice;
+                            speechSynthesis.speak(u);
+                     }, 40);
+              }
+
+
+const EV=[[.15,'v',0],[2.4,'g'],[3.7,'k'],[4.2,'b'],[5.8,'k'],[6.5,'g'],[7.1,'b'],[10.1,'v',1],[11.5,'c'],[17.3,'v',2],[17.2,'c']];
+function fire(e){if(e[1]==='v')speak(e[2]);else if(e[1]==='g'){tone(65,.9,.1,'sawtooth');tone(91,.65,.055,'triangle',.1)}else if(e[1]==='k'){tone(210,.08,.09,'sawtooth');tone(950,.05,.035,'square',.04)}else if(e[1]==='b'){tone(160,.5,.12,'sawtooth');tone(120,.5,.1,'square',.28)}else{tone(880,1,.13,'sine');tone(1320,1.2,.08,'sine',.13)}}
+function audioTick(t){if(!ac||!rainG)return;rainG.gain.setTargetAtTime(playing&&t>3&&t<9.5?.015*(.3+.7*Math.abs(Math.sin(t*9))):0,ac.currentTime,.1);rumG.gain.setTargetAtTime(playing&&t>1.4&&t<14?(t<10?.7*cl((t-1.4)/1.5):.3*(1-cl((t-10)/4))):0,ac.currentTime,.12)}
+let t=0,pt=-.01,playing=false,last=performance.now();const pp=document.getElementById('pp'),sk=document.getElementById('sk'),tm=document.getElementById('tm'),btnL=document.getElementById('lang'),overlay=document.getElementById('start-overlay');
+const stopSpeech=()=>{if(window.speechSynthesis)speechSynthesis.cancel()};
+function play(){if(t>=D){t=0;pt=-.01}playing=true;last=performance.now();if(ac)ac.resume();pp.textContent='Pause';if(t>.2){let i=t<10?0:t<17?1:2;let ev=EV.find(e=>e[1]==='v'&&e[2]===i);if(t>=ev[0])speak(i)}}
+document.getElementById('start-btn').onclick=()=>{overlay.style.display='none';initAudio();pp.disabled=sk.disabled=false;play()};
+pp.onclick=()=>{if(playing){playing=false;stopSpeech();pp.textContent='Play';if(ac)ac.suspend()}else play()};
+sk.oninput=()=>{playing=false;stopSpeech();t=+sk.value;pt=t;pp.textContent='Play';if(ac)ac.suspend();frame(t)};
+btnL.onclick=()=>{showHindi=!showHindi;btnL.textContent=showHindi?'Voice & captions: हिन्दी':'Voice & captions: English';stopSpeech();if(playing)speak(t<10?0:t<17?1:2);voiceStatus()};
+function voiceStatus(){let ok=window.speechSynthesis&&speechSynthesis.getVoices().some(v=>v.lang.toLowerCase().startsWith(showHindi?'hi':'en'));document.getElementById('note').textContent=ok?'Narration uses your browser’s '+(showHindi?'Hindi':'English')+' voice. Earthquake rumble and chimes are synthesized.':'No '+(showHindi?'Hindi':'English')+' voice detected. Install a matching system voice for narration; captions remain available.'}
+if(window.speechSynthesis)speechSynthesis.addEventListener('voiceschanged',voiceStatus);voiceStatus();
+function loop(n){let dt=Math.min((n-last)/1000,.1);last=n;if(playing){t=Math.min(D,t+dt);for(let e of EV)if(pt<e[0]&&e[0]<=t)fire(e);pt=t;sk.value=t;if(t>=D){playing=false;pp.textContent='Replay';stopSpeech()}}audioTick(t);frame(t);tm.textContent=t.toFixed(1)+' / 20.0s';requestAnimationFrame(loop)}requestAnimationFrame(loop);
+</script></body></html>

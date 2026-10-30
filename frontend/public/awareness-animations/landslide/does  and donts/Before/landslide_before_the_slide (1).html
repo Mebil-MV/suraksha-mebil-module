@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Landslide Safety — Before the Slide</title>
+  <style>
+    :root { --bg:#f4f1ea; --fg:#2a2f38; --border:#c9c7bc; --accent:#2f8459; box-sizing:border-box; }
+    * { box-sizing:inherit; }
+    body { margin:0; padding:20px max(14px,env(safe-area-inset-right)) 24px max(14px,env(safe-area-inset-left)); background:var(--bg); color:var(--fg); font-family:system-ui,-apple-system,sans-serif; }
+    main { max-width:1280px; margin:auto; }
+    .mast { display:flex; justify-content:space-between; align-items:center; gap:16px; margin:0 0 12px; }
+    .mast h1 { font-size:18px; letter-spacing:-.4px; margin:0; font-weight:700; }
+    .mast span { font-size:12px; color:#69756d; letter-spacing:1.5px; text-transform:uppercase; }
+    .stage { position:relative; overflow:hidden; border-radius:10px; background:#243746; box-shadow:0 12px 34px #253b4520; }
+    canvas { display:block; width:100%; aspect-ratio:16/9; }
+    #start-overlay { position:absolute; inset:0; background:linear-gradient(0deg,#12243180,transparent 65%); display:flex; align-items:flex-end; justify-content:center; padding:0 12px 15%; }
+    button { font:inherit; color:inherit; background:transparent; border:1px solid var(--border); border-radius:8px; padding:8px 13px; cursor:pointer; }
+    button:hover { background:#739c7d15; }
+    button:focus-visible,input:focus-visible,summary:focus-visible { outline:3px solid #40b887; outline-offset:3px; }
+    #start-btn { background:#f4ead2; color:#172f39; border:0; padding:15px 28px; border-radius:50px; font-size:18px; font-weight:700; box-shadow:0 6px 24px #13263040; }
+    .bar { display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-top:13px; }
+    #pp { background:#2f7455; border-color:#2f7455; color:#fff; min-width:85px; }
+    #sk { flex:1; min-width:120px; accent-color:#2f8459; }
+    #tm { font:13px ui-monospace,monospace; white-space:nowrap; min-width:90px; }
+    .options { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .options button { font-size:12px; padding:6px 10px; }
+    .note { font-size:12px; line-height:1.6; color:#69756d; margin:12px 0; }
+    details { margin-top:14px; border-top:1px solid var(--border); padding-top:12px; font-size:13px; line-height:1.8; }
+    summary { cursor:pointer; font-weight:600; }
+    details p { max-width:920px; }
+    .stage:fullscreen { display:grid; place-items:center; background:#142530; border-radius:0; }
+    .stage:fullscreen canvas { width:min(100vw,177.7778vh); height:auto; }
+    @media(prefers-color-scheme:dark) { :root { --bg:#14181e; --fg:#e8e4d8; --border:#46514c; } .mast span,.note { color:#abb8b0; } }
+    @media(max-width:600px) { body { padding:12px 8px 20px; } .mast h1 { font-size:14px; } .mast span { font-size:9px; letter-spacing:.5px; } #start-btn { font-size:13px; padding:11px 18px; } button { font-size:13px; } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="mast"><h1>Landslide Safety: Before the Slide</h1><span>20-second animated PSA</span></div>
+  <div class="stage" id="stage">
+    <canvas id="c" width="1280" height="720" role="img" aria-label="Animated landslide preparation PSA: contact officials, arrange a professional site analysis, prepare a family evacuation plan, discuss risks, and speak to an insurance agent."></canvas>
+    <div id="start-overlay"><button id="start-btn">▶ Play Animation &amp; Audio</button></div>
+  </div>
+  <div class="bar">
+    <button id="pp" aria-label="Play animation">Play</button>
+    <button id="restart" aria-label="Restart from the beginning">↺ Restart</button>
+    <input id="sk" type="range" min="0" max="20" step="0.01" value="0" aria-label="Animation time in seconds">
+    <output id="tm" for="sk">0.0 / 20.0s</output>
+  </div>
+  <div class="options">
+    <button id="voice" aria-pressed="true">Voiceover: On</button>
+    <button id="sfx" aria-pressed="true">Sound effects: On</button>
+    <button id="lang" aria-pressed="false">Hindi Subtitles: Off</button>
+    <button id="full">⛶ Full screen</button>
+  </div>
+  <p class="note" id="status">Open this file in a browser and press Play. The complete supplied narration uses your browser’s English voice at a fast pace to fit 20 seconds. Voice availability and speech timing depend on your browser.</p>
+  <details>
+    <summary>Full script &amp; scene timings</summary>
+    <p><strong>0:00–0:09 · Research &amp; Assessment.</strong> Learn your risk by contacting local officials, geological surveys, or university geology departments. Since landslides recur in identifiable locations, ask for a professional site analysis of your property and necessary corrective measures.</p>
+    <p><strong>0:09–0:17 · Planning &amp; Insurance.</strong> Next, develop a landslide-specific family disaster and evacuation plan. Talk to your insurance agent. Discussing debris flows ahead of time reduces fear and ensures separated family members know how to respond.</p>
+    <p><strong>0:17–0:20 · Call to Action.</strong> Plan ahead. Stay safe.</p>
+  </details>
+</main>
+<script>
+'use strict';
+// Self-contained Canvas animation, in the same faceted style as the example.
+// All drawings and sound effects are procedural. No CDN or external assets.
+const W=1280,H=720,D=20,TAU=Math.PI*2;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const dpr=Math.min(window.devicePixelRatio||1,2);
+cv.width=W*dpr; cv.height=H*dpr;
+const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const lp=(a,b,k)=>a+(b-a)*k;
+const sm=k=>{k=cl(k);return k*k*(3-2*k)};
+const ease=k=>1-Math.pow(1-cl(k),3);
+const mod=(a,n)=>((a%n)+n)%n;
+function hs(n){n|=0;n=(n^61)^(n>>>16);n=(n+(n<<3))|0;n^=n>>>4;n=Math.imul(n,0x27d4eb2d);n^=n>>>15;return(n>>>0)/4294967296}
+const hx=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));
+const mx=(a,b,k)=>a.map((v,i)=>lp(v,b[i],k));
+const rg=(c,a=1)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+const sh=(c,f=1,k=0)=>rg(mx(hx(c),[22,32,44],k*.45).map(v=>Math.min(255,v*f)));
+const C={cream:'#f4ead2',ink:'#1c3540',green:'#49d991',moss:'#648357',earth:'#8b6a45',sky:'#87aabd'};
+function poly(P,col){ctx.fillStyle=col;ctx.beginPath();P.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.fill()}
+const tri=(a,b,c,col)=>poly([a,b,c],col);
+function rr(x,y,w,h,r=10){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function box(x,y,w,h,col,r=10){ctx.fillStyle=col;rr(x,y,w,h,r);ctx.fill()}
+function fan(P,c,col,f=1,k=0){for(let i=0;i<P.length;i++)tri(c,P[i],P[(i+1)%P.length],sh(col,f+(hs(i*7+P[0][0])-.5)*.32,k))}
+function line(P,col,width=3){ctx.strokeStyle=col;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();P.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.stroke()}
+function text(s,x,y,size=24,col=C.cream,weight=600,align='left'){ctx.fillStyle=col;ctx.font=`${weight} ${size}px system-ui,sans-serif`;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(s,x,y)}
+function wrap(s,maxWidth,size=24,weight=600){ctx.font=`${weight} ${size}px system-ui,sans-serif`;const words=s.split(' '),out=[];let row='';for(const word of words){const test=row?row+' '+word:word;if(ctx.measureText(test).width>maxWidth&&row){out.push(row);row=word}else row=test}if(row)out.push(row);return out}
+function lines(s,x,y,maxWidth,size=24,color=C.cream,weight=600,align='left',leading=1.3){const rows=wrap(s,maxWidth,size,weight);rows.forEach((r,i)=>text(r,x,y+i*size*leading,size,color,weight,align));return rows.length}
+function peak(cx,top,w,base,c,k=0){const T=[cx,top],L=[cx-w/2,base],R=[cx+w/2,base],M=[cx+w*.05,top+(base-top)*.5],B=[cx-w*.12,base],N=[cx-w*.14,top+(base-top)*.42];tri(T,L,N,sh(c,1.15,k));tri(T,N,M,sh(c,.95,k));tri(T,M,R,sh(c,.7,k));tri(L,N,B,sh(c,.9,k));tri(N,M,B,sh(c,.8,k));tri(M,R,B,sh(c,.6,k))}
+function tree(x,y,s=1,k=0){ctx.fillStyle=sh('#5b4130',1,k);ctx.fillRect(x-3*s,y-22*s,6*s,22*s);for(let j=0;j<3;j++){const b=y-12*s-j*18*s,w=(36-j*8)*s;tri([x-w/2,b],[x,b-30*s],[x+w/2,b],sh('#3f8a4a',.8+j*.18,k))}}
+function cloud(x,y,r,k=0){for(let j=0;j<4;j++){const cx=x+j*r*.9,cy=y+(j%2?-r*.3:0),rad=r*(1-.1*j);const p=[];for(let i=0;i<7;i++){const a=i/7*TAU;p.push([cx+Math.cos(a)*rad,cy+Math.sin(a)*rad*.7])}poly(p,rg(mx([245,248,250],[44,52,62],k),.65))}}
+function shadow(x,y,rx,ry,alpha=.18){ctx.fillStyle=`rgba(20,37,40,${alpha})`;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,TAU);ctx.fill()}
+function check(x,y,s=1,p=1){if(p<=0)return;ctx.save();ctx.translate(x,y);const a=ease(p);ctx.scale(s*(.65+.35*a),s*(.65+.35*a));ctx.globalAlpha*=a;ctx.shadowColor='#60f3a1';ctx.shadowBlur=18;ctx.fillStyle='#2b9d64';ctx.beginPath();ctx.arc(0,0,25,0,TAU);ctx.fill();ctx.shadowBlur=0;poly([[-18,-16],[9,-23],[24,-5],[12,20],[-12,21],[-25,0]],'#44b774');line([[-12,0],[-3,9],[14,-11]],'#fff',6);ctx.restore()}
+function warning(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);poly([[0,-17],[18,15],[-18,15]],'#db9b43');text('!',0,9,24,'#3e3424',800,'center');ctx.restore()}
+function terrain(w,h,t=0,interior=false){const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,interior?'#a7bebc':'#779bad');g.addColorStop(.65,'#d4d9c4');g.addColorStop(1,'#dfd8b8');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);cloud(w*.08+t*1.5,48,22,.15);cloud(w*.73-t,35,28,.15);peak(w*.18,76,w*.8,h*.75,'#8baba7',.08);peak(w*.85,45,w*.9,h*.75,'#78978d',.08);peak(w*.55,138,w,h*.86,'#7c9366',.06);poly([[0,h*.68],[w*.2,h*.64],[w*.55,h*.72],[w,h*.62],[w,h],[0,h]],'#a69c75');for(let i=0;i<12;i++){let x=w*i/11,y=h*.7+hs(i+80)*h*.13;tri([x-42,y],[x+48,y-9],[x+20,h],sh('#8c865f',.92+hs(i+9)*.25));tri([x-42,y],[x+20,h],[x-85,h],sh('#a1966d',.84+hs(i+13)*.24))}tree(w*.08,h*.69,.65);tree(w*.91,h*.67,.8);tree(w*.98,h*.73,.55)}
+function building(x,y,w,h,title,type,t,active=false){ctx.save();ctx.translate(x,y);shadow(w*.5,6,w*.72,12);poly([[0,-h],[w,-h],[w+15,-h-12],[15,-h-12]],'#d5ceb6');poly([[w,-h],[w+15,-h-12],[w+15,-6],[w,8]],'#788b83');poly([[0,-h],[w,-h],[w,8],[0,0]],'#e7ddbf');if(type===1){tri([-8,-h],[w*.5,-h-35],[w+8,-h],'#789086');tri([w*.5,-h-35],[w+8,-h],[w+15,-h-12],'#5b756e')}else{poly([[-6,-h-12],[w+8,-h-12],[w+8,-h+2],[-6,-h+2]],'#657f7b')}
+  for(let i=0;i<3;i++)box(12+i*(w-20)/3,-h+22,13,22,'#789fa4',1);box(w/2-10,-36,20,40,'#6c817d',1);box(-8,-h-19,w+16,39,active?'#2b795a':'#2d4850',5);lines(title,w/2,-h-3,w+6,12,C.cream,700,'center',1.25);if(active){ctx.strokeStyle=`rgba(80,235,154,${.5+.3*Math.sin(t*8)})`;ctx.lineWidth=3;rr(-9,-h-20,w+18,41,5);ctx.stroke()}ctx.restore()}
+function house(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);shadow(0,7,105,18);poly([[-72,-105],[35,-105],[35,0],[-72,-9]],'#e4d5b5');poly([[35,-105],[84,-126],[84,-21],[35,0]],'#b3af96');tri([-88,-105],[-20,-171],[51,-105],'#91624b');poly([[-20,-171],[36,-192],[99,-126],[51,-105]],'#6e5144');tri([[-20,-171]][0],[-88,-105],[51,-105],'#a57054');box(-54,-88,29,31,'#8aacb2',2);line([[-40,-88],[-40,-57]],'#eee1c1',3);box(-3,-67,24,65,'#75634c',1);poly([[49,-88],[68,-96],[68,-62],[49,-54]],'#72949a');poly([[-78,-9],[36,2],[89,-21],[89,-15],[35,10],[-78,-1]],'#7b7f6e');ctx.restore()}
+function person(x,y,s,shirt,pose='stand',t=0,skin='#c8956f',helmet=false){ctx.save();ctx.translate(x,y);ctx.scale(s,s);const bob=Math.sin(t*3)*.7;ctx.translate(0,bob);shadow(0,3,28,7);const seated=pose==='sit';line([[-9,-45],[-12,seated?-21:-3]],'#354955',12);line([[10,-45],[seated?28:13,seated?-20:-3]],'#293e4a',12);if(seated){line([[-12,-21],[-25,-7]],'#354955',11);line([[28,-20],[32,-7]],'#293e4a',11)}line([[-17,-1],[-5,-1]],'#293a43',7);line([[9,-1],[23,-1]],'#293a43',7);poly([[-21,-97],[15,-98],[25,-52],[12,-41],[-18,-43],[-27,-60]],shirt);tri([-21,-97],[-7,-61],[-18,-43],sh(shirt,.8));tri([-7,-61],[15,-98],[25,-52],sh(shirt,1.13));poly([[-6,-111],[7,-111],[7,-94],[-6,-94]],skin);fan([[-17,-132],[-5,-145],[11,-139],[19,-122],[11,-108],[-8,-108],[-19,-119]],[0,-126],skin,1);poly([[-20,-127],[-17,-142],[-4,-149],[14,-141],[19,-129],[5,-135],[-8,-133]],'#433c36');if(helmet){poly([[-23,-133],[-17,-151],[1,-157],[18,-147],[23,-133]],'#e8c46d');box(-27,-135,53,7,'#d4ab53',2);tri([[-17,-151]][0],[1,-157],[0,-135],'#f5d788')}
+  if(pose==='phone'){line([[-20,-90],[-37,-77],[-38,-119]],skin,9);line([[19,-86],[34,-62]],skin,9);box(-45,-133,14,28,'#263d47',3);box(-43,-130,7,19,'#9ccab7',1)}
+  else if(pose==='clipboard'){line([[-21,-88],[-35,-68],[-15,-62]],skin,9);line([[21,-86],[29,-58],[10,-56]],skin,9)}
+  else if(pose==='write'){line([[-21,-87],[-37,-64],[-20,-54]],skin,9);line([[20,-86],[32,-62],[51+Math.sin(t*12)*2,-59]],skin,8);line([[48,-62],[55,-75]],'#efdca7',3)}
+  else if(pose==='shake'){line([[-20,-89],[-25,-60]],skin,9);line([[20,-87],[35,-67],[61,-65+Math.sin(t*5)*2]],skin,9)}
+  else if(pose==='shakeLeft'){line([[21,-88],[28,-61]],skin,9);line([[-20,-88],[-33,-67],[-58,-65+Math.sin(t*5)*2]],skin,9)}
+  else {line([[-21,-88],[-30,-51]],skin,9);line([[20,-88],[30,-51]],skin,9)}
+  if(pose==='clipboard'){poly([[-16,-90],[18,-87],[15,-44],[-20,-47]],'#836548');poly([[-11,-85],[14,-83],[11,-49],[-15,-51]],'#f4ead2');box(-4,-91,14,7,'#a6b2a0',1);for(let i=0;i<3;i++)line([[-8,-74+i*7],[7,-73+i*7]],'#9baf9d',2)}ctx.restore()}
+function documentCard(x,y,w,h,t,mode='map'){ctx.save();ctx.translate(x,y);const r=-.06;ctx.rotate(r);shadow(w*.48,h+4,w*.6,10,.16);box(0,0,w,h,'#efe5c9',5);poly([[w-28,0],[w-28,26],[w,26]],'#cfc5aa');if(mode==='map'){text('LANDSLIDE HAZARD MAP',14,24,12,'#31564d',800);const x0=12,y0=36;box(x0,y0,w-24,h-50,'#bbc9a4',2);for(let i=0;i<8;i++){const P=[];for(let j=0;j<6;j++){const a=j/6*TAU;P.push([w*.5+Math.cos(a)*(25+i*10),h*.57+Math.sin(a)*(12+i*6)])}line(P,'#7e976c',1)}poly([[35,60],[88,43],[150,70],[128,117],[72,124]],'#ba8c62');poly([[90,45],[151,70],[127,117]],'#c39d73');line([[16,117],[55,102],[89,111],[140,87],[w-14,112]],'#739ba3',5);warning(92,80,.6);warning(137,109,.5);line([[28,137],[70,127],[88,143]],'#eee9ce',5);box(14,h-23,9,9,'#be8a62',1);text('RISK ZONES',29,h-15,9,'#49654d',700)}ctx.restore()}
+function callWaves(x,y,p,t){if(p<=0)return;ctx.save();ctx.globalAlpha*=p*(.65+.35*Math.sin(t*10));for(let i=0;i<3;i++){ctx.strokeStyle=i===2?'#b9e8ca':'#50bc85';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,15+i*11,-1.1,1.0);ctx.stroke()}ctx.restore()}
+function retainingWall(x,y,w,t){ctx.save();ctx.translate(x,y);shadow(w/2,8,w*.64,11);poly([[0,-37],[w,-37],[w+15,-49],[15,-49]],'#b5b3a0');poly([[w,-37],[w+15,-49],[w+15,-4],[w,9]],'#6e7a71');poly([[0,-37],[w,-37],[w,9],[0,0]],'#8f9a8a');for(let j=0;j<3;j++)for(let i=0;i<6;i++){const a=i*w/6+(j%2?-w/12:0);if(a<0)continue;line([[a,-36+j*14],[Math.min(w,a+w/6),-36+j*14]],'#b7bdac',1.3);line([[a,-36+j*14],[a,-22+j*14]],'#b7bdac',1)}ctx.restore()}
+function title(t,scene){text('LANDSLIDE SAFETY',36,42,15,'#bad3c4',800);text('Before the Slide',34,88,38,C.cream,800);box(1045,29,199,42,'#172f3ad4',22);text(scene===0?'01 / RESEARCH':scene===1?'02 / PLAN AHEAD':'03 / STAY SAFE',1144,56,14,C.cream,700,'center');line([[36,104],[1244,104]],'#b5c2ad50',1)}
+function panel(x,y,w,h,t,fn){ctx.save();ctx.shadowColor='#0b283331';ctx.shadowBlur=18;box(x,y,w,h,'#b2bda3',12);ctx.shadowBlur=0;rr(x,y,w,h,12);ctx.clip();ctx.translate(x,y);fn(w,h);ctx.restore();ctx.save();ctx.strokeStyle='#ece8ca52';ctx.lineWidth=1;rr(x,y,w,h,12);ctx.stroke();ctx.restore()}
+function smallPill(s,x,y,w){box(x,y,w,30,'#203c42df',7);text(s,x+12,y+21,13,C.cream,700)}
+let showHindi=false;
+function actionLabel(n,en,hi,x,y,w,done){box(x,y,w,49,'#1d3741ee',9);box(x+12,y+10,29,29,'#345b54',7);text(String(n).padStart(2,'0'),x+26.5,y+30,13,'#bcdfbd',800,'center');const s=showHindi?hi:en;const fs=showHindi?19:20;const rows=wrap(s,w-91,fs,600);rows.slice(0,2).forEach((l,i)=>text(l,x+52,y+(rows.length===1?31:21)+i*23,fs,C.cream,600));if(done)check(x+w-24,y+24,.55,done)}
+function research(t){
+  panel(36,125,594,416,t,(w,h)=>{terrain(w,h,t);smallPill('KNOW YOUR LOCAL RISK',16,15,211);const who=Math.floor(mod(t-.35,5.4)/1.8);building(35,217,136,89,'Local Officials',0,t,who===0);building(229,214,136,89,'Geological Survey',0,t,who===1);building(424,217,132,90,'University Geology Dept',1,t,who===2);const a=sm((t-.3)/.6);ctx.globalAlpha=a;documentCard(59,253,264,146,t);person(407,384,1.04,'#527a91','phone',t,'#c8956f');callWaves(376,260,1,t);ctx.globalAlpha=1;line([[363,244],[363,234],[108+who*194,234],[108+who*194,221]],'#80d9a0a0',2);for(let i=0;i<3;i++){box(496+i*16,372-(i+1)*8,9,(i+1)*8,'#5aaf7a',2)}text('ASK. MAP. UNDERSTAND.',56,405,13,'#354e43',800);});
+  panel(650,125,594,416,t,(w,h)=>{terrain(w,h,t+.8);smallPill('PROFESSIONAL SITE ANALYSIS',16,15,258);peak(440,118,320,340,'#7f8b61');fan([[348,208],[440,120],[523,234],[560,308],[390,308]],[449,237],'#9b8665',.95);tree(475,219,.7);tree(548,259,.55);house(266,289,1.02);retainingWall(314,326,211,t);ctx.save();ctx.globalAlpha=.7;line([[314,282],[314,263],[525,263],[525,292]],'#f0e8c4',2);line([[314,270],[525,270]],'#f0e8c4',1);ctx.restore();person(128,387,1.11,'#427c73','clipboard',t,'#ce9b76',true);const p=ease((t-4.9)/.6);check(446,229,1.3,p);if(t>5.6){ctx.globalAlpha=ease((t-5.6)/.4);smallPill('Corrective measures',333,355,197);ctx.globalAlpha=1;}text('INSPECT THE SITE & SLOPE',40,405,13,'#354e43',800);});
+  actionLabel(1,'Contact officials & geology depts','अधिकारियों और भूविज्ञान विभाग से संपर्क करें',36,553,594,cl((t-2.6)/.5));
+  actionLabel(2,'Request a professional site analysis','विशेषज्ञ से स्थल की जाँच करवाएँ',650,553,594,cl((t-5.1)/.5));
+}
+function evacuationPlan(x,y,w,h,t){ctx.save();ctx.translate(x,y);ctx.rotate(-.035);box(0,0,w,h,'#f4ead2',4);text('FAMILY DISASTER',w/2,21,13,'#365650',800,'center');text('& EVACUATION PLAN',w/2,39,13,'#365650',800,'center');line([[14,50],[w-14,50]],'#b3bca3',1);for(let i=0;i<3;i++){box(14,61+i*18,9,9,'#c3d3b0',1);line([[30,66+i*18],[w-18,66+i*18]],'#a2ad96',2);if(t>9.8+i*.35)line([[15,65+i*18],[18,68+i*18],[23,61+i*18]],'#43845d',2)}line([[18,h-24],[62,h-30],[98,h-15],[w-22,h-30]],'#39875d',3);tri([w-28,h-37],[w-17,h-31],[w-29,h-24],'#39875d');ctx.restore()}
+function calendar(x,y,s,t){ctx.save();ctx.translate(x,y);ctx.scale(s,s);shadow(0,88,93,12);box(-92,-84,184,168,'#f4ead2',11);box(-92,-84,184,42,'#44796b',11);ctx.fillStyle='#44796b';ctx.fillRect(-92,-64,184,24);for(const a of [-51,51]){line([[a,-94],[a,-69]],'#c7cdb2',8)}text('PREPARE EARLY',0,-57,13,C.cream,800,'center');for(let j=0;j<3;j++)for(let i=0;i<4;i++){box(-67+i*38,-22+j*31,23,21,(i===1&&j===1)?'#79af7a':'#d7d9bc',3)}const flip=mod((t-9.4)*1.6,1);if(t<12.8){ctx.save();ctx.translate(0,-39);ctx.scale(1,Math.cos(flip*Math.PI));poly([[-84,0],[84,0],[84,115],[-84,115]],'rgba(240,232,205,.78)');line([[-65,25],[65,25]],'#bac4a3',3);ctx.restore()}check(7,21,.62,cl((t-11.4)/.6));ctx.restore()}
+function heart(x,y,s,t){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.shadowColor='#8be0ac';ctx.shadowBlur=22;const P=[[0,14],[-39,-16],[-43,-38],[-27,-54],[-8,-51],[0,-39],[11,-52],[29,-53],[44,-38],[39,-16]];fan(P,[0,-22],'#6dbd86',1);ctx.shadowBlur=0;tri([0,-39],[11,-52],[29,-53],'#b6e3a9');ctx.restore()}
+function planning(t){
+  const u=t-9;
+  panel(36,125,389,416,t,(w,h)=>{terrain(w,h,t,true);box(0,101,w,230,'#a6b29a',0);poly([[0,101],[w,101],[w,124],[0,124]],'#849b89');box(26,139,95,103,'#739593',4);box(32,145,83,91,'#b5cbd0',1);line([[73,145],[73,236]],'#ede5c9',5);line([[32,190],[115,190]],'#ede5c9',5);peak(76,172,94,237,'#8ca688');smallPill('A PLAN FOR EVERYONE',15,15,214);box(0,326,w,90,'#ab9975',0);person(77,339,.97,'#527a91','sit',t,'#c8956f');person(319,340,1.0,'#a37155','sit',t+.6,'#d8ac86');person(194,283,.67,'#c7a75f','stand',t,'#bd8664');poly([[41,309],[285,299],[351,339],[96,357]],'#8b674a');poly([[96,357],[351,339],[351,356],[96,374]],'#745740');poly([[41,309],[96,357],[96,374],[41,326]],'#765740');line([[72,335],[72,402]],'#705239',12);line([[325,346],[325,405]],'#705239',12);evacuationPlan(119,270,173,126,t);check(334,226,.8,cl((u-1.3)/.5));});
+  panel(446,125,389,416,t,(w,h)=>{terrain(w,h,t);smallPill('PREPARATION BRINGS CALM',15,15,248);calendar(194,199,1.18,t);const p=ease((u-1.8)/.65);ctx.save();ctx.globalAlpha=p;heart(194,338,.92*(1+.025*Math.sin(t*5)),t);ctx.restore();if(u>2.6){ctx.globalAlpha=ease((u-2.6)/.5);text('Know how to respond.',194,391,18,'#3c5948',700,'center');ctx.globalAlpha=1;}});
+  panel(856,125,388,416,t,(w,h)=>{terrain(w,h,t);smallPill('UNDERSTAND YOUR COVER',15,15,237);building(102,239,181,120,'Insurance',1,t,false);person(117,390,.91,'#527a91','shake',t,'#c8956f');person(223,390,.91,'#526b60','shakeLeft',t,'#d8ac86');ctx.save();ctx.globalAlpha=cl((u-3.2)/.5);check(301,291,.93,cl((u-3.2)/.5));ctx.restore();box(27,371,78,25,'#e6dbc1',4);text('POLICY',66,388,10,'#3e5b50',800,'center');});
+  actionLabel(3,'Develop a family evacuation plan','परिवार की निकासी योजना बनाएँ',36,553,389,cl((u-1.5)/.5));
+  actionLabel(4,'Discuss risks to reduce fear','जोखिम पर बात करें, डर घटाएँ',446,553,389,cl((u-2.8)/.5));
+  actionLabel(5,'Talk to your insurance agent','बीमा एजेंट से बात करें',856,553,388,cl((u-4.0)/.5));
+}
+function shield(x,y,s,t){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.shadowColor='#6cf5b1';ctx.shadowBlur=24;const P=[[0,-110],[90,-75],[90,10],[57,77],[0,120],[-57,77],[-90,10],[-90,-75]];fan(P,[0,-8],'#2f9e5a',1);ctx.shadowBlur=0;tri([0,-110],[0,-8],[-90,-75],'#54b975');line([[-39,-4],[-10,29],[45,-38]],'#fff',19);ctx.restore()}
+function closing(t){const u=t-17,a=sm(u/.58);ctx.save();ctx.globalAlpha=a;const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#90b6ca');g.addColorStop(.62,'#c7dce1');g.addColorStop(1,'#e6e9dc');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.globalAlpha*=.35;peak(150,470,740,740,'#9fb8b4');peak(1100,488,650,740,'#a9beb6');ctx.globalAlpha=a;text('LANDSLIDE SAFETY',640,82,16,'#3c6268',800,'center');const p=ease((u-.12)/.65);shield(640,287,1.04*p*(1+.012*Math.sin(u*4)),t);ctx.globalAlpha=a*ease((u-.4)/.5);text(showHindi?'पहले से योजना बनाएँ। सुरक्षित रहें।':'Plan Ahead. Stay Safe.',640,493,showHindi?48:54,'#193c4b',800,'center');line([[538,530],[742,530]],'#2f9e5a',4);text(showHindi?'जोखिम जानें। परिवार को तैयार रखें।':'Know your risk. Prepare your family.',640,571,23,'#41636a',500,'center');ctx.restore()}
+// Original supplied English voiceover, divided into short timed phrases.
+const CUES=[
+  {a:.28,b:4.03,en:'Learn your risk by contacting local officials, geological surveys, or university geology departments.',hi:'स्थानीय अधिकारियों, भूवैज्ञानिक सर्वेक्षण या विश्वविद्यालय के भूविज्ञान विभाग से अपना जोखिम जानें।'},
+  {a:4.03,b:8.86,en:'Since landslides recur in identifiable locations, ask for a professional site analysis of your property and necessary corrective measures.',hi:'भूस्खलन कुछ पहचाने गए स्थानों पर दोबारा होते हैं। विशेषज्ञ से संपत्ति की जाँच और सुधार के उपाय पूछें।'},
+  {a:9.08,b:11.48,en:'Next, develop a landslide-specific family disaster and evacuation plan.',hi:'भूस्खलन के लिए परिवार की आपदा और निकासी योजना बनाएँ।'},
+  {a:11.48,b:12.95,en:'Talk to your insurance agent.',hi:'अपने बीमा एजेंट से बात करें।'},
+  {a:12.95,b:16.88,en:'Discussing debris flows ahead of time reduces fear and ensures separated family members know how to respond.',hi:'मलबे के बहाव पर पहले से चर्चा डर घटाती है और अलग होने पर परिवार को सही कदम उठाने में मदद करती है।'},
+  {a:17.48,b:19.75,en:'Plan ahead. Stay safe.',hi:'पहले से योजना बनाएँ। सुरक्षित रहें।'}
+];
+function captions(t){const c=CUES.find(c=>t>=c.a&&t<c.b);if(!c)return;ctx.save();const s=showHindi?c.hi:c.en;const size=showHindi?23:24;const rows=wrap(s,1100,size,600);const h=rows.length*31+20;box(62,H-h-14,1156,h,t>=17?'#244653db':'#102730e8',12);rows.forEach((r,i)=>text(r,640,H-h+19+i*31,size,C.cream,600,'center'));ctx.restore()}
+// Subtle static grain keeps the same soft, earthy canvas atmosphere.
+const grain=document.createElement('canvas');grain.width=320;grain.height=180;
+const gc=grain.getContext('2d'),im=gc.createImageData(320,180);
+for(let i=0;i<im.data.length;i+=4){const n=hs(i)*255;im.data[i]=n;im.data[i+1]=n;im.data[i+2]=n;im.data[i+3]=12}gc.putImageData(im,0,0);
+function frame(t){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.clearRect(0,0,W,H);const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2c4b58');g.addColorStop(.55,'#58756f');g.addColorStop(1,'#6e795f');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);if(t<9){title(t,0);research(t)}else if(t<17){title(t,1);planning(t)}else{title(t,1);planning(16.95);closing(t)}ctx.save();ctx.globalAlpha=.38;ctx.drawImage(grain,0,0,W,H);ctx.restore();captions(t);if(t>=9&&t<9.28){ctx.fillStyle=`rgba(227,235,211,${(1-sm((t-9)/.28))*.48})`;ctx.fillRect(0,110,W,499)}ctx.fillStyle='#183c43';ctx.fillRect(0,H-4,W,4);ctx.fillStyle='#7cd9a1';ctx.fillRect(0,H-4,W*cl(t/D),4)}
+
+// Synthesized SFX: dialing, paper, writing, family murmur and gentle chimes.
+let ac=null,master=null,noiseBuffer=null,nodes=new Set(),sfxOn=true,voiceOn=true,voices=[],spoken=-1;
+const status=document.getElementById('status');
+function initAudio(){if(ac)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();master=ac.createGain();master.gain.value=sfxOn?.6:0;master.connect(ac.destination);noiseBuffer=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);const a=noiseBuffer.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=(hs(i+193)-.5)*2}catch(e){ac=null}}
+function keep(n){nodes.add(n);n.onended=()=>nodes.delete(n);return n}
+function tone(f,d=.2,v=.12,type='sine',delay=0){if(!ac||!sfxOn)return;const o=keep(ac.createOscillator()),g=ac.createGain(),n=ac.currentTime+delay;o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(v,n+.012);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(master);o.start(n);o.stop(n+d+.03)}
+function noise(d=.4,v=.06,f=1700,delay=0,type='highpass'){if(!ac||!sfxOn)return;const s=keep(ac.createBufferSource()),g=ac.createGain(),fl=ac.createBiquadFilter(),n=ac.currentTime+delay;s.buffer=noiseBuffer;fl.type=type;fl.frequency.value=f;g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(v,n+.03);g.gain.exponentialRampToValueAtTime(.0001,n+d);s.connect(fl);fl.connect(g);g.connect(master);s.start(n);s.stop(n+d+.02)}
+function clearSounds(){for(const n of nodes){try{n.stop()}catch(e){}}nodes.clear()}
+function ding(){tone(880,.5,.11);tone(1320,.75,.07,'sine',.09);tone(1760,.6,.035,'sine',.17)}
+function dial(){for(let i=0;i<3;i++){tone([697,770,852][i],.11,.04,'sine',i*.15);tone([1209,1336,1477][i],.11,.04,'sine',i*.15)}}
+const EVENTS=[
+  [.6,'dial'],[1.35,'paper'],[2.35,'dial'],[3.8,'paper'],[4.65,'paper'],[5.2,'ding'],
+  [9.35,'murmur'],[9.65,'write'],[10.05,'write'],[10.65,'ding'],[11.6,'paper'],[12.0,'ding'],[13.15,'ding'],[17.35,'chime']
+];
+function effect(type){if(type==='dial')dial();else if(type==='paper'){noise(.3,.13,1400);noise(.22,.08,2300,.15)}else if(type==='write'){for(let i=0;i<4;i++)noise(.11,.065,2600,i*.14)}else if(type==='murmur'){noise(1.2,.06,440,0,'bandpass');tone(154,.4,.012);tone(185,.5,.009,'sine',.3)}else if(type==='chime'){tone(523.25,1.1,.10);tone(659.25,1.3,.07,'sine',.12);tone(783.99,1.5,.06,'sine',.25);tone(1046.5,1.3,.04,'sine',.39)}else ding()}
+function loadVoices(){if('speechSynthesis'in window)voices=window.speechSynthesis.getVoices()}
+if('speechSynthesis'in window){loadVoices();window.speechSynthesis.addEventListener('voiceschanged',loadVoices)}else{voiceOn=false;document.getElementById('voice').textContent='Voiceover unavailable';document.getElementById('voice').disabled=true;document.getElementById('voice').setAttribute('aria-pressed','false');status.textContent='This browser does not support speech. Captions and sound effects remain available.'}
+function cancelSpeech(){if('speechSynthesis'in window)window.speechSynthesis.cancel()}
+function speakCue(i,at){if(!voiceOn||!('speechSynthesis'in window))return;const c=CUES[i];if(at>=c.b-.12)return;cancelSpeech();const words=c.en.split(/\s+/);const passed=cl((at-c.a)/(c.b-c.a));const rest=words.slice(Math.floor(words.length*passed));if(!rest.length)return;const u=new SpeechSynthesisUtterance(rest.join(' '));u.lang='en-US';u.pitch=1;u.volume=.95;const remaining=Math.max(.2,c.b-Math.max(at,c.a));u.rate=cl(rest.length*60/remaining/155*1.16,1.0,2.7);u.voice=voices.find(v=>/^en/i.test(v.lang)&&v.localService&&/natural|neural|samantha|zira/i.test(v.name))||voices.find(v=>/^en/i.test(v.lang)&&v.localService)||voices.find(v=>/^en/i.test(v.lang))||null;u.onerror=e=>{if(!['canceled','interrupted'].includes(e.error))status.textContent='Voiceover is unavailable in this browser. The animation, captions and sound effects still work.'};window.speechSynthesis.speak(u)}
+function narrationAt(at){spoken=CUES.findIndex(c=>at>=c.a&&at<c.b);if(spoken>=0)speakCue(spoken,at)}
+
+// One timeline drives visuals, text, speech and effects; seeking is deterministic.
+let t=0,playing=false,last=0,started=false;
+const pp=document.getElementById('pp'),sk=document.getElementById('sk'),tm=document.getElementById('tm'),overlay=document.getElementById('start-overlay');
+function updateControls(){pp.textContent=playing?'Pause':t>=D?'Replay':'Play';pp.setAttribute('aria-label',playing?'Pause animation':t>=D?'Replay animation':'Play animation');sk.value=t;tm.textContent=`${t.toFixed(1)} / 20.0s`;}
+function ensureStarted(){started=true;overlay.style.display='none';initAudio();if(ac)ac.resume().catch(()=>{});loadVoices()}
+function play(){ensureStarted();if(t>=D){t=0;spoken=-1;clearSounds();cancelSpeech()}playing=true;last=performance.now();if('speechSynthesis'in window&&window.speechSynthesis.paused){const current=window.speechSynthesis.speaking;window.speechSynthesis.resume();if(!current)narrationAt(t)}else narrationAt(t);updateControls()}
+function pause(){playing=false;if('speechSynthesis'in window)window.speechSynthesis.pause();if(ac)ac.suspend().catch(()=>{});updateControls()}
+function seek(v){pause();cancelSpeech();clearSounds();t=cl(Number(v),0,D);spoken=-1;overlay.style.display='none';frame(t);updateControls()}
+document.getElementById('start-btn').onclick=play;
+pp.onclick=()=>playing?pause():play();
+document.getElementById('restart').onclick=()=>{seek(0);play()};
+sk.addEventListener('input',()=>seek(sk.value));
+document.getElementById('voice').onclick=()=>{voiceOn=!voiceOn;cancelSpeech();document.getElementById('voice').textContent='Voiceover: '+(voiceOn?'On':'Off');document.getElementById('voice').setAttribute('aria-pressed',String(voiceOn));if(voiceOn&&playing)narrationAt(t)};
+document.getElementById('sfx').onclick=()=>{sfxOn=!sfxOn;document.getElementById('sfx').textContent='Sound effects: '+(sfxOn?'On':'Off');document.getElementById('sfx').setAttribute('aria-pressed',String(sfxOn));if(master)master.gain.setValueAtTime(sfxOn?.6:0,ac.currentTime);if(!sfxOn)clearSounds()};
+document.getElementById('lang').onclick=()=>{showHindi=!showHindi;document.getElementById('lang').textContent='Hindi Subtitles: '+(showHindi?'On':'Off');document.getElementById('lang').setAttribute('aria-pressed',String(showHindi));frame(t)};
+document.getElementById('full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else if(document.getElementById('stage').requestFullscreen)document.getElementById('stage').requestFullscreen().catch(()=>{})};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)pause()});
+document.addEventListener('keydown',e=>{if(['INPUT','BUTTON','SUMMARY'].includes(document.activeElement.tagName))return;if(e.code==='Space'){e.preventDefault();playing?pause():play()}if(e.code==='ArrowRight'){e.preventDefault();seek(t+1)}if(e.code==='ArrowLeft'){e.preventDefault();seek(t-1)}});
+function loop(now){const dt=Math.min((now-(last||now))/1000,.1);last=now;if(playing){const prev=t;t=Math.min(D,t+dt);for(const [at,type]of EVENTS)if(prev<at&&t>=at)effect(type);for(let i=0;i<CUES.length;i++){const c=CUES[i];if(prev<c.a&&t>=c.a){spoken=i;speakCue(i,t)}if(prev<c.b&&t>=c.b&&spoken===i){cancelSpeech();spoken=-1}}if(t>=D){playing=false;cancelSpeech();clearSounds();if(ac)ac.suspend().catch(()=>{})}updateControls()}frame(t);requestAnimationFrame(loop)}
+// A small public preview hook is also useful when rendering individual frames.
+window.landslidePSA={duration:D,seek,play,pause,render:frame,get time(){return t},get playing(){return playing}};
+frame(0);requestAnimationFrame(loop);
+</script>
+</body>
+</html>
