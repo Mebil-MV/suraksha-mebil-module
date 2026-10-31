@@ -28,23 +28,23 @@ export default function GamePage() {
     },
     {
       id: "go-bag",
-      title: lang === "hi" ? "अपना गो-बैग पैक करें (Pack Your Go-Bag)" : "Pack Your Go-Bag Challenge",
+      title: lang === "hi" ? "कमरे से किट पैक करें (Pack the Room)" : "Pack the Room · Go-Bag",
       category: lang === "hi" ? "आपातकालीन किट तैयारी" : "Emergency Kit Preparation",
       icon: "🎒",
-      badge: lang === "hi" ? "नया • 60-सेकंड टाइमर" : "NEW • 60s Timed Challenge",
+      badge: lang === "hi" ? "नया • 60s टाइमर / अभ्यास" : "NEW • 60s Timed / Practice",
       badgeColor: "#38bdf8",
       description:
         lang === "hi"
-          ? "आपात स्थिति में केवल 60 सेकंड के भीतर जरूरी वस्तुएं पैक करें! 6 किग्रा वजन सीमा और 8 आइटम स्लॉट का ध्यान रखें। विलासिता की फालतू चीजें पैक करने पर अंक कटेंगे।"
-          : "Pack essential emergency supplies into your survival backpack under 60 seconds. Manage strict 6 kg weight limits and 8 item slots while avoiding heavy non-essentials.",
+          ? "सचित्र लिविंग रूम में घूमें, 12 वस्तुओं में से 8 आवश्यक चीजें पहचानें और उन्हें बैकपैक में स्लाइड/खींचें। 6 किग्रा वजन सीमा और 8 आइटम स्लॉट का ध्यान रखें।"
+          : "Explore an illustrated living room, identify 8 vital emergency supplies among distractions, and slide them into the backpack. Manage 6 kg weight and 8 slots under 60s or in practice mode.",
       features: [
+        lang === "hi" ? "कमरे से ड्रैग/टच या टैप-पैक नियंत्रण" : "Drag-and-slide or tap-pack interactive room",
         lang === "hi" ? "60s समयबद्ध चुनौती और अभ्यास मोड" : "60s Timed challenge or untimed practice mode",
-        lang === "hi" ? "वजन और स्लॉट क्षमता भौतिकी" : "Weight (kg) and item slot capacity mechanics",
-        lang === "hi" ? "किट मास्टर बैज अनलॉकिंग" : "Kit Master badge & readiness XP unlocks",
+        lang === "hi" ? "बैग के अंदर देखें और किट मास्टर बैज जीतें" : "'Look inside' bag inspector & Kit Master badge",
       ],
       path: "/games/go-bag",
       popout: "/games/go-bag/index.html",
-      btnText: lang === "hi" ? "▶ बैग पैक करें" : "▶ Pack Bag",
+      btnText: lang === "hi" ? "▶ बैग पैक करें" : "▶ Pack the Room",
     },
     {
       id: "flood-game",

@@ -27,7 +27,7 @@ export default function GoBagGamePage() {
           {lang === "hi" ? "← गेम्स आर्केड पर वापस" : "← Back to Games Arcade"}
         </button>
         <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "#38bdf8" }}>
-          🎒 {lang === "hi" ? "अपना गो-बैग पैक करें • आपातकालीन किट चुनौती" : "Suraksha • Pack Your Go-Bag Challenge"}
+          🎒 {lang === "hi" ? "कमरे से किट पैक करें • गो-बैग चुनौती" : "Suraksha · Pack the Room (Go-Bag Challenge)"}
         </span>
         <button
           onClick={() => window.open("/games/go-bag/index.html", "_blank")}
