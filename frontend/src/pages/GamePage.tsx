@@ -47,25 +47,6 @@ export default function GamePage() {
       btnText: lang === "hi" ? "▶ बैग पैक करें" : "▶ Pack the Room",
     },
     {
-      id: "flood-game",
-      title: lang === "hi" ? "बाढ़ से बचाव (Flood Survival Escape)" : "Flood Survival Escape",
-      category: lang === "hi" ? "रात की बाढ़ निर्णय श्रृंखला" : "Night Flash Flood Decisions",
-      icon: "🌊",
-      badge: lang === "hi" ? "निर्णय शाखा" : "Decision Branching",
-      badgeColor: "#60a5fa",
-      description:
-        lang === "hi"
-          ? "आधी रात को अचानक बाढ़ का पानी घर में घुस जाता है। सही फैसले लें: खिलौने समेटने में समय न गंवाएं, छत पर शरण लें और बचाव दल को लाल कपड़े से संकेत दें।"
-          : "Water enters your home in the middle of the night. Make split-second survival decisions: move to the roof, avoid swimming in rapid floodwater, and signal for helicopter rescue.",
-      features: [
-        lang === "hi" ? "चरणबद्ध निर्णय वृक्ष" : "Step-by-step branching decision trees",
-        lang === "hi" ? "हेलीकॉप्टर बचाव एनीमेशन" : "Helicopter rescue and sprite animations",
-        lang === "hi" ? "जीवन रक्षक सुरक्षा पाठ" : "Life-saving educational consequence feedback",
-      ],
-      path: "/flood-game",
-      btnText: lang === "hi" ? "▶ बाढ़ से बचें" : "▶ Escape Flood",
-    },
-    {
       id: "quiz-game",
       title: lang === "hi" ? "आपदा परिदृश्य क्विज़ (Hazard Scenarios)" : "Disaster Hazard Scenarios",
       category: lang === "hi" ? "दृश्य सिमुलेशन क्विज़" : "Visual Simulation Quiz",

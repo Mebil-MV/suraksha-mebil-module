@@ -7,7 +7,6 @@ const navItems = [
   { path: '/game', icon: '🎮', labelKey: 'nav.game' },
   { path: '/safe-route', icon: '🗺️', labelKey: 'nav.safeRoute' },
   { path: '/go-bag', icon: '🎒', labelKey: 'nav.goBag' },
-  { path: '/flood-game', icon: '🌊', labelKey: 'nav.floodGame' },
   { path: '/quiz', icon: '📝', labelKey: 'nav.quiz' },
   { path: '/community', icon: '🤝', labelKey: 'nav.community' },
   { path: '/volunteers', icon: '🙋', labelKey: 'nav.volunteers' },
