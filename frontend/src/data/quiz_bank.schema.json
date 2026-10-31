@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Suraksha Quiz Bank",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "language",
+    "defaults",
+    "hazards",
+    "animations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string"
+    },
+    "app": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string",
+      "description": "BCP-47 code of the text in this file, e.g. en or hi"
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "passingScorePercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "shuffleQuestions": {
+          "type": "boolean"
+        },
+        "shuffleOptions": {
+          "type": "boolean"
+        },
+        "showExplanationAfterEachQuestion": {
+          "type": "boolean"
+        }
+      }
+    },
+    "hazards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "animationIds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "animationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "animations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "animationId",
+          "title",
+          "hazard",
+          "phase",
+          "animationSource",
+          "questions"
+        ],
+        "properties": {
+          "animationId": {
+            "type": "string",
+            "description": "Stable id. Question ids are prefixed with it."
+          },
+          "title": {
+            "type": "string"
+          },
+          "hazard": {
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              "before",
+              "during",
+              "after",
+              "general"
+            ]
+          },
+          "animationSource": {
+            "type": "string",
+            "description": "Path of the source animation file, relative to the root of Suraksha_Animations.zip (forward slashes)."
+          },
+          "questions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type",
+                "question",
+                "options",
+                "correctIndex",
+                "explanation"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "type": {
+                  "enum": [
+                    "single_choice",
+                    "true_false"
+                  ]
+                },
+                "question": {
+                  "type": "string"
+                },
+                "options": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "correctIndex": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "explanation": {
+                  "type": "string",
+                  "description": "Shown after answering; restates the animation's message."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

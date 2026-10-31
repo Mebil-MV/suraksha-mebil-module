@@ -6,6 +6,7 @@ import type { SafetyTip, MicroChallenge, ReadinessOverview } from '../types';
 import Spinner from '../components/Spinner';
 import SpeechButton from '../components/SpeechButton';
 import ErrorBox from '../components/ErrorBox';
+import AwarenessCatalog from '../components/AwarenessCatalog';
 
 export default function PreparednessPage() {
   const { t, lang } = useI18n();
@@ -84,6 +85,9 @@ export default function PreparednessPage() {
 
       {activeTab === 'awareness' && (
         <div className="tab-content awareness-content">
+          <AwarenessCatalog />
+          <hr style={{ borderColor: "#1e314b", margin: "30px 0" }} />
+          <h3 style={{ color: "#94a3b8", textAlign: "center", marginBottom: "20px" }}>Featured Interactive Scenarios</h3>
           <div className="card text-center mb-4" style={{ padding: '0' }}>
             <h2 style={{ padding: '1rem' }}>{lang === 'hi' ? 'बंद नाले से बाढ़ जागरूकता' : 'Clogged Drain Flood Awareness'}</h2>
             <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
