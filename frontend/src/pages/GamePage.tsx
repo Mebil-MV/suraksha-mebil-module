@@ -1,222 +1,202 @@
-import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../i18n";
 
-// Types
-interface Item {
-  id: string;
-  name: string;
-  icon: string;
-  isEssential: boolean;
-  reason: string;
-}
-
-const ALL_ITEMS: Item[] = [
-  { id: "water", name: "Bottled Water", icon: "💧", isEssential: true, reason: "Hydration is critical. You need 1 gallon per person per day." },
-  { id: "firstaid", name: "First Aid Kit", icon: "💊", isEssential: true, reason: "Crucial for treating injuries when emergency services are delayed." },
-  { id: "flashlight", name: "Flashlight", icon: "🔦", isEssential: true, reason: "Power outages are common. Essential for navigating in the dark." },
-  { id: "radio", name: "Radio", icon: "📻", isEssential: true, reason: "A battery/crank radio is vital for receiving official emergency broadcasts." },
-  { id: "food", name: "Canned Food", icon: "🥫", isEssential: true, reason: "Non-perishable food provides necessary energy during a crisis." },
-  { id: "docs", name: "Important Docs", icon: "📄", isEssential: true, reason: "IDs, insurance, and medical records are crucial for recovery." },
-  { id: "whistle", name: "Whistle", icon: "🌬️", isEssential: true, reason: "The best way to signal for help if trapped; saves your voice." },
-  { id: "mask", name: "Dust Mask", icon: "😷", isEssential: true, reason: "Protects your lungs from contaminated air and debris." },
-  { id: "videogame", name: "Video Game Console", icon: "🎮", isEssential: false, reason: "Useless without power and takes up valuable space." },
-  { id: "books", name: "Heavy Books", icon: "📚", isEssential: false, reason: "Too heavy to carry during a rapid evacuation." },
-  { id: "laptop", name: "Laptop", icon: "💻", isEssential: false, reason: "Delicate, heavy, and likely won't have power or internet." },
-  { id: "toaster", name: "Toaster", icon: "🍞", isEssential: false, reason: "Takes up space and requires electricity you won't have." },
-  { id: "guitar", name: "Guitar", icon: "🎸", isEssential: false, reason: "Too bulky to carry when you need your hands free for safety." },
-  { id: "highheels", name: "High Heels", icon: "👠", isEssential: false, reason: "Dangerous for walking over debris; you need sturdy closed-toe shoes." },
-];
-
-const MAX_SLOTS = 6;
-const GAME_TIME = 20;
-
 export default function GamePage() {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { lang } = useI18n();
 
-  // State
-  const [phase, setPhase] = useState<"start" | "playing" | "result">("start");
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
-  const [backpack, setBackpack] = useState<Item[]>([]);
-  const [availableItems, setAvailableItems] = useState<Item[]>([]);
+  const games = [
+    {
+      id: "safe-route",
+      title: lang === "hi" ? "सुरक्षित रास्ता खोजक (Safe Route Navigator)" : "Safe Route Navigator",
+      category: lang === "hi" ? "बाढ़ एवं तूफान निकासी" : "Flood & Storm Evacuation",
+      icon: "🗺️",
+      badge: lang === "hi" ? "नया • इंटरैक्टिव सिमुलेशन" : "NEW • Interactive Canvas",
+      badgeColor: "#9dd9ae",
+      description:
+        lang === "hi"
+          ? "बाढ़ और तूफान के दौरान घर से सुरक्षित आश्रय तक सूखा रास्ता बनाएं। नियंत्रण कक्ष से सड़क रिपोर्ट मांगें, खुले मैनहोल व टूटे बिजली के तारों से बचें और मौसम बदलने पर रास्ता बदलें।"
+          : "Plan an evacuation route from HOME to the hilltop SHELTER. Request control room updates, avoid downed power lines & submerged open manholes, and adapt to rising water levels.",
+      features: [
+        lang === "hi" ? "3 गतिशील मौसम चरण (बारिश, बढ़ता पानी, गंभीर तूफान)" : "3 dynamic storm phases with evolving closures",
+        lang === "hi" ? "नियंत्रण कक्ष से लाइव सड़क जांच रिपोर्ट" : "Live control-room road survey reports",
+        lang === "hi" ? "द्विभाषी आवाज और उपशीर्षक" : "Full bilingual voice and subtitle support",
+      ],
+      path: "/games/safe-route",
+      popout: "/games/safe-route/index.html",
+      btnText: lang === "hi" ? "▶ मिशन शुरू करें" : "▶ Play Navigator",
+    },
+    {
+      id: "go-bag",
+      title: lang === "hi" ? "अपना गो-बैग पैक करें (Pack Your Go-Bag)" : "Pack Your Go-Bag Challenge",
+      category: lang === "hi" ? "आपातकालीन किट तैयारी" : "Emergency Kit Preparation",
+      icon: "🎒",
+      badge: lang === "hi" ? "नया • 60-सेकंड टाइमर" : "NEW • 60s Timed Challenge",
+      badgeColor: "#38bdf8",
+      description:
+        lang === "hi"
+          ? "आपात स्थिति में केवल 60 सेकंड के भीतर जरूरी वस्तुएं पैक करें! 6 किग्रा वजन सीमा और 8 आइटम स्लॉट का ध्यान रखें। विलासिता की फालतू चीजें पैक करने पर अंक कटेंगे।"
+          : "Pack essential emergency supplies into your survival backpack under 60 seconds. Manage strict 6 kg weight limits and 8 item slots while avoiding heavy non-essentials.",
+      features: [
+        lang === "hi" ? "60s समयबद्ध चुनौती और अभ्यास मोड" : "60s Timed challenge or untimed practice mode",
+        lang === "hi" ? "वजन और स्लॉट क्षमता भौतिकी" : "Weight (kg) and item slot capacity mechanics",
+        lang === "hi" ? "किट मास्टर बैज अनलॉकिंग" : "Kit Master badge & readiness XP unlocks",
+      ],
+      path: "/games/go-bag",
+      popout: "/games/go-bag/index.html",
+      btnText: lang === "hi" ? "▶ बैग पैक करें" : "▶ Pack Bag",
+    },
+    {
+      id: "flood-game",
+      title: lang === "hi" ? "बाढ़ से बचाव (Flood Survival Escape)" : "Flood Survival Escape",
+      category: lang === "hi" ? "रात की बाढ़ निर्णय श्रृंखला" : "Night Flash Flood Decisions",
+      icon: "🌊",
+      badge: lang === "hi" ? "निर्णय शाखा" : "Decision Branching",
+      badgeColor: "#60a5fa",
+      description:
+        lang === "hi"
+          ? "आधी रात को अचानक बाढ़ का पानी घर में घुस जाता है। सही फैसले लें: खिलौने समेटने में समय न गंवाएं, छत पर शरण लें और बचाव दल को लाल कपड़े से संकेत दें।"
+          : "Water enters your home in the middle of the night. Make split-second survival decisions: move to the roof, avoid swimming in rapid floodwater, and signal for helicopter rescue.",
+      features: [
+        lang === "hi" ? "चरणबद्ध निर्णय वृक्ष" : "Step-by-step branching decision trees",
+        lang === "hi" ? "हेलीकॉप्टर बचाव एनीमेशन" : "Helicopter rescue and sprite animations",
+        lang === "hi" ? "जीवन रक्षक सुरक्षा पाठ" : "Life-saving educational consequence feedback",
+      ],
+      path: "/flood-game",
+      btnText: lang === "hi" ? "▶ बाढ़ से बचें" : "▶ Escape Flood",
+    },
+    {
+      id: "quiz-game",
+      title: lang === "hi" ? "आपदा परिदृश्य क्विज़ (Hazard Scenarios)" : "Disaster Hazard Scenarios",
+      category: lang === "hi" ? "दृश्य सिमुलेशन क्विज़" : "Visual Simulation Quiz",
+      icon: "⚡",
+      badge: lang === "hi" ? "SVG सिमुलेशन" : "SVG Simulations",
+      badgeColor: "#fbbf24",
+      description:
+        lang === "hi"
+          ? "भूकंप, सुनामी, आग और बवंडर के दृश्य परिदृश्यों में अपनी सजगता परखें। सही उत्तर देकर अंक कमाएं और ऑडियो सहायता का लाभ उठाएं।"
+          : "Test your situational awareness during animated earthquake tremors, receding tsunami shorelines, and smoke corridors. Earn points with instant voice narration.",
+      features: [
+        lang === "hi" ? "एनिमेटेड भूकंप और सुनामी दृश्य" : "Animated SVG earthquakes, smoke & tsunamis",
+        lang === "hi" ? "वॉइस ऑडियो सहायता (TTS)" : "Integrated Text-to-Speech audio readout",
+        lang === "hi" ? "तैयारी स्तर अपग्रेड" : "Readiness profile point increments",
+      ],
+      path: "/quiz",
+      btnText: lang === "hi" ? "▶ क्विज़ शुरू करें" : "▶ Start Scenarios",
+    },
+  ];
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Initialize Game
-  const startGame = () => {
-    // Shuffle items
-    const shuffled = [...ALL_ITEMS].sort(() => Math.random() - 0.5);
-    setAvailableItems(shuffled);
-    setBackpack([]);
-    setTimeLeft(GAME_TIME);
-    setPhase("playing");
-  };
-
-  // Timer
-  useEffect(() => {
-    if (phase === "playing") {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            endGame();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [phase]);
-
-  // Actions
-  const addToBackpack = (item: Item) => {
-    if (backpack.length >= MAX_SLOTS) return;
-    setBackpack([...backpack, item]);
-    setAvailableItems(availableItems.filter((i) => i.id !== item.id));
-  };
-
-  const removeFromBackpack = (item: Item) => {
-    setAvailableItems([...availableItems, item]);
-    setBackpack(backpack.filter((i) => i.id !== item.id));
-  };
-
-  const endGame = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setPhase("result");
-  };
-
-  // Render Start Phase
-  if (phase === "start") {
-    return (
-      <div className="game-page">
-        <div className="game-hero">
-          <h1>🎒 {t('game.title') || "Emergency Evacuation Packer"}</h1>
-          <p className="game-subtitle">{t('game.subtitle')} <strong>{GAME_TIME} {t('game.seconds')}</strong> {t('game.to_pack')}</p>
-          
-          <div className="game-instructions card">
-            <h3>{t('game.how_to_play')}</h3>
-            <ul>
-              <li>{t('game.rule1')} <strong>{MAX_SLOTS} {t('game.items')}</strong> {t('game.rule1_end')}</li>
-              <li>{t('game.rule2')}</li>
-              <li>{t('game.rule3')}</li>
-              <li>{t('game.rule4')}</li>
-            </ul>
-          </div>
-
-          <button className="btn btn-primary game-start-btn" onClick={startGame}>
-            {t('game.start_btn')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Render Playing Phase
-  if (phase === "playing") {
-    return (
-      <div className="game-page">
-        <div className="game-header">
-          <div className="game-timer">
-            <span className="timer-icon">⏱️</span>
-            <span className={`timer-text ${timeLeft <= 5 ? "danger" : ""}`}>00:{timeLeft.toString().padStart(2, "0")}</span>
-          </div>
-          <button className="btn btn-danger" onClick={endGame}>
-            {t('game.evacuate_now')}
-          </button>
-        </div>
-
-        <div className="game-grid-container">
-          {/* Backpack Section */}
-          <div className="game-backpack-section">
-            <h2>{t('game.your_backpack')} ({backpack.length}/{MAX_SLOTS})</h2>
-            <div className="game-backpack">
-              {Array.from({ length: MAX_SLOTS }).map((_, i) => {
-                const item = backpack[i];
-                return (
-                  <div 
-                    key={i} 
-                    className={`game-slot ${item ? "filled" : "empty"}`}
-                    onClick={() => item && removeFromBackpack(item)}
-                  >
-                    {item ? (
-                      <>
-                        <span className="item-icon">{item.icon}</span>
-                        <span className="item-name">{item.name}</span>
-                      </>
-                    ) : (
-                      <span className="empty-text">{t('game.empty_slot')}</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {backpack.length === MAX_SLOTS && <p className="backpack-full-msg">{t('game.backpack_full')}</p>}
-          </div>
-
-          {/* House/Available Items Section */}
-          <div className="game-house-section">
-            <h2>{t('game.house_items')}</h2>
-            <p className="house-hint">{t('game.click_to_pack')}</p>
-            <div className="game-items-grid">
-              {availableItems.map(item => (
-                <div 
-                  key={item.id} 
-                  className={`game-item-card ${backpack.length >= MAX_SLOTS ? "disabled" : ""}`}
-                  onClick={() => addToBackpack(item)}
-                >
-                  <span className="item-icon">{item.icon}</span>
-                  <span className="item-name">{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render Result Phase
-  const score = backpack.reduce((acc, item) => acc + (item.isEssential ? 15 : -10), 0);
-  const maxPossibleScore = MAX_SLOTS * 15;
-  const scorePct = Math.max(0, Math.round((score / maxPossibleScore) * 100));
-  
   return (
-    <div className="game-page">
-      <div className="game-result">
-        <div className="result-header">
-          <h1>{scorePct >= 80 ? t('game.expert') : scorePct >= 50 ? t('game.survived') : t('game.needs_planning')}</h1>
-          <div className="score-circle">
-            <span className="score-num">{score}</span>
-            <span className="score-label">{t('game.points')}</span>
-          </div>
-        </div>
+    <div className="game-arcade-page" style={{ padding: "10px 0 40px" }}>
+      {/* Header */}
+      <div
+        className="arcade-header card"
+        style={{
+          background: "linear-gradient(135deg, #101a2b 0%, #0d1522 100%)",
+          border: "1px solid #1e314b",
+          borderRadius: "16px",
+          padding: "30px 24px",
+          marginBottom: "30px",
+          textAlign: "center",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
+        }}
+      >
+        <span style={{ fontSize: "2.8rem" }}>🎮</span>
+        <h1 style={{ fontSize: "2.2rem", fontWeight: 700, margin: "10px 0 8px", color: "#fff" }}>
+          {lang === "hi" ? "सुरक्षा • आपदा उत्तरजीविता गेम्स आर्केड" : "Suraksha • Disaster Survival Games Arcade"}
+        </h1>
+        <p style={{ color: "#94a3b8", fontSize: "1.05rem", maxWidth: "680px", margin: "0 auto" }}>
+          {lang === "hi"
+            ? "आपात स्थितियों के लिए अपने निर्णय और तैयारी को परखें। इंटरैक्टिव गेम्स खेलें, निकासी मार्ग सीखें और सुरक्षा अंक कमाएं!"
+            : "Master life-saving emergency instincts through interactive simulations. Plan safe evacuation routes, pack emergency kits, and earn Readiness XP!"}
+        </p>
+      </div>
 
-        <div className="result-analysis">
-          <h2>{t('game.your_packed_items')}</h2>
-          <div className="packed-items-list">
-            {backpack.length === 0 ? (
-              <p className="no-items-msg">{t('game.empty_bag_msg')}</p>
-            ) : (
-              backpack.map(item => (
-                <div key={item.id} className={`analysis-card ${item.isEssential ? "good" : "bad"}`}>
-                  <div className="analysis-icon">{item.icon}</div>
-                  <div className="analysis-details">
-                    <h4>{item.name} {item.isEssential ? "✅ +15" : "❌ -10"} {t('game.points')}</h4>
-                    <p>{item.reason}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+      {/* Grid of Games */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: "24px",
+        }}
+      >
+        {games.map((g) => (
+          <div
+            key={g.id}
+            className="card game-card"
+            style={{
+              background: "#121c2b",
+              border: "1px solid #1e314b",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "12px" }}>
+                <span style={{ fontSize: "2.2rem" }}>{g.icon}</span>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    background: "rgba(56, 189, 248, 0.12)",
+                    color: g.badgeColor,
+                    border: `1px solid ${g.badgeColor}40`,
+                  }}
+                >
+                  {g.badge}
+                </span>
+              </div>
 
-        <div className="game-actions">
-          <button className="btn btn-primary" onClick={startGame}>{t('game.play_again')}</button>
-          <button className="btn btn-outline" onClick={() => navigate("/")}>{t('game.home')}</button>
-        </div>
+              <span style={{ fontSize: "0.8rem", color: "#38bdf8", fontWeight: 600, textTransform: "uppercase" }}>
+                {g.category}
+              </span>
+              <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "6px 0 12px", color: "#fff" }}>
+                {g.title}
+              </h2>
+              <p style={{ color: "#94a3b8", fontSize: "0.92rem", lineHeight: 1.5, marginBottom: "16px" }}>
+                {g.description}
+              </p>
+
+              <div style={{ background: "#09111c", padding: "12px", borderRadius: "10px", marginBottom: "20px" }}>
+                <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>
+                  {lang === "hi" ? "प्रमुख विशेषताएं:" : "Key Highlights:"}
+                </span>
+                <ul style={{ margin: "6px 0 0 16px", padding: 0, fontSize: "0.85rem", color: "#cbd5e1", lineHeight: 1.4 }}>
+                  {g.features.map((feat, i) => (
+                    <li key={i} style={{ marginBottom: "4px" }}>{feat}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1, padding: "10px 16px", fontWeight: 600 }}
+                onClick={() => navigate(g.path)}
+              >
+                {g.btnText}
+              </button>
+              {g.popout && (
+                <button
+                  className="btn btn-outline"
+                  title="Open Fullscreen in New Tab"
+                  onClick={() => window.open(g.popout, "_blank")}
+                  style={{ padding: "10px 14px" }}
+                >
+                  ↗
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

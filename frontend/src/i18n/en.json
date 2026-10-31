@@ -11,9 +11,11 @@
     "alerts": "Alerts",
     "admin": "Admin",
     "quiz": "Quiz",
-    "game": "Packer Game",
+    "game": "Games Arcade",
     "floodGame": "Flood Escape",
-    "logout": "Logout"
+    "logout": "Logout",
+    "safeRoute": "Safe Route",
+    "goBag": "Go-Bag Pack"
   },
   "community": {
     "title": "Community Response Hub",

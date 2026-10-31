@@ -10,6 +10,8 @@ import PreparednessPage from './pages/PreparednessPage';
 import QuizPage from './pages/QuizPage';
 import GamePage from './pages/GamePage';
 import FloodGame from './pages/FloodGame';
+import SafeRouteGamePage from './pages/SafeRouteGamePage';
+import GoBagGamePage from './pages/GoBagGamePage';
 import { I18nProvider } from './i18n';
 import Layout from './components/Layout';
 import './App.css';
@@ -36,6 +38,10 @@ function App() {
         <Route path="/quiz" element={<PrivateRoute><Layout><QuizPage /></Layout></PrivateRoute>} />
         <Route path="/game" element={<PrivateRoute><Layout><GamePage /></Layout></PrivateRoute>} />
         <Route path="/flood-game" element={<PrivateRoute><Layout><FloodGame /></Layout></PrivateRoute>} />
+        <Route path="/games/safe-route" element={<PrivateRoute><Layout><SafeRouteGamePage /></Layout></PrivateRoute>} />
+        <Route path="/safe-route" element={<PrivateRoute><Layout><SafeRouteGamePage /></Layout></PrivateRoute>} />
+        <Route path="/games/go-bag" element={<PrivateRoute><Layout><GoBagGamePage /></Layout></PrivateRoute>} />
+        <Route path="/go-bag" element={<PrivateRoute><Layout><GoBagGamePage /></Layout></PrivateRoute>} />
       </Routes>
     </I18nProvider>
   );
